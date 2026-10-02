@@ -6,13 +6,13 @@ import path from "node:path";
 // caption below, the way a plate is bound into a field atlas.
 //
 // <Plate> fills the frame with an engraved line drawing from public/guide/plates/<id>.svg.
-// Those drawings are this project's own assets (the explainer film uses the same eight),
+// Those drawings are this project's own assets (the explainer film uses the same plates),
 // so they are inlined, which lets the page colour them per theme and draw them on as
 // they scroll into view. Until a drawing exists the frame holds a quiet placeholder.
 
 const PLATES_DIR = path.join(process.cwd(), "public", "guide", "plates");
 
-export const PLATE_IDS = ["pipeline", "crawl", "anatomy", "search", "names", "add-site", "codebase", "contribute"] as const;
+export const PLATE_IDS = ["pipeline", "crawl", "anatomy", "search", "names", "add-site", "codebase", "contribute", "privacy"] as const;
 export type PlateId = (typeof PLATE_IDS)[number];
 
 export function Figure({
@@ -128,6 +128,7 @@ const SKETCHES: Record<PlateId, { terms: string[]; flow: boolean; loop?: boolean
   "add-site": { terms: ["folder", "README", "manifest", "git", "pnpm index", "article"], flow: true },
   codebase: { terms: ["scripts/", "data/index.json", "lib/", "app/", "components/", "your browser"], flow: true },
   contribute: { terms: ["edit", "typecheck", "crawl", "screenshot", "pull request"], flow: true, loop: true },
+  privacy: { terms: ["this machine", "the index", "search", "Innerpedia", "one gate: 127.0.0.1", "0 bytes sent"], flow: false },
 };
 
 export function Plate({

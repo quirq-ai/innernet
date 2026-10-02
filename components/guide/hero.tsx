@@ -39,6 +39,18 @@ export function Hero() {
         <p className="rise mx-auto mt-7 max-w-[600px] text-center font-serif text-[20px] leading-[1.5] text-ink-2 sm:text-[23px]" style={{ animationDelay: "120ms" }}>
           How the folders on this machine become a search engine and an encyclopedia, and how to add to both.
         </p>
+        <p className="rise mt-6 flex justify-center" style={{ animationDelay: "150ms" }}>
+          <a
+            href="#privacy"
+            className="inline-flex items-center gap-2.5 rounded-full border border-link/40 px-4 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.18em] text-link transition-colors hover:border-link hover:bg-link/5"
+          >
+            <svg aria-hidden width="11" height="13" viewBox="0 0 16 18" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="8" width="12" height="9" rx="1.5" />
+              <path d="M4.5 8V5.5a3.5 3.5 0 0 1 7 0V8" />
+            </svg>
+            Private · local · <span className="text-ink">0 B</span> sent
+          </a>
+        </p>
 
         {!missing && (
           <dl className="rise mx-auto mt-10 grid max-w-[860px] grid-cols-3 gap-y-6 text-center sm:flex sm:flex-wrap sm:justify-center sm:gap-y-5" style={{ animationDelay: "180ms" }}>
@@ -91,7 +103,9 @@ function Film() {
           src="/guide/innernet-explainer.mp4"
           className="block aspect-video w-full bg-bg-sunk"
         >
-          {exists(CAPTIONS) && <track kind="captions" src="/guide/innernet-explainer.vtt" srcLang="en" label="English" default />}
+          {/* The film carries its own captions; this track is there for players and readers
+              that want them separately, so it starts switched off. */}
+          {exists(CAPTIONS) && <track kind="captions" src="/guide/innernet-explainer.vtt" srcLang="en" label="English" />}
         </video>
       ) : (
         <FilmPlaceholder />

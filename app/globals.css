@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* The film project has its own styles; keep its files out of the class scan. */
+@source not "../film";
 
 /* ------------------------------------------------------------------ tokens
    Warm paper by day, quiet ink by night. One accent (link blue), one signature
