@@ -5,6 +5,7 @@ import { Box, Lead } from "@/components/wiki/main/section";
 import { getIndex, getPage } from "@/lib/data";
 import { monthYear, num, plural } from "@/lib/format";
 import { categoryHref } from "@/lib/links";
+import { DEMO } from "@/lib/mode";
 import type { Page } from "@/lib/types";
 
 const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
@@ -64,7 +65,14 @@ function sentence(f: Fact, root: string): React.ReactNode {
     case "commits":
       return (
         <>
-          <Lead page={f.page} /> holds {plural(f.page.git!.commitCount, "commit")}, more than any other repository on this machine
+          <Lead page={f.page} /> holds {plural(f.page.git!.commitCount, "commit")}, more than any other repository{" "}
+          {DEMO ? (
+            <>
+              in <span className="font-mono text-[0.84em]">{root}</span>
+            </>
+          ) : (
+            "on this machine"
+          )}
         </>
       );
     case "framework":

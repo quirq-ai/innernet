@@ -1,6 +1,6 @@
 import { getPage } from "@/lib/data";
 import { plural } from "@/lib/format";
-import { vscodeHref } from "@/lib/links";
+import { sourceHref, sourceLabel } from "@/lib/links";
 import type { Page } from "@/lib/types";
 import { Infobox } from "./article/infobox";
 import { stubLeadSegs } from "./article/lead";
@@ -27,8 +27,8 @@ export function StubView({ page }: { page: Page }) {
           page={page}
           title={page.title}
           tools={
-            <Tool href={vscodeHref(page.path)} external>
-              Open in VS Code
+            <Tool href={sourceHref(page.path)} external>
+              {sourceLabel(page.path)}
             </Tool>
           }
         />
@@ -65,7 +65,7 @@ export function StubView({ page }: { page: Page }) {
 
             <Notice page={page} className={hasContents ? "mt-12" : "mt-4"}>
               This folder is a stub. You can help Innerpedia by{" "}
-              <a href={vscodeHref(page.path)} className="link whitespace-nowrap not-italic">
+              <a href={sourceHref(page.path)} className="link whitespace-nowrap not-italic">
                 adding a README
               </a>
               .

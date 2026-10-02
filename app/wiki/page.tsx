@@ -7,6 +7,7 @@ import { InTheNews } from "@/components/wiki/main/in-the-news";
 import { OnThisDay } from "@/components/wiki/main/on-this-day";
 import { Welcome } from "@/components/wiki/main/welcome";
 import { getIndex } from "@/lib/data";
+import { INDEX_COMMAND } from "@/lib/mode";
 
 // Innerpedia's front page, a love letter to Wikipedia's: a welcome, then the day's
 // featured article, news, trivia and anniversaries, all computed from the index.
@@ -24,7 +25,7 @@ export default function WikiMain() {
             <em className="italic">Inner</em>pedia is still blank
           </h1>
           <p className="mt-4 font-serif text-[18px] text-ink-2">
-            No index has been built yet. Run <code className="rounded-md bg-bg-sunk px-1.5 py-0.5 font-mono text-[14px]">pnpm index</code> and every
+            No index has been built yet. Run <code className="rounded-md bg-bg-sunk px-1.5 py-0.5 font-mono text-[14px]">{INDEX_COMMAND}</code> and every
             folder you keep will get a page.
           </p>
         </main>

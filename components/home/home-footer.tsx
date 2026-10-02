@@ -2,10 +2,12 @@ import Link from "next/link";
 import { BrandCredit } from "@/components/quirq-credit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { timeAgo } from "@/lib/format";
+import { DEMO, INDEX_COMMAND } from "@/lib/mode";
 import type { IndexMeta } from "@/lib/types";
 
 // Small print at the foot of the home page: the way into Innerpedia, how fresh the
-// index is, and how to refresh it.
+// index is, and how to refresh it. The demo's index is built before it is deployed, so
+// it says when and from where, and leaves out the refresh.
 
 export function HomeFooter({ meta, missing }: { meta: IndexMeta; missing: boolean }) {
   const roots = meta.roots.map((r) => r.label).join(", ");
@@ -27,6 +29,13 @@ export function HomeFooter({ meta, missing }: { meta: IndexMeta; missing: boolea
         <p className="text-center">
           {missing ? (
             "Nothing indexed yet"
+          ) : DEMO ? (
+            <>
+              Demo index of <span className="font-mono text-[11.5px] text-ink-2">{roots}</span>,{" "}
+              <span className="whitespace-nowrap">
+                built <time dateTime={meta.generatedAt}>{timeAgo(meta.generatedAt)}</time>
+              </span>
+            </>
           ) : (
             <>
               Indexed <time dateTime={meta.generatedAt}>{timeAgo(meta.generatedAt)}</time> from{" "}
@@ -35,9 +44,9 @@ export function HomeFooter({ meta, missing }: { meta: IndexMeta; missing: boolea
           )}
         </p>
         <div className="flex items-center gap-2 lg:-mr-2 lg:justify-self-end">
-          {!missing && (
+          {!missing && !DEMO && (
             <span>
-              Refresh with <code className="rounded-md bg-bg-sunk px-1.5 py-0.5 font-mono text-[11.5px] text-ink-2">pnpm index</code>
+              Refresh with <code className="rounded-md bg-bg-sunk px-1.5 py-0.5 font-mono text-[11.5px] text-ink-2">{INDEX_COMMAND}</code>
             </span>
           )}
           <ThemeToggle />

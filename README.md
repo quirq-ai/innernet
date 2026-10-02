@@ -29,6 +29,21 @@ Your existing folders are the source material. One local JSON index powers both 
 | **Innerpedia** · `/wiki` | Project articles with README overviews, folder trees, technology, Git history and related projects. Browse categories, statistics or a random article. |
 | **Field guide** · `/guide` | An illustrated walkthrough of the crawl, search and privacy rules, plus an interactive recipe for turning a folder into an article. |
 
+## The public demo (Vercel)
+
+The same app runs as a public demo at https://innernet-nine.vercel.app. Instead of this
+machine, it indexes the open-source repositories of github.com/quirq-ai:
+
+```bash
+pnpm index:demo   # clone the public quirq-ai repos (anonymous HTTPS) and build data/demo/index.json
+pnpm dev:demo     # preview the demo locally
+```
+
+`data/demo/index.json` is committed, and every path in it is a GitHub URL. Vercel builds
+always run the demo (`VERCEL=1`); locally `INNERNET_DEMO=1` switches it on (`lib/mode.ts`).
+In the demo the localhost guard is off, a banner says what you are looking at, folders
+link to GitHub instead of VS Code, and the guide plays the committed 720p film.
+
 ## How it works
 
 ```mermaid

@@ -8,6 +8,7 @@ import { getIndex } from "@/lib/data";
 import { bytes, longDate, monthYear, num, plural, shortMonth } from "@/lib/format";
 import { langColor } from "@/lib/lang-colors";
 import { categoryHref, wikiHref } from "@/lib/links";
+import { DEMO } from "@/lib/mode";
 import type { GitInfo } from "@/lib/types";
 
 // Special:Statistics. A small, handsome table page: the headline counts, what the
@@ -33,7 +34,7 @@ export function StatisticsView() {
     { k: "Stubs", v: num(m.counts.stubs), note: "folders without a story yet" },
     { k: "Repositories", v: num(m.counts.repos), note: s.withHistory === m.counts.repos ? "with a Git history" : `${num(s.withHistory)} with commits` },
     { k: "Files", v: num(s.files), note: m.deeperCounted ? "in every folder, indexed or counted" : "in indexed folders" },
-    { k: "On disk", v: bytes(s.bytes), note: "dependencies and builds excluded" },
+    { k: DEMO ? "Size" : "On disk", v: bytes(s.bytes), note: DEMO ? "at each repository's latest commit" : "dependencies and builds excluded" },
     { k: "Commits", v: num(s.commits), note: `in ${num(s.histories)} distinct histories` },
     { k: "Categories", v: num(m.counts.categories), note: "ways to browse" },
   ];

@@ -85,6 +85,12 @@ export interface IndexMeta {
   deeperCounted?: boolean; // true when folders past maxDepth are tallied into `deeper`
   counts: { pages: number; articles: number; repos: number; stubs: number; categories: number };
   durationMs: number;
+  /** Present on the demo index (data/demo/index.json): which public repositories it holds.
+   * In a demo index every page's `path` is its GitHub URL, never a local path. */
+  demo?: {
+    org: string;
+    repos: { name: string; url: string; branch: string; fork: boolean; description: string | null }[];
+  };
 }
 
 export interface SiteIndex {

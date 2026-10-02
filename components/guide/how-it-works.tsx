@@ -5,6 +5,7 @@ import { ResultItem } from "@/components/search/result-item";
 import { getIndex, getPage } from "@/lib/data";
 import { bytes, num } from "@/lib/format";
 import { categoryHref, searchHref, wikiHref } from "@/lib/links";
+import { DEMO, INDEX_PATH } from "@/lib/mode";
 import { pageSummary, search } from "@/lib/search";
 import type { Page } from "@/lib/types";
 import { CHAPTERS } from "./chapters";
@@ -21,8 +22,10 @@ const B = "scripts/build-index.ts";
 export function HowItWorks() {
   const { index, missing } = getIndex();
   const { meta } = index;
-  const size = fileSize("data/index.json");
+  const size = fileSize(INDEX_PATH);
   const roots = meta.roots.map((r) => r.label);
+  // The demo's root is a GitHub organization that `pnpm index` would not walk.
+  const walked = DEMO ? [] : roots;
   const facts = indexFacts();
 
   return (
@@ -49,7 +52,7 @@ export function HowItWorks() {
             Innerpedia, gives every project an article and every other folder a stub. Nothing leaves the machine.
           </p>
           <p>
-            The whole thing runs on one file. <C>pnpm index</C> walks {roots.length ? <C>{roots.join(", ")}</C> : "the configured roots"}, reads a handful of small
+            The whole thing runs on one file. <C>pnpm index</C> walks {walked.length ? <C>{walked.join(", ")}</C> : "the configured roots"}, reads a handful of small
             files in each folder, and writes <C>data/index.json</C> through a temporary file and a rename, so the server never sees half of one. The server checks the
             file&apos;s modification time on every request and reloads it when it changes: no restart, no file watcher.
           </p>
@@ -61,7 +64,7 @@ export function HowItWorks() {
               { value: num(meta.counts.pages), label: "folders indexed", note: roots.join(", ") },
               { value: meta.maxDepth + 1, label: "levels of pages", note: `maxDepth ${meta.maxDepth}, depth 0 to ${meta.maxDepth}` },
               { value: `${Math.round(meta.durationMs / 1000)} s`, label: "to index, last run", note: "durationMs" },
-              { value: size ? bytes(size) : "none", label: "one JSON file", note: "data/index.json" },
+              { value: size ? bytes(size) : "none", label: "one JSON file", note: INDEX_PATH },
             ]}
           />
         )}
@@ -280,8 +283,8 @@ function Specimen() {
       bodyClassName="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
       caption={
         <>
-          Two readers, one record. The entry for <Link href={wikiHref(page.slug)} className="link not-italic">{page.title}</Link> in <C>data/index.json</C>, as this
-          machine holds it today, and what each reader makes of it.
+          Two readers, one record. The entry for <Link href={wikiHref(page.slug)} className="link not-italic">{page.title}</Link> in <C>{INDEX_PATH}</C>, as{" "}
+          {DEMO ? "the demo" : "this machine"} holds it today, and what each reader makes of it.
         </>
       }
       imprint={

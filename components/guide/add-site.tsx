@@ -3,7 +3,8 @@ import { Sigil } from "@/components/sigil";
 import { count } from "@/components/wiki/article/lead";
 import { getIndex } from "@/lib/data";
 import { longDate, monthYear, num } from "@/lib/format";
-import { categoryHref, vscodeHref, wikiHref } from "@/lib/links";
+import { categoryHref, isRemote, sourceHref, wikiHref } from "@/lib/links";
+import { DEMO } from "@/lib/mode";
 import { displayPath } from "@/lib/search";
 import type { Page } from "@/lib/types";
 import { CHAPTERS } from "./chapters";
@@ -19,9 +20,14 @@ import { cite, projectDir } from "./source";
 
 const B = "scripts/build-index.ts";
 
+/** The root a reader's own folders would sit under. The demo's root is a GitHub
+ * organization, not a folder, so its examples use the default in innernet.config.json. */
+const DEFAULT_ROOT = "~/Programming";
+const localRoot = (): string => (DEMO ? DEFAULT_ROOT : (getIndex().index.meta.roots[0]?.label ?? DEFAULT_ROOT));
+
 function recipeProps(): RecipeProps {
   const { index, byName } = getIndex();
-  const root = index.meta.roots[0];
+  const rootLabel = localRoot();
   const namesakes = Object.fromEntries(
     RECIPE_NAMES.map((n) => {
       const pages = byName.get(n.toLowerCase()) ?? [];
@@ -37,8 +43,8 @@ function recipeProps(): RecipeProps {
   }
   return {
     maxDepth: index.meta.maxDepth || 6,
-    rootLabel: root?.label ?? "~/Programming",
-    rootName: (root?.label ?? "~/Programming").split("/").pop() || "Programming",
+    rootLabel,
+    rootName: rootLabel.split("/").pop() || "Programming",
     today: monthYear(now),
     todayLong: longDate(now),
     year: now.slice(0, 4),
@@ -63,7 +69,7 @@ function recipeProps(): RecipeProps {
 export function AddSite() {
   const { index, missing } = getIndex();
   const { meta } = index;
-  const root = meta.roots[0]?.label ?? "~/Programming";
+  const root = localRoot();
   const site = `${root}/weather-station`;
   const facts = indexFacts();
 
@@ -112,7 +118,7 @@ export function AddSite() {
       code: `cd ${projectDir()}\npnpm index`,
       text: (
         <>
-          {missing ? "A minute or so" : <>About {Math.max(1, Math.round(meta.durationMs / 1000))} seconds on this machine</>}. Until the run ends,{" "}
+          {missing || DEMO ? "A minute or so" : <>About {Math.max(1, Math.round(meta.durationMs / 1000))} seconds on this machine</>}. Until the run ends,{" "}
           <Link href={wikiHref("weather-station")} prefetch={false} className="link font-mono text-[0.85em]">
             /wiki/weather-station
           </Link>{" "}
@@ -381,8 +387,12 @@ function MostWanted() {
           <span className="font-mono text-[11.5px]">{displayPath(p)}</span>
         </div>
       </div>
-      <a href={vscodeHref(p.path)} className="shrink-0 rounded-full px-2.5 py-1 text-[12.5px] text-muted transition-colors hover:bg-bg-sunk hover:text-ink">
-        Write it<span className="sr-only">: open {p.title} in VS Code to add a README</span>
+      <a
+        href={sourceHref(p.path)}
+        {...(isRemote(p.path) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+        className="shrink-0 rounded-full px-2.5 py-1 text-[12.5px] text-muted transition-colors hover:bg-bg-sunk hover:text-ink"
+      >
+        Write it<span className="sr-only">: open {p.title} {isRemote(p.path) ? "on GitHub" : "in VS Code"} to add a README</span>
       </a>
     </li>
   );

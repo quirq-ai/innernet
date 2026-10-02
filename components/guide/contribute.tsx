@@ -1,11 +1,11 @@
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { num } from "@/lib/format";
-import { vscodeHref } from "@/lib/links";
+import { DEMO } from "@/lib/mode";
 import { CHAPTERS } from "./chapters";
 import { C, ChapterHead, Command, Excerpt, Fine, Prose, SectionHead } from "./parts";
 import { Plate } from "./plate";
-import { absPath, cite, exists, fileCount, lineCount, lineOf, readText } from "./source";
+import { cite, exists, fileCount, fileHref, lineCount, lineOf, readText } from "./source";
 
 // Chapter IV: a map of the code, four recipes quoted from the code itself, the loop,
 // the conventions, and the checklist from CONTRIBUTING.md.
@@ -140,7 +140,7 @@ function FileMap() {
                   <span aria-hidden className="absolute left-0 top-[18px] h-px w-2.5 bg-line-strong" />
                   <div className="flex items-baseline gap-3">
                     {present ? (
-                      <a href={vscodeHref(absPath(it.path))} className="min-w-0 truncate font-mono text-[13px] text-link hover:underline">
+                      <a href={fileHref(it.path, it.dir)} className="min-w-0 truncate font-mono text-[13px] text-link hover:underline">
                         {it.path}
                         {it.dir ? "/" : ""}
                       </a>
@@ -160,7 +160,7 @@ function FileMap() {
       ))}
       <Fine className="md:col-span-2">
         The indexer imports only <C>lib/text.ts</C>, <C>lib/normalize.ts</C> and <C>lib/types.ts</C>, so it runs outside Next. <C>lib/data.ts</C> and{" "}
-        <C>lib/search.ts</C> import <C>server-only</C>: they never reach the browser. File names open in VS Code.
+        <C>lib/search.ts</C> import <C>server-only</C>: they never reach the browser. File names open {DEMO ? "on GitHub" : "in VS Code"}.
       </Fine>
     </div>
   );
@@ -479,8 +479,8 @@ function Checklist() {
             </Markdown>
           </div>
           <p className="border-t border-line px-5 py-3 text-[13px] sm:px-8">
-            <a href={vscodeHref(absPath("CONTRIBUTING.md"))} className="link">
-              Open CONTRIBUTING.md in VS Code
+            <a href={fileHref("CONTRIBUTING.md")} className="link">
+              {DEMO ? "Read CONTRIBUTING.md on GitHub" : "Open CONTRIBUTING.md in VS Code"}
             </a>
           </p>
         </details>

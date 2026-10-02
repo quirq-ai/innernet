@@ -66,7 +66,7 @@ export default async function SearchPage({ searchParams }: Props) {
   const hasOps = Object.keys(res.query.filters).length > 0;
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-[calc(100dvh-var(--demo-bar,0px))] flex-col">
       <TopBar q={q} />
 
       <div className="border-b border-line">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getIndex } from "@/lib/data";
 import { longDate, num } from "@/lib/format";
 import { searchHref, wikiHref } from "@/lib/links";
+import { DEMO } from "@/lib/mode";
 import { CHAPTERS } from "./chapters";
 import { indexFacts } from "./data";
 import { Figure, PLATE_IDS } from "./plate";
@@ -10,9 +11,18 @@ import { exists } from "./source";
 // The title page: the aurora, the promise, the live counts, the explainer film as a
 // frontispiece, and the contents.
 
-const FILM = "public/guide/innernet-explainer.mp4";
-const POSTER = "public/guide/film-poster.jpg";
-const CAPTIONS = "public/guide/innernet-explainer.vtt";
+// The film in full HD when it has been rendered here (it is gitignored), else the
+// committed 720p copy, else a placeholder.
+const FILMS = ["innernet-explainer.mp4", "innernet-explainer-720p.mp4"];
+const POSTER = "film-poster.jpg";
+const CAPTIONS = "innernet-explainer.vtt";
+
+// What public/guide held when the app was built (next.config.ts). The deployed demo's
+// server functions cannot see public/, which the CDN serves, so they trust this list.
+const BUILT = new Set(DEMO ? (process.env.INNERNET_GUIDE_MEDIA ?? "").split(",").filter(Boolean) : []);
+
+/** True when public/guide/<name> is there to be served. */
+const has = (name: string) => exists(`public/guide/${name}`) || BUILT.has(name);
 
 const AURORA_MASK = "radial-gradient(ellipse min(760px, 110vw) min(520px, 70vh) at 50% 30%, #000 18%, transparent 100%)";
 
@@ -86,26 +96,27 @@ export function Hero() {
 }
 
 function Film() {
-  const ready = exists(FILM);
-  const caption = ready ? (
-    <>A short film of the whole guide, drawn from the same eight plates.{exists(CAPTIONS) ? " Captions are on the player." : ""}</>
+  const film = FILMS.find(has) ?? null;
+  const captions = has(CAPTIONS);
+  const caption = film ? (
+    <>A short film of the whole guide, drawn from the same eight plates.{captions ? " Captions are on the player." : ""}</>
   ) : (
     <>A short film of the whole guide is being drawn from the same eight plates. It will play here when it is ready.</>
   );
   return (
-    <Figure fig="Frontispiece" title="The film" caption={caption} imprint={<><span>public/guide/innernet-explainer.mp4</span><span>16 : 9</span></>}>
-      {ready ? (
+    <Figure fig="Frontispiece" title="The film" caption={caption} imprint={<><span>public/guide/{film ?? FILMS[0]}</span><span>16 : 9</span></>}>
+      {film ? (
         <video
           controls
           preload="metadata"
           playsInline
-          poster={exists(POSTER) ? "/guide/film-poster.jpg" : undefined}
-          src="/guide/innernet-explainer.mp4"
+          poster={has(POSTER) ? `/guide/${POSTER}` : undefined}
+          src={`/guide/${film}`}
           className="block aspect-video w-full bg-bg-sunk"
         >
           {/* The film carries its own captions; this track is there for players and readers
               that want them separately, so it starts switched off. */}
-          {exists(CAPTIONS) && <track kind="captions" src="/guide/innernet-explainer.vtt" srcLang="en" label="English" />}
+          {captions && <track kind="captions" src={`/guide/${CAPTIONS}`} srcLang="en" label="English" />}
         </video>
       ) : (
         <FilmPlaceholder />

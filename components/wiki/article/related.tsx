@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { getPages } from "@/lib/data";
-import { vscodeHref, wikiHref } from "@/lib/links";
+import { isRemote, sourceHref, wikiHref } from "@/lib/links";
 import type { Page } from "@/lib/types";
 import { article, descriptor, fullPath, placeText, remoteLink, splitTitle } from "./lead";
 import { PathText } from "./parts";
@@ -55,20 +55,30 @@ function Arrow() {
 }
 
 export function ExternalLinks({ page }: { page: Page }) {
+  // In the demo the folder itself is on GitHub, and for a repository that is its remote.
+  const onGitHub = isRemote(page.path);
   const remote = remoteLink(page.git?.remote ?? null);
   return (
     <ul className="space-y-2.5 font-serif text-[17px] leading-snug">
       <li className="flex gap-3">
         <span aria-hidden className="mt-[0.6em] size-1 shrink-0 rounded-full bg-faint" />
         <span className="min-w-0 [overflow-wrap:anywhere]">
-          <a href={vscodeHref(page.path)} className="link">
-            Open {page.name} in VS Code
-          </a>
-          <span className="text-muted">, on this machine at </span>
+          {onGitHub ? (
+            <a href={sourceHref(page.path)} target="_blank" rel="noopener noreferrer" className="link">
+              View {page.name} on GitHub
+              <Arrow />
+            </a>
+          ) : (
+            <a href={sourceHref(page.path)} className="link">
+              Open {page.name} in VS Code
+            </a>
+          )}
+          <span className="text-muted">{onGitHub ? ", at " : ", on this machine at "}</span>
           <PathText path={fullPath(page)} className="text-[13px] text-ink-2" />
+          {onGitHub && page.git?.branch && <span className="text-muted"> ({page.git.branch})</span>}
         </span>
       </li>
-      {remote && (
+      {remote && remote.href !== page.path && (
         <li className="flex gap-3">
           <span aria-hidden className="mt-[0.6em] size-1 shrink-0 rounded-full bg-faint" />
           <span className="min-w-0 [overflow-wrap:anywhere]">

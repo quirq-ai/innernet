@@ -9,11 +9,17 @@ import Link from "next/link";
 import { getIndex } from "@/lib/data";
 import { num } from "@/lib/format";
 import { searchHref, wikiHref } from "@/lib/links";
+import { DEMO, DEMO_ORG } from "@/lib/mode";
 
-export const metadata: Metadata = {
-  title: { absolute: "Innernet · your personal internet" },
-  description: "Search the folders on this machine like the web, and read your projects in Innerpedia.",
-};
+export const metadata: Metadata = DEMO
+  ? {
+      title: { absolute: "Innernet · a demo of your personal internet" },
+      description: `A demo of Innernet: the open-source repositories of github.com/${DEMO_ORG}, searchable like the web and readable in Innerpedia.`,
+    }
+  : {
+      title: { absolute: "Innernet · your personal internet" },
+      description: "Search the folders on this machine like the web, and read your projects in Innerpedia.",
+    };
 
 // Counts and "indexed N ago" are live, so render on every request.
 export const dynamic = "force-dynamic";
@@ -30,7 +36,7 @@ export default function Home() {
   const recent = missing ? [] : recentlyTouched(articles);
 
   return (
-    <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip">
+    <div className="relative isolate flex min-h-[calc(100dvh-var(--demo-bar,0px))] flex-col overflow-x-clip">
       <div className="aurora" aria-hidden style={auroraStyle}>
         <span />
         <span />
@@ -55,10 +61,10 @@ export default function Home() {
 
           <p className="rise mt-4 text-center text-[15px] text-muted sm:mt-5" style={{ animationDelay: "60ms" }}>
             {missing ? (
-              "Your personal internet, waiting to be indexed"
+              DEMO ? "The demo, waiting to be indexed" : "Your personal internet, waiting to be indexed"
             ) : (
               <>
-                <span className="block sm:inline">Your personal internet</span>
+                <span className="block sm:inline">{DEMO ? `The open-source repos of ${DEMO_ORG}` : "Your personal internet"}</span>
                 <Count n={counts.pages} label="folders" href={wikiHref("Special:Statistics")} first />
                 <Count n={counts.articles} label="articles" href={wikiHref("Special:AllPages")} />
                 <Count n={counts.repos} label="repositories" href={searchHref("kind:repo")} className="hidden sm:inline" />

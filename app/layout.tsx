@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Instrument_Serif, JetBrains_Mono, Newsreader } from "next/font/google";
+import { DEMO_BAR, DemoBanner } from "@/components/demo-banner";
+import { DEMO } from "@/lib/mode";
 import "./globals.css";
 
 const instrument = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-instrument" });
@@ -26,11 +28,20 @@ const themeScript = `try{var t=localStorage.getItem("innernet-theme");if(t==="li
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${instrument.variable} ${newsreader.variable} ${inter.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${instrument.variable} ${newsreader.variable} ${inter.variable} ${mono.variable}`}
+      // Pages that fill the window take the demo's banner off their height.
+      style={DEMO ? ({ "--demo-bar": DEMO_BAR } as React.CSSProperties) : undefined}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="grain min-h-dvh bg-bg text-ink">{children}</body>
+      <body className="grain min-h-dvh bg-bg text-ink">
+        {DEMO && <DemoBanner />}
+        {children}
+      </body>
     </html>
   );
 }

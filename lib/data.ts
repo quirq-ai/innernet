@@ -2,13 +2,18 @@ import "server-only";
 
 import fs from "node:fs";
 import path from "node:path";
+import { DEMO } from "./mode";
 import { normalizeIndex } from "./normalize";
 import type { Page, SiteIndex } from "./types";
 
 // Loads data/index.json once and reloads it when the file changes, so `pnpm index`
-// takes effect without restarting the server.
+// takes effect without restarting the server. The demo (lib/mode.ts) reads the
+// committed data/demo/index.json instead; next.config.ts ships that one file with
+// every server function, and never the local index.
 
-const INDEX_FILE = path.join(process.cwd(), "data", "index.json");
+const LOCAL_INDEX = path.join(process.cwd(), "data", "index.json");
+const DEMO_INDEX = path.join(process.cwd(), "data", "demo", "index.json");
+const INDEX_FILE = DEMO ? DEMO_INDEX : LOCAL_INDEX;
 
 export interface Loaded {
   index: SiteIndex;

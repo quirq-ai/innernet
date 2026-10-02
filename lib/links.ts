@@ -13,3 +13,12 @@ export const searchHref = (q: string, extra: Record<string, string | number | un
 
 /** Opens the folder in VS Code. Handled entirely by the OS; no request leaves the browser. */
 export const vscodeHref = (absPath: string) => `vscode://file${encodeURI(absPath)}`;
+
+/** Where a page's folder lives: a GitHub URL in the demo index, a local path otherwise. */
+export const isRemote = (p: string) => /^https?:\/\//.test(p);
+
+/** The link to a page's folder: GitHub in the demo, VS Code on this machine. */
+export const sourceHref = (p: string) => (isRemote(p) ? p : vscodeHref(p));
+
+/** What that link says. */
+export const sourceLabel = (p: string) => (isRemote(p) ? "View on GitHub" : "Open in VS Code");

@@ -1,7 +1,7 @@
 import { workspaces } from "@/components/wiki/main/insights";
 import { ancestors, getIndex, getPage, getPages } from "@/lib/data";
 import { bytes, monthYear, num, plural, timeAgo } from "@/lib/format";
-import { wikiHref } from "@/lib/links";
+import { isRemote, wikiHref } from "@/lib/links";
 import { isListableName } from "@/lib/text";
 import type { GitInfo, Page } from "@/lib/types";
 
@@ -254,7 +254,9 @@ export function leadSegs(p: Page): Seg[] {
 
   // 1. What and where.
   if (p.depth === 0) {
-    out.push({ text: ` is the root of Innerpedia: the folder at ${p.root} from which all ${num(index.meta.counts.pages)} indexed folders descend.` });
+    // In the demo the root is a GitHub organization rather than a folder on disk.
+    const where = isRemote(p.path) ? `the GitHub organization at ${p.root},` : `the folder at ${p.root}`;
+    out.push({ text: ` is the root of Innerpedia: ${where} from which all ${num(index.meta.counts.pages)} indexed folders descend.` });
   } else {
     const d = descriptor(p);
     const what = p.kind === "docs" && p.totalFiles > 0 ? `collection of ${countOf(p.totalFiles, docNoun)}` : d;

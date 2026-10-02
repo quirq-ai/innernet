@@ -3,10 +3,14 @@ import "server-only";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { vscodeHref } from "@/lib/links";
+import { DEMO, repoFileUrl } from "@/lib/mode";
 
 // Innernet's own files, read at request time so the guide quotes the code as it is
 // today: excerpts, line numbers for the small print, line counts for the file map.
-// Only files inside this project are read, never anything from the index.
+// Only files inside this project are read, never anything from the index. The paths
+// are hidden from the bundler's tracer, which would otherwise ship the whole project
+// with the server; next.config.ts names the files a deployment needs.
 
 const ROOT = process.cwd();
 
@@ -14,7 +18,7 @@ const cache = new Map<string, { mtime: number; lines: string[] }>();
 
 /** The file's lines, or null when it is missing. Re-read when it changes. */
 export function sourceLines(file: string): string[] | null {
-  const abs = path.join(ROOT, file);
+  const abs = path.join(/*turbopackIgnore: true*/ ROOT, file);
   if (!abs.startsWith(ROOT + path.sep)) return null;
   try {
     const mtime = fs.statSync(abs).mtimeMs;
@@ -50,7 +54,7 @@ export function lineCount(file: string): number | null {
 
 export function exists(file: string): boolean {
   try {
-    return fs.statSync(path.join(ROOT, file)).isFile();
+    return fs.statSync(path.join(/*turbopackIgnore: true*/ ROOT, file)).isFile();
   } catch {
     return false;
   }
@@ -58,7 +62,7 @@ export function exists(file: string): boolean {
 
 export function fileSize(file: string): number | null {
   try {
-    return fs.statSync(path.join(ROOT, file)).size;
+    return fs.statSync(path.join(/*turbopackIgnore: true*/ ROOT, file)).size;
   } catch {
     return null;
   }
@@ -69,15 +73,17 @@ export function readText(file: string): string | null {
   return lines ? lines.join("\n") : null;
 }
 
-/** This project's folder as the reader would type it: "~/Programming/...". */
+/** This project's folder as the reader would type it: "~/Programming/...". In the demo,
+ * the folder `git clone` makes, since the server's own folder is nobody's business. */
 export function projectDir(): string {
+  if (DEMO) return "innernet";
   const home = os.homedir();
   return ROOT.startsWith(home) ? "~" + ROOT.slice(home.length) : ROOT;
 }
 
 /** TypeScript files under a folder of this project, counted recursively. */
 export function fileCount(dir: string): number {
-  const abs = path.join(ROOT, dir);
+  const abs = path.join(/*turbopackIgnore: true*/ ROOT, dir);
   if (!abs.startsWith(ROOT + path.sep)) return 0;
   let n = 0;
   const walk = (d: string) => {
@@ -98,5 +104,11 @@ export function fileCount(dir: string): number {
 
 /** Absolute path of a project file, for "Open in VS Code" links. */
 export function absPath(file: string): string {
-  return path.join(ROOT, file);
+  return path.join(/*turbopackIgnore: true*/ ROOT, file);
+}
+
+/** Where a link to one of this project's files goes: VS Code on this machine, the file
+ * on GitHub in the demo. */
+export function fileHref(file: string, dir = false): string {
+  return DEMO ? repoFileUrl(file, dir) : vscodeHref(absPath(file));
 }

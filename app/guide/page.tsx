@@ -15,6 +15,7 @@ import { TopBar } from "@/components/top-bar";
 import { getIndex } from "@/lib/data";
 import { longDate, timeAgo } from "@/lib/format";
 import { wikiHref } from "@/lib/links";
+import { DEMO, INDEX_PATH } from "@/lib/mode";
 import "./guide.css";
 
 // The Innernet Field Guide: how it works, how to add a site, how to search, how to
@@ -23,7 +24,9 @@ import "./guide.css";
 
 export const metadata: Metadata = {
   title: { absolute: "The Innernet Field Guide" },
-  description: "How the folders on this machine become a search engine and an encyclopedia, and how to add to both.",
+  description: DEMO
+    ? "How the folders on your machine become a search engine and an encyclopedia, and how to add to both."
+    : "How the folders on this machine become a search engine and an encyclopedia, and how to add to both.",
 };
 
 export const dynamic = "force-dynamic";
@@ -38,7 +41,7 @@ const LINKS = [
 
 export default function GuidePage() {
   return (
-    <div className="fg flex min-h-dvh flex-col">
+    <div className="fg flex min-h-[calc(100dvh-var(--demo-bar,0px))] flex-col">
       <TopBar />
       <main id="content" tabIndex={-1} className="flex-1 focus:outline-none">
         <Hero />
@@ -85,7 +88,7 @@ function Colophon() {
       <h2 className="fg-smallcaps mt-6">Colophon</h2>
       <p className="mx-auto mt-4 max-w-[560px] font-serif text-[16px] italic leading-[1.65] text-ink-2">
         Set in Instrument Serif, Newsreader, Inter and JetBrains Mono. Every number on these pages was read from{" "}
-        <span className="font-mono text-[0.85em] not-italic">data/index.json</span>
+        <span className="font-mono text-[0.85em] not-italic">{INDEX_PATH}</span>
         {missing ? "" : <>, indexed {timeAgo(index.meta.generatedAt)} on {longDate(index.meta.generatedAt)}</>}, and every excerpt from the code as it stands.{" "}
         {plates}
       </p>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getIndex } from "@/lib/data";
-import { searchHref, vscodeHref, wikiHref } from "@/lib/links";
+import { searchHref, sourceHref, sourceLabel, wikiHref } from "@/lib/links";
 import { readsAsInstructions } from "@/lib/text";
 import type { Page } from "@/lib/types";
 import { ContentsBox, ContentsNav, type ContentsItem } from "./article/contents-nav";
@@ -65,8 +65,8 @@ export function ArticleView({ page, disambiguation }: { page: Page; disambiguati
           title={page.title}
           tools={
             <>
-              <Tool href={vscodeHref(page.path)} external>
-                Open in VS Code
+              <Tool href={sourceHref(page.path)} external>
+                {sourceLabel(page.path)}
               </Tool>
               {page.children.length > 0 && <Tool href={searchHref(within)}>Search inside</Tool>}
             </>
@@ -89,7 +89,7 @@ export function ArticleView({ page, disambiguation }: { page: Page; disambiguati
             {!page.readme && (
               <Notice page={page} className="mt-2">
                 This article was written from the folder alone. You can help Innerpedia by{" "}
-                <a href={vscodeHref(page.path)} className="link whitespace-nowrap not-italic">
+                <a href={sourceHref(page.path)} className="link whitespace-nowrap not-italic">
                   adding a README
                 </a>
                 .

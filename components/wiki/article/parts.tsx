@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { ancestors, getIndex, getPages } from "@/lib/data";
 import { longDate } from "@/lib/format";
-import { categoryHref, wikiHref } from "@/lib/links";
+import { categoryHref, isRemote, wikiHref } from "@/lib/links";
 import type { Page } from "@/lib/types";
 import { fullPath, splitTitle, type Seg } from "./lead";
 
@@ -89,11 +89,11 @@ export function PageHeader({ page, title, tools }: { page?: Page; title: string;
   );
 }
 
-/** A quiet header action: "Open in VS Code", "Search inside". */
+/** A quiet header action: "Open in VS Code" (or "View on GitHub" in the demo), "Search inside". */
 export function Tool({ href, children, external }: { href: string; children: React.ReactNode; external?: boolean }) {
   const cls = "rounded-full px-3 py-1 text-[13px] text-muted transition-colors hover:bg-bg-sunk hover:text-ink";
   return external ? (
-    <a href={href} className={cls}>
+    <a href={href} className={cls} {...(isRemote(href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
       {children}
     </a>
   ) : (
