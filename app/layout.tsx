@@ -10,6 +10,7 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" }
 export const metadata: Metadata = {
   title: { default: "Innernet", template: "%s · Innernet" },
   description: "Your personal internet. Search your folders like the web, read your projects like an encyclopedia.",
+  creator: "Quirq",
   robots: { index: false, follow: false },
 };
 

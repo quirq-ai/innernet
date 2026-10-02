@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { QuirqCredit } from "@/components/quirq-credit";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { timeAgo } from "@/lib/format";
 import type { IndexMeta } from "@/lib/types";
@@ -42,6 +43,9 @@ export function HomeFooter({ meta, missing }: { meta: IndexMeta; missing: boolea
           <ThemeToggle />
         </div>
       </div>
+      <p className="mt-3 text-center">
+        <QuirqCredit />
+      </p>
     </footer>
   );
 }

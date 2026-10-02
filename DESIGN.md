@@ -70,6 +70,11 @@ Dark mode is automatic (`prefers-color-scheme`) with a manual override
 
 ## Shared pieces (already built, reuse them)
 
+- `components/quirq-credit.tsx` `<QuirqCredit>`: "Powered by Quirq" in small muted
+  type, with Quirq in the display serif. A plain link goes to Quirq's GitHub profile.
+  Home centres the credit below its footer row; other pages keep it at the end of the
+  footer, right-aligned on desktop and centred on phones. Keep attribution in the
+  small print and use local type and colour tokens.
 - `components/top-bar.tsx` `<TopBar q variant="search"|"wiki">`: sticky header with
   wordmark, compact `<SearchBox>`, link across, theme toggle.
 - `components/search-box.tsx` `<SearchBox size="hero"|"compact">`: combobox with live
