@@ -1,0 +1,7 @@
+node_modules
+.next
+next-env.d.ts
+*.tsbuildinfo
+# The index holds local paths and README text from this machine. Never commit it.
+data/*.json
+data/*.tmp
