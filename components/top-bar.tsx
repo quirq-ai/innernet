@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { BrandLinks, QuirqHome } from "@/components/brand-nav";
 import { SearchBox } from "@/components/search-box";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PediaMark, Wordmark } from "@/components/wordmark";
 
-// Header for every page except home: wordmark, compact search, and the way across
-// to the other half of the site.
+// Header for every page except home: the quirq mark home, the wordmark, compact search,
+// the way across to the other half of the site, and the guide, quirq and GitHub links.
 
 export function TopBar({ q = "", variant = "search" }: { q?: string; variant?: "search" | "wiki" }) {
   return (
@@ -16,7 +17,11 @@ export function TopBar({ q = "", variant = "search" }: { q?: string; variant?: "
         Skip to content
       </a>
       <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
-        <div className="shrink-0">{variant === "wiki" ? <PediaMark size={26} /> : <Wordmark size={27} />}</div>
+        <div className="flex shrink-0 items-center gap-3">
+          <QuirqHome />
+          <span aria-hidden className="hidden h-6 w-px bg-line-strong sm:block" />
+          <div className="hidden sm:block">{variant === "wiki" ? <PediaMark size={26} /> : <Wordmark size={27} />}</div>
+        </div>
         <div className="min-w-0 max-w-[640px] flex-1">
           <SearchBox defaultValue={q} placeholder={variant === "wiki" ? "Search Innerpedia" : "Search your internet"} />
         </div>
@@ -33,6 +38,7 @@ export function TopBar({ q = "", variant = "search" }: { q?: string; variant?: "
               </Link>
             )}
           </nav>
+          <BrandLinks />
           <ThemeToggle />
         </div>
       </div>
