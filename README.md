@@ -1,64 +1,180 @@
-# innernet
+<p align="center">
+  <img src="app/icon.svg" alt="Innernet sigil" width="64" height="64">
+</p>
 
-A personal internet. Search the folders on this machine the way you search the web, and
-read every project as an article in **Innerpedia**, the encyclopedia of you.
+<h1 align="center"><em>inner</em>net</h1>
 
-```bash
-pnpm install
-pnpm index        # crawl ~/Programming into data/index.json (about a minute)
-pnpm dev          # http://localhost:3470, bound to 127.0.0.1 only
+<p align="center">
+  <strong>A personal internet, made from your folders.</strong><br>
+  Search what you have built. Read the encyclopedia of you.
+</p>
+
+<p align="center">
+  <a href="#get-started">Get started</a> ·
+  <a href="#search-your-folders">Search</a> ·
+  <a href="#privacy">Privacy</a> ·
+  <a href="#contributing">Contributing</a>
+</p>
+
+Innernet turns the folders on your machine into a small, connected web. Find a project
+by its name, language, framework or README text, then open its **Innerpedia** article
+to see what it does, how it is organised and how it has changed.
+
+Your existing folders are the source material. One local JSON index powers both readers.
+
+| Explore | What you will find |
+| --- | --- |
+| **Search** · `/` and `/search` | A familiar search box, highlighted results, live suggestions, spelling corrections and project knowledge panels. |
+| **Innerpedia** · `/wiki` | Project articles with README overviews, folder trees, technology, Git history and related projects. Browse categories, statistics or a random article. |
+| **Field guide** · `/guide` | An illustrated walkthrough of the crawl, search and privacy rules, plus an interactive recipe for turning a folder into an article. |
+
+## How it works
+
+```mermaid
+flowchart LR
+    folders["Your folders"] --> crawler["Crawler<br>READMEs, manifests, Git metadata"]
+    crawler --> index["Local index<br>data/index.json"]
+    index --> search["Search<br>Find a project"]
+    index --> wiki["Innerpedia<br>Read its story"]
 ```
 
-## What is where
+The crawler records folder structure, project descriptions, languages, dependencies and
+Git history. Innerpedia assembles articles from that information; folders with less
+project context become **stubs**. Shared names get disambiguation pages, and categories
+connect projects across your directory tree.
 
-| Path | What |
+Search runs on the server with MiniSearch. The app uses Next.js, React, TypeScript and
+Tailwind CSS, with Markdown rendered by react-markdown and remark-gfm.
+
+## Get started
+
+You need **Node.js 20.9 or newer** and **pnpm**. Run the commands from the repository
+directory so the server can find its index.
+
+**1. Install**
+
+```bash
+git clone https://github.com/quirq-ai/innernet.git
+cd innernet
+pnpm install
+```
+
+**2. Choose your folders**
+
+Edit [`innernet.config.json`](innernet.config.json) before indexing. The defaults are:
+
+```json
+{
+  "roots": ["~/Programming"],
+  "maxDepth": 6
+}
+```
+
+Add or replace roots with the folders you want to explore. `maxDepth` controls how many
+levels of folders get their own pages.
+
+**3. Index and open**
+
+```bash
+pnpm index
+pnpm dev
+```
+
+Open **[localhost:3470](http://localhost:3470)**, search for a familiar project, or visit
+**[Innerpedia](http://localhost:3470/wiki)** and the **[field guide](http://localhost:3470/guide)**.
+Both `pnpm dev` and `pnpm start` bind to `127.0.0.1`.
+
+The first dev run or build needs network access to fetch fonts. Afterward, the fonts
+are served locally.
+
+### Keep the index fresh
+
+Run `pnpm index` after your folders change. The server picks up the new index on the
+next request without a restart.
+
+For a single run, override the configured roots and depth:
+
+```bash
+INNERNET_ROOTS="~/projects,~/notes" INNERNET_MAX_DEPTH=3 pnpm index
+```
+
+To inspect a trial index without replacing the app's index:
+
+```bash
+INNERNET_ROOTS="~/projects" INNERNET_OUT=/tmp/innernet-test.json pnpm index
+```
+
+The app always reads `data/index.json` from its working directory; `INNERNET_OUT` only
+changes where the crawler writes.
+
+## Search your folders
+
+Start with ordinary words, then narrow the results with operators. Search covers
+project names, paths, descriptions, README text, dependencies and agent notes.
+
+| Try | Finds |
 | --- | --- |
-| `scripts/build-index.ts` | The crawler. Reads folder structure, READMEs, CLAUDE.md / AGENTS.md, manifests and git history. |
-| `innernet.config.json` | Roots to index and max depth. For one run, `INNERNET_ROOTS=~/a,~/b` replaces the roots and `INNERNET_MAX_DEPTH=3` the depth. |
-| `data/index.json` | The index. Local only, gitignored. Rebuild any time; the server picks it up without a restart. `INNERNET_OUT=/tmp/test.json pnpm index` writes a test index there instead and leaves this one alone. |
-| `lib/search.ts` | Server-side full-text search (MiniSearch), operators, snippets, suggestions. |
-| `lib/data.ts` | Index loader, slug resolution (articles, stubs, disambiguation, categories, special pages). |
-| `lib/text.ts` | Markdown-to-text clean-up and secret redaction, shared by the indexer and the server. |
-| `lib/normalize.ts` | Brings any index up to the current rules on load: redaction, house style, UTC dates rolled up the tree. |
-| `proxy.ts` | Refuses requests that are not addressed to localhost. |
-| `app/` | Home `/`, results `/search`, Innerpedia `/wiki` and `/wiki/[slug]`, the field guide `/guide`, `/api/suggest`. |
-| `components/guide/` | The field guide: chapters, plates (drawings from `public/guide/plates/<id>.svg`), the folder recipe. |
-| `DESIGN.md` | The design spec: tokens, type, every page. |
-| `CONTRIBUTING.md` | How to work on Innernet: setup, the checks, conventions, recipes, the pull request checklist. |
+| `lang:rust` | Folders whose leading languages include Rust. |
+| `in:experiments` | Folders inside a matching ancestor folder. |
+| `kind:repo` | Git repositories. |
+| `fw:next` | Projects using Next.js. |
+| `is:article` | Innerpedia articles. |
+| `is:stub` | Folders with less project context. |
 
-## The field guide
-
-Open [/guide](http://localhost:3470/guide) (also `/wiki/Help:Contents`) for the illustrated walkthrough: how
-the crawl, the index and the two readers work, what turns a folder into an article (with a
-recipe that runs the indexer's rules in the browser), search operators and ranking, how to
-contribute, and what stays private. Its numbers come from the live index and its code
-excerpts from the code itself. To work on Innernet, read [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Search operators
-
-`lang:rust` · `in:experiments` · `kind:repo` · `fw:next` · `is:article` · `is:stub`
+Combine them with free text, such as `chat lang:ts fw:next`. Quote values containing
+spaces, such as `in:"side projects"`. Results can also be filtered using the
+**Projects**, **Repositories**, **Documents** and **Folders** tabs.
 
 ## Privacy
 
-Everything stays on this machine. The indexer reads only READMEs, CLAUDE.md, AGENTS.md
-and project manifests (never `.env` or key files, and nothing inside secret-looking
-folders), hides secret-looking file names, strips credentials from git remotes, and never
-indexes its own `data/`. Credential-shaped values in README text, manifests and commit
-subjects (tokens, keys, passwords in database URLs, private keys) are replaced with
-`[redacted]` by `redactSecrets` in `lib/text.ts`, both when indexing and when the server
-loads an older index (`lib/normalize.ts`).
+Innernet is built to read and serve your project context on your machine.
 
-The server answers only to this machine: `pnpm dev` and `pnpm start` bind to 127.0.0.1,
-and `proxy.ts` refuses any request whose Host is not localhost, so a page elsewhere cannot
-read the index through DNS rebinding. A Content-Security-Policy keeps the browser on the
-same origin (under `next dev` it also allows the hot-reload websocket); the only request
-the app makes is to its own `/api/suggest` route.
+- **Local index.** `data/index.json` contains local paths and project text. It is
+  gitignored, and the crawler skips its own `data/`, dependency folders, generated
+  folders and symlinks.
+- **Limited content reads.** The crawler reads READMEs, `CLAUDE.md` or `AGENTS.md`,
+  project manifests and Git metadata. It does not read `.env`, key files or arbitrary
+  source and document contents. The Documents tab classifies folders by file names
+  and types.
+- **Redaction.** Secret-looking file names are hidden, credentials are stripped from
+  Git remotes, and credential-shaped text becomes `[redacted]` during indexing and
+  when an older index is loaded.
+- **Local serving.** The server binds to loopback, rejects non-localhost Host headers
+  and sets a Content-Security-Policy that keeps the browser on the same origin.
+  Development also allows websockets for hot reload. Suggestions use the app's own
+  `/api/suggest` route.
 
-`next dev` records request URLs, search queries included, in `.next/dev/trace`. Delete
-that file whenever you like; it is gitignored and recreated.
+During development, Next.js records request URLs, including search queries, in
+`.next/dev/trace`. That file is gitignored and can be deleted.
 
-## Visual checks
+## Contributing
 
-`scripts/shot.sh "/wiki/linear-clone" out.png 1440 2400 dark` takes a headless screenshot
-of the running dev server once fonts have loaded and the rise animations have finished,
-and names any element that makes the page scroll sideways.
+Read **[CONTRIBUTING.md](CONTRIBUTING.md)** for the development loop and PR checklist,
+**[DESIGN.md](DESIGN.md)** for visual and writing conventions, and the
+**[field guide](http://localhost:3470/guide)** for an explanation of the app's rules.
+
+Run the required check before opening a PR:
+
+```bash
+pnpm -s typecheck
+```
+
+<details>
+<summary><strong>Explore the source</strong></summary>
+
+| Path | Responsibility |
+| --- | --- |
+| [`scripts/build-index.ts`](scripts/build-index.ts) | Crawl configured roots and write the index. |
+| [`innernet.config.json`](innernet.config.json) | Set roots and maximum depth. |
+| `data/index.json` | Local, generated index. Rebuild with `pnpm index`; never commit it. |
+| [`lib/search.ts`](lib/search.ts) | MiniSearch, operators, ranking, snippets and suggestions. |
+| [`lib/data.ts`](lib/data.ts) | Load the index and resolve articles, stubs, categories and other pages. |
+| [`lib/text.ts`](lib/text.ts) · [`lib/normalize.ts`](lib/normalize.ts) | Clean and redact text; bring older indexes up to current rules. |
+| [`app/`](app) · [`components/`](components) | Search, Innerpedia and the field guide. |
+| [`proxy.ts`](proxy.ts) · [`next.config.ts`](next.config.ts) | Localhost checks and browser security headers. |
+| [`scripts/shot.sh`](scripts/shot.sh) | Capture settled app screenshots and report horizontal overflow. |
+
+For UI changes, use the screenshot workflow in [CONTRIBUTING.md](CONTRIBUTING.md)
+to check both themes at desktop and phone widths.
+
+</details>
