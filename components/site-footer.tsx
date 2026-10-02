@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandCredit } from "@/components/quirq-credit";
 import { getIndex } from "@/lib/data";
 import { timeAgo } from "@/lib/format";
 
@@ -39,6 +40,9 @@ export function SiteFooter({ links }: { links: FooterLink[] }) {
           <span className="whitespace-nowrap max-sm:mt-2 max-sm:block">
             {missing ? "Build it" : "Refresh"} with <code className="rounded-md bg-bg-sunk px-1.5 py-0.5 font-mono text-[11.5px] text-ink-2">pnpm index</code>
           </span>
+        </p>
+        <p className="basis-full text-center sm:text-right">
+          <BrandCredit />
         </p>
       </div>
     </footer>
