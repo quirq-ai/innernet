@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { QuirqCredit } from "@/components/quirq-credit";
+import { BrandCredit } from "@/components/quirq-credit";
 import { getIndex } from "@/lib/data";
 import { timeAgo } from "@/lib/format";
 
@@ -42,7 +42,7 @@ export function SiteFooter({ links }: { links: FooterLink[] }) {
           </span>
         </p>
         <p className="basis-full text-center sm:text-right">
-          <QuirqCredit />
+          <BrandCredit />
         </p>
       </div>
     </footer>

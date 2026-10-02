@@ -7,7 +7,7 @@
 <p align="center">
   <strong>A personal internet, made from your folders.</strong><br>
   Search what you have built. Read the encyclopedia of you.<br>
-  <sub>Powered by <a href="https://github.com/quirq-ai">Quirq</a></sub>
+  <sub>Powered by <a href="https://github.com/quirq-ai">quirq</a></sub>
 </p>
 
 <p align="center">
