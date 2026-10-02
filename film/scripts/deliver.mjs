@@ -1,8 +1,10 @@
 // Delivers a rendered film to the Innernet field guide:
-//   node scripts/deliver.mjs <render.mp4> [posterSeconds]
-// Writes renders/innernet-explainer.vtt (captions from the narration word timings, the
-// same phrasing the film shows), a poster JPEG, and copies all three into
-// the app's public/guide/ (the repo root) as innernet-explainer.mp4 / .vtt and film-poster.jpg.
+//   node scripts/deliver.mjs renders/innernet-explainer.mp4 [posterSeconds]
+// From the delivery-quality master it makes the web copy (H.264 CRF 24, loudness
+// normalised to -16 LUFS / -1.5 dBTP), renders/innernet-explainer.vtt (captions from the
+// narration word timings, the same phrasing the film shows) and a poster JPEG, then copies
+// all three into the app's public/guide/ (the repo root) as innernet-explainer.mp4 / .vtt
+// and film-poster.jpg.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -16,7 +18,9 @@ if (!mp4Arg) {
   console.error("usage: node scripts/deliver.mjs <render.mp4> [posterSeconds]");
   process.exit(1);
 }
-const mp4 = path.resolve(mp4Arg);
+const master = path.resolve(mp4Arg);
+const mp4 = path.join(path.dirname(master), "innernet-explainer-1080p.mp4");
+execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", master, "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-tune", "film", "-pix_fmt", "yuv420p", "-af", "loudnorm=I=-16:TP=-1.5:LRA=11", "-ar", "48000", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", mp4]);
 const { segs } = timing();
 
 // Same phrase rules as the runtime's captions.

@@ -305,7 +305,7 @@ Key ticks while typing. The counter tick is the callback to F06.
 - scene: innernet.config.json engraved: roots ["~/Programming", "~/Documents/notes"]; the second root draws in and a second set of depth rings opens beside the first
 - duration: 6s
 - transition_in: chromatic cut
-- voiceover: "Want more of your machine in it? Add a root, and the crawl reaches further."
+- voiceover: "Want more of your machine in it? Add a root folder, and the crawl reaches further."
 - rules: svg-path-draw, center-outward-expansion
 - plate: crawl (second centre)
 - src: index.html#s15
