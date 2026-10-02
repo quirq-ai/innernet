@@ -4,15 +4,21 @@ import { HeroSearch } from "@/components/home/hero-search";
 import { HomeFooter } from "@/components/home/home-footer";
 import { MissingIndex } from "@/components/home/missing-index";
 import { RecentlyTouched, recentlyTouched } from "@/components/home/recently-touched";
+import { getSearchBoxProps } from "@/components/search/search-config";
+import { Wordmark } from "@/components/wordmark";
 import Link from "next/link";
 import { getIndex } from "@/lib/data";
 import { num } from "@/lib/format";
 import { searchHref, wikiHref } from "@/lib/links";
+import { getUiConfig, uiText } from "@/lib/ui-config";
 
-export const metadata: Metadata = {
-  title: { absolute: "Innernet · your personal internet" },
-  description: "Search the folders on this machine like the web, and read your projects in Innerpedia.",
-};
+export function generateMetadata(): Metadata {
+  const config = getUiConfig();
+  return {
+    title: { absolute: uiText("home.title", { tagline: config.brand.tagline }, config) },
+    description: config.brand.description,
+  };
+}
 
 // Counts and "indexed N ago" are live, so render on every request.
 export const dynamic = "force-dynamic";
@@ -24,9 +30,11 @@ const AURORA_MASK = "radial-gradient(ellipse min(580px, 100vw) min(440px, 56vh) 
 const auroraStyle = { maskImage: AURORA_MASK, WebkitMaskImage: AURORA_MASK };
 
 export default function Home() {
+  const config = getUiConfig();
+  const { home } = config;
   const { index, articles, missing } = getIndex();
   const { counts } = index.meta;
-  const recent = missing ? [] : recentlyTouched(articles);
+  const recent = missing || !home.showRecent ? [] : recentlyTouched(articles, home.recentLimit);
 
   return (
     <div className="relative isolate flex min-h-dvh flex-col overflow-x-clip">
@@ -38,19 +46,23 @@ export default function Home() {
 
       <main className="relative flex flex-1 flex-col">
         <section className="flex flex-1 flex-col items-center justify-center px-4 pb-[8vh] pt-[14vh] sm:pt-[12vh]">
-          <h1 className="rise font-display text-[64px] leading-[0.95] tracking-[-0.02em] text-ink sm:text-[96px]">
-            <em>inner</em>net
+          <h1 className="rise max-w-full text-center font-display text-[64px] leading-[0.95] tracking-[-0.02em] text-ink [overflow-wrap:anywhere] sm:text-[96px]">
+            <Wordmark href={null} size={null} />
           </h1>
 
-          <p className="rise mt-4 text-center text-[15px] text-muted sm:mt-5" style={{ animationDelay: "60ms" }}>
+          <p className="rise mt-4 max-w-full text-center text-[15px] text-muted [overflow-wrap:anywhere] sm:mt-5" style={{ animationDelay: "60ms" }}>
             {missing ? (
-              "Your personal internet, waiting to be indexed"
+              uiText("home.waitingTagline", { tagline: config.brand.tagline }, config)
             ) : (
               <>
-                <span className="block sm:inline">Your personal internet</span>
-                <Count n={counts.pages} label="folders" href={wikiHref("Special:Statistics")} first />
-                <Count n={counts.articles} label="articles" href={wikiHref("Special:AllPages")} />
-                <Count n={counts.repos} label="repositories" href={searchHref("kind:repo")} className="hidden sm:inline" />
+                <span className="block sm:inline">{config.brand.tagline}</span>
+                {home.showCounts && (
+                  <>
+                    <Count n={counts.pages} label={uiText("home.folders", undefined, config)} href={wikiHref("Special:Statistics")} first />
+                    <Count n={counts.articles} label={uiText("home.articles", undefined, config)} href={wikiHref("Special:AllPages")} />
+                    <Count n={counts.repos} label={uiText("home.repositories", undefined, config)} href={searchHref("kind:repo")} className="hidden sm:inline" />
+                  </>
+                )}
               </>
             )}
           </p>
@@ -60,10 +72,17 @@ export default function Home() {
               <MissingIndex />
             ) : (
               <>
-                <HeroSearch />
-                <div className="rise mt-6" style={{ animationDelay: "240ms" }}>
-                  <ExampleQueries pages={index.pages} />
-                </div>
+                <HeroSearch
+                  searchBox={{ ...getSearchBoxProps(config), placeholder: uiText("home.searchPlaceholder", undefined, config), autoFocus: home.autoFocus }}
+                  searchLabel={uiText("home.searchButton", undefined, config)}
+                  curiousLabel={uiText("home.curiousButton", undefined, config)}
+                  showCurious={home.showCurious}
+                />
+                {home.showExamples && (
+                  <div className="rise mt-6" style={{ animationDelay: "240ms" }}>
+                    <ExampleQueries />
+                  </div>
+                )}
               </>
             )}
           </div>

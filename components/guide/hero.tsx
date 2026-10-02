@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { getIndex } from "@/lib/data";
 import { longDate, num } from "@/lib/format";
@@ -29,15 +30,15 @@ export function Hero() {
         <span />
       </div>
 
-      <div className="relative mx-auto max-w-[1240px] px-4 pb-10 pt-16 sm:px-6 sm:pt-24">
+      <div className="relative mx-auto max-w-[var(--ui-max-width)] px-4 pb-10 pt-16 sm:px-6 sm:pt-24">
         <p className="fg-smallcaps rise text-center">
           {missing ? "A field guide in five chapters" : <>A field guide in five chapters · Edition of {longDate(index.meta.generatedAt)}</>}
         </p>
         <h1 id="guide-title" className="rise mt-6 text-center font-display text-[58px] leading-[0.92] tracking-[-0.025em] text-ink sm:text-[104px]" style={{ animationDelay: "60ms" }}>
-          The <em>Inner</em>net <span className="block">Field Guide</span>
+          {uiText("guideTitle")}
         </h1>
         <p className="rise mx-auto mt-7 max-w-[600px] text-center font-serif text-[20px] leading-[1.5] text-ink-2 sm:text-[23px]" style={{ animationDelay: "120ms" }}>
-          How the folders on this machine become a search engine and an encyclopedia, and how to add to both.
+          {uiText("guideDescription")}
         </p>
 
         {!missing && (

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/icon.svg" alt="Innernet sigil" width="64" height="64">
+  <img src="public/brand/innernet.svg" alt="Innernet sigil" width="64" height="64">
 </p>
 
 <h1 align="center"><em>inner</em>net</h1>
@@ -7,7 +7,6 @@
 <p align="center">
   <strong>A personal internet, made from your folders.</strong><br>
   Search what you have built. Read the encyclopedia of you.<br>
-  <sub>Powered by <a href="https://github.com/quirq-ai">quirq</a></sub>
 </p>
 
 <p align="center">
@@ -92,6 +91,23 @@ the next request. The first dev run or build fetches fonts, which are then serve
 The index contains local paths and project text and is gitignored. Innernet serves
 on localhost and reads a limited set of project files. See the
 [engine privacy notes](docs/engine/README.md#privacy-boundaries) for the exact boundaries.
+
+## Make it your own
+
+Edit [innernet.ui.json](innernet.ui.json) to change your instance's identity, local
+logos, light/dark colors, typography, navigation, page sections and search controls.
+The [JSON Schema](innernet.ui.schema.json) gives your editor completion and the server
+validates every setting. UI changes do not require rebuilding the folder index.
+
+Try the [atlas preset](examples/atlas.ui.json), a partial override with a different
+identity, palette and page layout:
+
+```bash
+INNERNET_UI_CONFIG=examples/atlas.ui.json pnpm dev
+```
+
+See the [UI customization guide](docs/ui/README.md#customization) for settings, logo
+setup and how overrides work.
 
 ## Contributing
 

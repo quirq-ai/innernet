@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { allCategories, browseGroups, type CategoryInfo } from "@/components/wiki/main/insights";
 import { Box } from "@/components/wiki/main/section";
@@ -26,18 +27,18 @@ export function BrowseByCategory({ delay }: { delay?: number }) {
   return (
     <Box
       id="browse"
-      title="Browse by category"
+      title={uiText("wiki.browse")}
       delay={delay}
       action={
         <Link href={wikiHref("Special:Categories")} className="link">
-          All {num(allCategories().length)} categories
+          {uiText("wiki.allCategories", { count: num(allCategories().length) })}
         </Link>
       }
     >
       <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:gap-x-10 md:grid-cols-3 lg:grid-cols-5">
         {groups.map((g) => (
           <div key={g.label} className="min-w-0">
-            <h3 className="mb-2 font-display text-[21px] leading-none text-ink">{g.label}</h3>
+            <h3 className="mb-2 font-display text-[21px] leading-none text-ink">{uiText(`wiki.label.${g.label.toLowerCase()}`)}</h3>
             <ul>
               {g.items.map((c) => (
                 <li key={c.name}>
@@ -53,28 +54,28 @@ export function BrowseByCategory({ delay }: { delay?: number }) {
 }
 
 const AREAS = [
-  { slug: "Special:Random", title: "Random article", text: "A page chosen by chance. The quickest way to rediscover something you made and forgot." },
-  { slug: "Special:AllPages", title: "All pages", text: "Every article from A to Z, in one long and satisfying index." },
-  { slug: "Special:Categories", title: "Categories", text: "Collections, languages, frameworks and eras: the same folders, sliced different ways." },
-  { slug: "Special:Statistics", title: "Statistics", text: "Counts and languages, the biggest folders and the busiest repositories." },
+  { slug: "Special:Random", key: "random" },
+  { slug: "Special:AllPages", key: "allPages" },
+  { slug: "Special:Categories", key: "categories" },
+  { slug: "Special:Statistics", key: "statistics" },
 ];
 
 export function OtherAreas({ delay }: { delay?: number }) {
   const { index } = getIndex();
   return (
-    <Box id="areas" title="Other areas of Innerpedia" delay={delay}>
+    <Box id="areas" title={uiText("wiki.areas")} delay={delay}>
       <ul className="grid grid-cols-2 gap-x-6 gap-y-6 sm:gap-x-10 lg:grid-cols-4">
         {AREAS.map((a) => (
           <li key={a.slug}>
             <Link href={wikiHref(a.slug)} className="link font-display text-[22px] leading-tight">
-              {a.title}
+              {uiText(`wiki.special.${a.key}`)}
             </Link>
-            <p className="mt-1 text-[13.5px] leading-relaxed text-muted">{a.text}</p>
+            <p className="mt-1 text-[13.5px] leading-relaxed text-muted">{uiText(`wiki.special.${a.key}Description`)}</p>
           </li>
         ))}
       </ul>
       <p className="mt-10 text-center font-serif text-[14.5px] italic text-muted">
-        Innerpedia is written by your file system and edited by you. It holds {num(index.meta.counts.articles)} articles, and
+        {getUiConfig().brand.encyclopediaName} is written by your file system and edited by you. It holds {num(index.meta.counts.articles)} articles, and
         every one of them is yours.
       </p>
     </Box>

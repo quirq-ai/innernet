@@ -1,0 +1,37 @@
+{
+  "$schema": "../innernet.ui.override.schema.json",
+  "version": 1,
+  "brand": {
+    "name": "atlas",
+    "encyclopediaName": "atlaspedia",
+    "tagline": "Your local project atlas",
+    "description": "A local atlas of projects, folders and their stories.",
+    "italicPrefix": "",
+    "encyclopediaItalicPrefix": ""
+  },
+  "theme": {
+    "light": { "bg": "#f2f7f2", "link": "#246b46", "link-hover": "#154e31", "ring": "#246b46" },
+    "dark": { "bg": "#0d1711", "link": "#96d6ae", "link-hover": "#b7e6c8", "ring": "#96d6ae" },
+    "fonts": { "display": "system-sans", "serif": "system-sans" },
+    "effects": { "aurora": false, "grain": false, "motion": false }
+  },
+  "layout": { "maxWidth": 1200, "searchWidth": 640, "articleWidth": 900, "density": "compact" },
+  "navigation": {
+    "home": ["wiki", "guide", "statistics"],
+    "search": ["wiki", "guide"],
+    "wiki": ["search", "categories", "allPages", "guide"],
+    "guide": ["search", "wiki", "top"],
+    "headerSearch": ["wiki", "guide"],
+    "headerWiki": ["search", "guide"],
+    "labels": { "wiki": "Read {wiki}", "guide": "How it works", "search": "Find a project" }
+  },
+  "home": { "autoFocus": false, "recentLimit": 3, "showCurious": false, "exampleQueries": ["kind:repo", "is:article"] },
+  "search": { "perPage": 3, "suggestionLimit": 3, "tabs": ["all", "repos", "folders"] },
+  "wiki": {
+    "showContents": false,
+    "showInfobox": false,
+    "mainSections": ["browse", "welcome", "featured"],
+    "articleSections": ["external-links", "overview", "structure"]
+  },
+  "copy": { "home.searchButton": "Find a project" }
+}

@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { sigilGradient } from "@/components/sigil";
 import { getIndex, getPages } from "@/lib/data";
@@ -41,8 +42,8 @@ function More({ count, noun, children }: { count: number; noun: string; children
   return (
     <details className="group">
       <summary className="mt-2 inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full px-0 text-[13.5px] text-link hover:text-link-hover [&::-webkit-details-marker]:hidden">
-        <span className="group-open:hidden">and {num(count)} more {noun}</span>
-        <span className="hidden group-open:inline">Show fewer</span>
+        <span className="group-open:hidden">{uiText("wiki.moreItems", { count: num(count), noun })}</span>
+        <span className="hidden group-open:inline">{uiText("wiki.label.showFewer")}</span>
         <svg aria-hidden width="10" height="10" viewBox="0 0 10 10" className="transition-transform group-open:rotate-180">
           <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -130,7 +131,7 @@ export function Deeper({ page }: { page: Page }) {
         {d.names.length > shown.length && <li className="px-1 py-0.5 text-[12.5px] text-muted">and {num(d.names.length - shown.length)} more</li>}
       </ul>
       <p className="mt-2.5 text-[13px] text-muted">
-        Past the {count(getIndex().index.meta.maxDepth)} levels Innerpedia reads: {plural(d.folders, "folder")} and {plural(d.files, "file")}, counted
+        Past the {count(getIndex().index.meta.maxDepth)} levels {getUiConfig().brand.encyclopediaName} reads: {plural(d.folders, "folder")} and {plural(d.files, "file")}, counted
         but without pages of their own.
       </p>
     </div>
@@ -143,7 +144,7 @@ export function Structure({ page }: { page: Page }) {
   return (
     <>
       {kids + (page.deeper?.names.length ?? 0) > 0 && (
-        <Sub label="Folders" aside={plural(kids + (page.deeper?.names.length ?? 0), "subfolder")}>
+        <Sub label={uiText("wiki.label.folders")} aside={plural(kids + (page.deeper?.names.length ?? 0), "subfolder")}>
           <FolderTree page={page} />
           <Deeper page={page} />
           <Excluded page={page} />
@@ -151,7 +152,7 @@ export function Structure({ page }: { page: Page }) {
       )}
       {kids + (page.deeper?.names.length ?? 0) === 0 && <Excluded page={page} />}
       {page.files.length > 0 && (
-        <Sub label="Files" aside={`${plural(page.fileCount, "file")} at the top level`}>
+        <Sub label={uiText("wiki.label.files")} aside={`${plural(page.fileCount, "file")} at the top level`}>
           <FileList page={page} />
         </Sub>
       )}

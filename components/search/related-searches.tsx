@@ -4,6 +4,7 @@ import { searchHref } from "@/lib/links";
 import type { Tab } from "@/lib/search";
 import { QueryText } from "./query-text";
 import type { Related } from "./query-tools";
+import { uiText } from "@/lib/ui-config";
 
 // "Searches related to linear": narrower searches built from what the top hits are made
 // of, with the part we added in bold and how many results each would find.
@@ -13,7 +14,7 @@ export function RelatedSearches({ q, tab, items }: { q: string; tab: Tab; items:
   return (
     <section aria-labelledby="related-h" className="rise">
       <h2 id="related-h" className="text-[18px] tracking-[-0.005em] text-ink">
-        Searches related to{" "}
+        {uiText("search.relatedSearches")}{" "}
         <span className="font-display text-[21px] italic [overflow-wrap:anywhere]">
           <QueryText q={q} />
         </span>
@@ -34,8 +35,8 @@ export function RelatedSearches({ q, tab, items }: { q: string; tab: Tab; items:
                 <span className="font-mono text-[13px] font-semibold text-ink">{r.added}</span>
               </span>
               <span className="shrink-0 text-[12px] tabular-nums text-muted">
-                {num(r.count)}
-                <span className="sr-only"> results</span>
+                <span aria-hidden>{num(r.count)}</span>
+                <span className="sr-only">{uiText("search.relatedCount", { count: num(r.count) })}</span>
               </span>
             </Link>
           </li>

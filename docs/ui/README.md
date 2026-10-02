@@ -69,9 +69,10 @@ then `pnpm start` from the same directory.
 
 ## Appearance and branding
 
-The UI uses Next.js, React and TypeScript, with Tailwind CSS utilities backed by shared
-design tokens in [`app/globals.css`](../../app/globals.css). Colours belong in those
-tokens so every surface stays consistent across both themes.
+The UI uses Next.js, React and TypeScript. The root layout reads colours and fonts
+from [`innernet.ui.json`](../../innernet.ui.json) and emits shared design tokens.
+Tailwind utilities in [`app/globals.css`](../../app/globals.css) use those tokens
+across both themes.
 
 | Typeface | Role |
 | --- | --- |
@@ -80,8 +81,9 @@ tokens so every surface stays consistent across both themes.
 | Inter | Controls, search results and interface labels. |
 | JetBrains Mono | Paths, commands, file names and technical facts. |
 
-The theme follows the operating system unless the reader chooses light or dark with
-the theme toggle. That choice is saved locally and applied before the page paints.
+The default theme is configurable and initially follows the operating system.
+Readers can choose system, light or dark with the theme toggle when it is enabled.
+That choice is saved locally and applied before the page paints.
 Motion respects `prefers-reduced-motion`. Focus rings, semantic landmarks, labelled
 controls and keyboard navigation are part of the design.
 
@@ -92,14 +94,126 @@ Do not invent a logo or replace it with a text-only wordmark.
 
 ## Customization
 
-Appearance and interface behavior currently live in code: tokens in `app/globals.css`,
-fonts and page metadata in `app/layout.tsx`, and copy and layout in the route and
-component files. [`innernet.config.json`](../../innernet.config.json) configures the
-crawler's roots and depth; it does not customize the UI.
+[`innernet.ui.json`](../../innernet.ui.json) is the complete, versioned UI configuration.
+It controls branding, themes, navigation, supported layouts, interface copy and interaction
+settings. [`innernet.ui.schema.json`](../../innernet.ui.schema.json) describes the resolved
+configuration. The engine's [`innernet.config.json`](../../innernet.config.json) continues
+to configure indexing roots and depth separately.
 
-The [JSON customization feature](https://github.com/quirq-ai/innernet/issues/2) will
-give branding and UI settings a documented schema so people can change their instance
-without editing components. It is planned work, not an available configuration API yet.
+Edit the default UI file directly, or provide a partial override with `INNERNET_UI_CONFIG`.
+Try the included [atlas example](../../examples/atlas.ui.json):
+
+```bash
+INNERNET_UI_CONFIG=examples/atlas.ui.json pnpm dev
+```
+
+This changes the names, colours, fonts, density, search settings and encyclopedia panels
+while using the same index. Copy that example into your own JSON file and point the
+variable at it. Relative paths resolve from the repository root; an absolute file path
+also works. A partial file can be as small as:
+
+```json
+{
+  "$schema": "./innernet.ui.override.schema.json",
+  "version": 1,
+  "brand": {
+    "name": "My library",
+    "encyclopediaName": "My encyclopedia",
+    "tagline": "Everything I have made",
+    "italicPrefix": "",
+    "encyclopediaItalicPrefix": ""
+  },
+  "theme": {
+    "light": { "link": "#246b46" },
+    "effects": { "aurora": false }
+  },
+  "copy": { "home.searchButton": "Find a project" }
+}
+```
+
+Use the [override schema](../../innernet.ui.override.schema.json) for partial files;
+adjust its relative `$schema` path to the location of your file. Objects merge by key
+with the defaults, so changing one colour keeps the other colours. Arrays replace the
+whole list: their order determines display order, and omitted entries are hidden.
+Invalid values, unsupported version numbers and unknown fields report the file name
+and field path.
+
+Saved changes appear on the next full page load. They do not require `pnpm index`.
+Changing the environment variable requires restarting the UI process. This works with
+`pnpm start` as well as `pnpm dev`.
+
+### Settings at a glance
+
+| Section | Shape and supported settings |
+| --- | --- |
+| `brand` | Names, tagline, description, document `language`, `creator`, wordmark italic prefixes, product and encyclopedia logos, browser `icon`, `appleIcon` and an `attribution` object. |
+| `theme` | `defaultMode`: `system`, `light` or `dark`; `allowToggle`; `light` and `dark` palettes; `fonts` for `display`, `serif`, `sans` and `mono`; `effects` booleans for `aurora`, `grain` and `motion`. |
+| `layout` | `maxWidth`, `searchWidth` and `articleWidth` in pixels; `density`: `comfortable` or `compact`. Content widths cannot exceed `maxWidth`. |
+| `navigation` | Ordered footer arrays for `home`, `search`, `wiki` and `guide`; header arrays `headerSearch` and `headerWiki`; and a `labels` object keyed by navigation ID. |
+| `home` | `showCounts`, `showExamples`, `showRecent`, `showCurious`, `autoFocus`, `recentLimit` and an `exampleQueries` array. |
+| `search` | `suggestions`, `suggestionLimit`, `debounceMs`, `focusShortcut`, `perPage`, `showKnowledgePanel` and an ordered `tabs` array. |
+| `wiki` | `showContents`, `showInfobox`, and ordered `mainSections` and `articleSections` arrays. Article sections with no indexed content remain absent. |
+| `guide` | `showRecipe` controls the interactive folder recipe. |
+| `copy` | Plain strings keyed by the existing copy IDs in the default JSON, including headings, buttons, accessible labels, notices and metadata titles. |
+
+Navigation IDs are `search`, `wiki`, `guide`, `random`, `allPages`, `categories`,
+`statistics` and `top`. Footer arrays belong to their named page groups; `headerSearch`
+and `headerWiki` control the links beside the shared search bar. Their routes stay fixed;
+use `navigation.labels` to rename them.
+Search tab IDs are `all`, `articles`, `repos`, `docs` and `folders`; `all` must remain in
+the list. Tab labels live in `copy`, such as `search.tab.repos`.
+
+Encyclopedia main section IDs are `welcome`, `featured`, `news`, `did-you-know`,
+`on-this-day`, `browse` and `areas`. Article section IDs are `overview`, `structure`,
+`technology`, `history`, `see-also` and `external-links`. For example,
+`"articleSections": ["overview", "external-links"]` shows those two sections in that
+order and leaves the other article sections out. The article contents list follows the
+same order. Indexed page titles, categories and search operators keep their engine
+identifiers even when interface labels change.
+
+Copy supports `{app}`, `{wiki}`, `{publisher}` and `{tagline}` for the configured
+identity, plus the per-message placeholders already shown in the defaults. For example,
+`"wiki.welcomeTitle": "Welcome to {wiki},"` follows encyclopedia name changes.
+Strings render as plain text. The configuration controls the constructed UI regions;
+new components, routes, arbitrary HTML and CSS still require code changes. The field
+guide's longer engine explanations remain authored prose, with the configured brand
+names inserted where they appear.
+
+### Colours, fonts and assets
+
+Both theme palettes include the existing colour roles, aurora opacity and shadows.
+Colours accept hex, `rgb(...)` or `oklch(...)` in the formats defined by the schema.
+Shadows are arrays of objects with numeric `x`, `y`, `blur` and `spread` values and a
+`color`. The schema bounds dimensions, limits and list lengths; the defaults are a
+complete reference for every available key.
+
+Font roles select from `instrument`, `newsreader`, `inter`, `jetbrains`, `system-serif`,
+`system-sans` and `system-mono`. The four named families are bundled by `next/font`;
+arbitrary font names and external font URLs are unsupported. The `language` setting
+sets the document language; customize `copy` to change the supported interface text.
+
+Put your images in `public/` and use local URLs such as `/brand/library.svg`. A logo
+has this shape:
+
+```json
+{
+  "src": "/brand/library.svg",
+  "alt": "My library",
+  "width": 240,
+  "height": 80
+}
+```
+
+Set that object as `brand.logo` or `brand.encyclopediaLogo`. Width and height should
+match the artwork's proportions. Use `null` to show the configured product name
+instead. `brand.icon` and `brand.appleIcon` are local image URLs too. Images are served
+locally, so changing branding introduces no automatic requests to an external asset host.
+
+Attribution has `enabled`, `label`, `name`, `href` and `logo` fields. Set `enabled` to
+`false` to hide it, or replace the object with your own approved branding. The default
+publisher is **quirq**, always in lowercase. Its approved logo is pending, so the credit
+stays hidden until its `logo` is configured. Preserve the approved artwork and proportions;
+do not substitute an invented logo or a text-only quirq wordmark.
 
 ## Explore the source
 
@@ -113,7 +227,8 @@ without editing components. It is planned work, not an available configuration A
 | [`components/theme-toggle.tsx`](../../components/theme-toggle.tsx) · [`components/wordmark.tsx`](../../components/wordmark.tsx) | Theme choice and product identity. |
 | [`lib/links.ts`](../../lib/links.ts) | URL helpers for search, articles, categories and editor links. |
 
-Before opening a PR, run `pnpm -s typecheck`. For visible changes, check light and dark
+Before opening a PR, run `pnpm -s typecheck` and the configuration checks with
+`pnpm -s check:ui`. For visible changes, check light and dark
 themes at desktop and phone widths, including an empty or missing index. Follow the
 [contribution checklist](../../CONTRIBUTING.md#pull-request-checklist) and
 [design conventions](../../DESIGN.md) for the complete workflow.

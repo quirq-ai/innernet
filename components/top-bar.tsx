@@ -1,39 +1,29 @@
 import Link from "next/link";
 import { SearchBox } from "@/components/search-box";
+import { getSearchBoxProps } from "@/components/search/search-config";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PediaMark, Wordmark } from "@/components/wordmark";
-
-// Header for every page except home: wordmark, compact search, and the way across
-// to the other half of the site.
+import { getUiConfig, uiText } from "@/lib/ui-config";
+import { getNavigation } from "@/lib/ui-navigation";
 
 export function TopBar({ q = "", variant = "search" }: { q?: string; variant?: "search" | "wiki" }) {
+  const config = getUiConfig();
+  const links = getNavigation(variant === "wiki" ? "headerWiki" : "headerSearch");
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
-      <a
-        href="#content"
-        className="sr-only rounded-full bg-surface text-[13.5px] text-ink shadow-lift focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:px-4 focus:py-2"
-      >
-        Skip to content
+      <a href="#content" className="sr-only rounded-full bg-surface text-[13.5px] text-ink shadow-lift focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:px-4 focus:py-2">
+        {uiText("skipContent", {}, config)}
       </a>
-      <div className="mx-auto flex h-16 max-w-[1240px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
-        <div className="shrink-0">{variant === "wiki" ? <PediaMark size={26} /> : <Wordmark size={27} />}</div>
-        <div className="min-w-0 max-w-[640px] flex-1">
-          <SearchBox defaultValue={q} placeholder={variant === "wiki" ? "Search Innerpedia" : "Search your internet"} />
+      <div className="mx-auto flex h-16 max-w-[var(--ui-max-width)] items-center gap-3 px-4 sm:gap-6 sm:px-6">
+        <div className="min-w-0 max-w-[35%] shrink-0">{variant === "wiki" ? <PediaMark size={26} className="min-w-0 [&>span]:truncate" /> : <Wordmark size={27} className="min-w-0 [&>span]:truncate" />}</div>
+        <div className="min-w-0 max-w-[var(--ui-search-width)] flex-1">
+          <SearchBox {...getSearchBoxProps(config)} defaultValue={q} placeholder={uiText(variant === "wiki" ? "search.wikiPlaceholder" : "search.placeholder", {}, config)} />
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-1 text-[13.5px]">
-          {/* On a phone the way across moves to the footer. */}
-          <nav aria-label="Site" className="hidden sm:block">
-            {variant === "wiki" ? (
-              <Link href="/" className="block rounded-full px-3 py-1.5 text-muted hover:bg-bg-sunk hover:text-ink">
-                Search
-              </Link>
-            ) : (
-              <Link href="/wiki" className="block rounded-full px-3 py-1.5 text-muted hover:bg-bg-sunk hover:text-ink">
-                Innerpedia
-              </Link>
-            )}
+          <nav aria-label={uiText("siteNavigation", {}, config)} className="hidden max-w-[40vw] items-center overflow-x-auto whitespace-nowrap sm:flex">
+            {links.map((link) => <Link key={link.href} href={link.href} prefetch={link.prefetch} className="block rounded-full px-3 py-1.5 text-muted hover:bg-bg-sunk hover:text-ink">{link.label}</Link>)}
           </nav>
-          <ThemeToggle />
+          {config.theme.allowToggle && <ThemeToggle defaultMode={config.theme.defaultMode} labels={{ system: uiText("themeSystem", {}, config), light: uiText("themeLight", {}, config), dark: uiText("themeDark", {}, config) }} />}
         </div>
       </div>
     </header>

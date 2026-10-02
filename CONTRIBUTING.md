@@ -24,11 +24,13 @@ pnpm dev          # http://localhost:3470, bound to 127.0.0.1 only
 ## The loop
 
 Edit, let hot reload show you the page, then check the part you touched. There is no
-lint, test or format tooling; these are the checks.
+separate lint or format tooling; use these checks.
 
 | What you changed | Check | Expect |
 | --- | --- | --- |
 | Anything | `pnpm -s typecheck` | a clean exit, about a second |
+| UI configuration | `pnpm check:ui` | default/override schemas, invalid settings, unsafe values and reload behavior pass |
+| UI configuration integration | `pnpm check:ui:routes -- http://localhost:3470` | routes, metadata, navigation and configured controls render against the current local index |
 | Search, ranking, operators | `pnpm tsx --conditions=react-server scripts/try-search.ts "linear clone"` | results, the knowledge-panel pick, did-you-mean and suggestions, printed |
 | Anything you can see | `scripts/shot.sh "/wiki/innernet" out.png 1440 2400 dark` | a settled screenshot, and the names of any elements that scroll the page sideways |
 | The indexer | `INNERNET_ROOTS=~/some/small/dir INNERNET_OUT=/tmp/innernet-test.json pnpm index` | a test index, with your real one left alone |
@@ -67,10 +69,16 @@ the browser can satisfy.
 `lib/types.ts`, and `lib/links.ts`, `lib/format.ts` and `lib/lang-colors.ts` are meant to
 be importable from anywhere. Keep all six free of `server-only` and of Next imports.
 
-**Tokens, not values.** Colours live in `app/globals.css`. A new token goes in four
-places: `:root`, the dark `@media` block, `:root[data-theme="dark"]`, and `@theme
-inline`. Components use the utilities (`bg-surface`, `text-muted`, `border-line`), never
-hex. Check both themes.
+**Tokens, not values.** Colors, shadows and font roles live in `innernet.ui.json`.
+`lib/ui-theme.ts` emits validated CSS variables and `app/globals.css` maps them to
+utilities. Components use tokens, never hex values. Add both light/dark values and
+schema definitions for a new token. Check both themes.
+
+**Configuration is data.** Branding, supported layouts, copy, navigation and UI controls
+use `getUiConfig()` on the server. Pass only necessary serializable settings to client
+components. Stable route IDs and engine semantics stay in code. Keep defaults, both
+schemas and types aligned, and run `pnpm check:ui`. See the
+[UI customization guide](docs/ui/README.md#customization).
 
 **Links through `lib/links.ts`.** `wikiHref`, `categoryHref`, `searchHref` and
 `vscodeHref` handle encoding, underscores and empty parameters for you.
@@ -95,11 +103,12 @@ or code: use commas, colons, middots or full stops.
 1. In `lib/search.ts`, add the key to `ParsedQuery.filters` and `OPS`, to the operator
    regex in `parseQuery()`, to the copy of that regex in `correction()`, and its test to
    `matchesFilters()`.
-2. In `components/search/query-tools.ts`, add it to `OP_RE` and give it a label in
-   `OP_LABEL`. Typecheck will remind you about the label.
-3. Chips appear on their own. If it earns a place, add an example to `EXAMPLES` in
-   `components/home/example-queries.tsx` and to the operator lists in README.md and
-   DESIGN.md.
+2. In `components/search/query-tools.ts`, add it to `OP_RE` and add a copy key to
+   `OP_LABEL`. Define its label in `innernet.ui.json` and both UI schemas. Typecheck
+   and `pnpm check:ui` help check the contract.
+3. Chips appear on their own. If it earns a place, add an example to
+   `home.exampleQueries` in `innernet.ui.json` and to the operator lists in the engine
+   README and DESIGN.md.
 
 Values arrive lowercased and may be quoted (`in:"two words"`). If you add `lang:`
 aliases, add them to both `LANG_ALIASES` copies (`lib/search.ts` and
@@ -115,9 +124,10 @@ aliases, add them to both `LANG_ALIASES` copies (`lib/search.ts` and
    spaces and underscores removed), add it to `SPECIALS` in the same file, and build the
    view like `StatisticsView` with `PageTitle prefix="Special: "`. Put heavy computation
    in `components/wiki/main/insights.ts` behind `once()`.
-4. Link it from `LINKS` in `components/wiki/wiki-shell.tsx`, as
-   `wikiHref("Special:Name")`, and from `AREAS` in `components/wiki/main/browse.tsx`,
-   as `slug: "Special:Name"`.
+4. To expose it in navigation, add a stable route ID to `lib/ui-navigation.ts` and
+   `lib/ui-config-shared.ts`, define its label and allowed ID in both UI schemas, and
+   add it to the appropriate `navigation` arrays in `innernet.ui.json`. Add an entry
+   to `AREAS` in `components/wiki/main/browse.tsx` as `slug: "Special:Name"`.
 
 ### Add a framework detector
 
@@ -138,10 +148,11 @@ aliases, add them to both `LANG_ALIASES` copies (`lib/search.ts` and
    be worked out without the disk (older indexes still load).
 2. Create `components/wiki/article/<name>.tsx` exporting `hasX(page)` and `X({ page })`,
    patterned on `technology.tsx`, with `Sub` from `parts.tsx` for labelled blocks.
-3. In `components/wiki/article-view.tsx`, add the section id to `SECTION_IDS` (so a
-   README heading cannot claim it), push a contents item in order, and render
-   `<Section id title>` where it belongs. A section shows only when it has something to
-   say.
+3. Add its ID to `UiArticleSection` in `lib/ui-config-shared.ts`, both UI schemas and
+   `wiki.articleSections` in `innernet.ui.json`. In `components/wiki/article-view.tsx`,
+   register its renderer and contents entry in the section map, and reserve its anchor
+   in `SECTION_IDS` so a README heading cannot claim it. The configured array controls
+   section order; a section shows only when it has something to say.
 4. Stubs have their own view in `components/wiki/stub-view.tsx`.
 
 ## How to verify
@@ -160,7 +171,7 @@ aliases, add them to both `LANG_ALIASES` copies (`lib/search.ts` and
 
 ## Pull request checklist
 
-- [ ] Typecheck passes.
+- [ ] Typecheck passes, and `pnpm check:ui` passes for configuration changes.
 - [ ] Screenshots in light and dark, desktop and phone width, for anything visible.
 - [ ] Every page touched still renders with an empty or missing `data/index.json`.
 - [ ] No em or en dashes, no exclamation marks, encyclopedia voice in prose.

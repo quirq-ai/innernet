@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { searchHref } from "@/lib/links";
 import type { Tab } from "@/lib/search";
+import { Wordmark } from "@/components/wordmark";
+import { uiText } from "@/lib/ui-config";
 
-// "I n n n e r n e t": the wordmark stretched by one n per page, the way a certain
-// other search engine grows its o's. Current page in ink, the rest in link blue.
+// The configured product identity above a numbered page window. The same navigation
+// works for a custom name or logo without altering the brand's artwork.
 
 const MAX = 10;
 
@@ -18,7 +20,7 @@ export function Pagination({ q, tab, page, pages }: { q: string; tab: Tab; page:
   const arrow = (dir: "prev" | "next", beside: boolean) => {
     const target = dir === "prev" ? page - 1 : page + 1;
     const on = dir === "prev" ? page > 1 : page < pages;
-    const label = dir === "prev" ? "Previous" : "Next";
+    const label = uiText(dir === "prev" ? "search.previous" : "search.next");
     const icon = (
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d={dir === "prev" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7"} />
@@ -37,43 +39,27 @@ export function Pagination({ q, tab, page, pages }: { q: string; tab: Tab; page:
   };
 
   return (
-    <nav aria-label="Pages" className="flex flex-col items-center gap-4">
-      <div className="flex items-end justify-center gap-4">
-        <span className="hidden pb-[22px] sm:block">{arrow("prev", true)}</span>
-        <ol className="flex items-end font-display text-[40px] leading-none sm:text-[46px]">
-          <li aria-hidden className="px-[0.02em] pb-[22px] italic text-ink">
-            I
-          </li>
+    <nav aria-label={uiText("search.pages")} className="flex flex-col items-center gap-4">
+      <Wordmark size={30} href={null} />
+      <div className="flex w-full items-center justify-center gap-4">
+        <span className="hidden shrink-0 sm:block">{arrow("prev", true)}</span>
+        <ol className="flex min-w-0 flex-wrap items-center justify-center gap-1 font-sans text-[13.5px] leading-none tabular-nums">
           {nums.map((n) =>
             n === page ? (
-              <li key={n} aria-current="page" className="flex flex-col items-center px-[0.08em]">
-                <span aria-hidden className="italic text-ink">
-                  n
-                </span>
-                <span className="mt-1.5 pl-[0.3em] font-sans text-[12.5px] font-medium leading-4 tabular-nums text-ink">
-                  <span className="sr-only">Page </span>
-                  {n}
-                </span>
+              <li key={n} aria-current="page" className="grid min-h-9 min-w-8 place-items-center rounded-full bg-bg-sunk px-2 font-medium text-ink">
+                <span aria-hidden>{n}</span>
+                <span className="sr-only">{uiText("search.pageLabel", { page: n })}</span>
               </li>
             ) : (
               <li key={n}>
-                <Link href={href(n)} className="group flex flex-col items-center px-[0.08em] text-link hover:text-link-hover">
-                  <span aria-hidden className="italic transition-transform duration-200 group-hover:-translate-y-0.5">
-                    n
-                  </span>
-                  <span className="mt-1.5 pl-[0.3em] font-sans text-[12.5px] leading-4 tabular-nums group-hover:underline">
-                    <span className="sr-only">Page </span>
-                    {n}
-                  </span>
+                <Link href={href(n)} aria-label={uiText("search.pageLabel", { page: n })} className="grid min-h-9 min-w-8 place-items-center rounded-full px-2 text-link hover:bg-bg-sunk hover:text-link-hover hover:underline">
+                  {n}
                 </Link>
               </li>
             ),
           )}
-          <li aria-hidden className="pb-[22px] text-ink">
-            <em>er</em>net
-          </li>
         </ol>
-        <span className="hidden pb-[22px] sm:block">{arrow("next", true)}</span>
+        <span className="hidden shrink-0 sm:block">{arrow("next", true)}</span>
       </div>
       <div className="flex w-full justify-between border-t border-line pt-4 sm:hidden">
         {arrow("prev", false)}

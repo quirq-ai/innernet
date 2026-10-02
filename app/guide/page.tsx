@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { getUiConfig, uiText } from "@/lib/ui-config";
+import { getNavigation } from "@/lib/ui-navigation";
 import Link from "next/link";
 import { AddSite } from "@/components/guide/add-site";
 import { CHAPTERS } from "@/components/guide/chapters";
@@ -21,46 +23,42 @@ import "./guide.css";
 // contribute, and what stays private. Every number is read from the live index and
 // every code excerpt from the code itself, so the guide never drifts from the app.
 
-export const metadata: Metadata = {
-  title: { absolute: "The Innernet Field Guide" },
-  description: "How the folders on this machine become a search engine and an encyclopedia, and how to add to both.",
-};
+export function generateMetadata(): Metadata {
+  return { title: { absolute: uiText("guideTitle") }, description: uiText("guideDescription") };
+}
 
 export const dynamic = "force-dynamic";
 
-const LINKS = [
-  { href: "/", label: "Search" },
-  { href: "/wiki", label: "Innerpedia" },
-  { href: wikiHref("Special:Random"), label: "Random article", prefetch: false },
-  { href: wikiHref("Special:Statistics"), label: "Statistics" },
-  { href: "#top", label: "Back to the top" },
-];
+
 
 export default function GuidePage() {
+  const config = getUiConfig();
+  const chapters = CHAPTERS.map((chapter) => ({ ...chapter, sections: chapter.sections.filter((section) => config.guide.showRecipe || section.id !== "folder-recipe") }));
   return (
     <div className="fg flex min-h-dvh flex-col">
       <TopBar />
       <main id="content" tabIndex={-1} className="flex-1 focus:outline-none">
         <Hero />
-        <div className="mx-auto max-w-[1240px] px-4 sm:px-6 lg:grid lg:grid-cols-[196px_minmax(0,1fr)] lg:gap-14 xl:gap-20">
+        <div className="mx-auto max-w-[var(--ui-max-width)] px-4 sm:px-6 lg:grid lg:grid-cols-[196px_minmax(0,1fr)] lg:gap-14 xl:gap-20">
           <aside className="hidden lg:block">
-            <GuideRail chapters={CHAPTERS} />
+            <GuideRail chapters={chapters} />
           </aside>
           <div id="guide-body" className="min-w-0 pb-8">
-            <GuideBar chapters={CHAPTERS} />
+            <GuideBar chapters={chapters} />
             <div className="mx-auto max-w-[920px] lg:mx-0">
               <HowItWorks />
               <AddSite />
               <SearchPro />
               <Contribute />
               <Privacy />
+              <Customization />
               <Colophon />
             </div>
           </div>
         </div>
       </main>
-      <SiteFooter links={LINKS} />
-      <GuideMotion />
+      <SiteFooter links={getNavigation("guide")} />
+      {config.theme.effects.motion && <GuideMotion />}
     </div>
   );
 }
@@ -84,22 +82,32 @@ function Colophon() {
       </svg>
       <h2 className="fg-smallcaps mt-6">Colophon</h2>
       <p className="mx-auto mt-4 max-w-[560px] font-serif text-[16px] italic leading-[1.65] text-ink-2">
-        Set in Instrument Serif, Newsreader, Inter and JetBrains Mono. Every number on these pages was read from{" "}
+        {uiText("colophonFonts", { fonts: Object.values(getUiConfig().theme.fonts).join(", ") })} Every number on these pages was read from{" "}
         <span className="font-mono text-[0.85em] not-italic">data/index.json</span>
         {missing ? "" : <>, indexed {timeAgo(index.meta.generatedAt)} on {longDate(index.meta.generatedAt)}</>}, and every excerpt from the code as it stands.{" "}
         {plates}
       </p>
       <p className="mt-6 text-[13.5px]">
         <Link href="/wiki" className="link">
-          Continue to Innerpedia
+          {uiText("continueWiki")}
         </Link>
         <span aria-hidden className="px-2.5 text-faint">
           ·
         </span>
         <Link href="/" className="link">
-          Search your internet
+          {uiText("searchPlaceholder")}
         </Link>
       </p>
     </aside>
+  );
+}
+
+function Customization() {
+  return (
+    <section className="mt-24 border-t border-line pt-10" aria-labelledby="customization-title">
+      <h2 id="customization-title" className="font-display text-[36px] text-ink">{uiText("guideCustomizationTitle")}</h2>
+      <p className="mt-4 max-w-[680px] font-serif text-[18px] leading-relaxed text-ink-2">{uiText("guideCustomizationBody")}</p>
+      <p className="mt-4 font-mono text-[13px] text-muted">INNERNET_UI_CONFIG=examples/atlas.ui.json pnpm dev</p>
+    </section>
   );
 }

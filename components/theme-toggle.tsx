@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 
 type Mode = "system" | "light" | "dark";
 const NEXT: Record<Mode, Mode> = { system: "light", light: "dark", dark: "system" };
-const LABEL: Record<Mode, string> = { system: "Theme: system", light: "Theme: light", dark: "Theme: dark" };
 
-export function ThemeToggle({ className = "" }: { className?: string }) {
-  const [mode, setMode] = useState<Mode>("system");
+export function ThemeToggle({ className = "", defaultMode = "system", labels }: { className?: string; defaultMode?: Mode; labels: Record<Mode, string> }) {
+  const [mode, setMode] = useState<Mode>(defaultMode);
 
   useEffect(() => {
     const t = document.documentElement.dataset.theme;
-    if (t === "light" || t === "dark") setMode(t);
+    setMode(t === "light" || t === "dark" ? t : "system");
   }, []);
 
   function cycle() {
@@ -19,9 +18,9 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     setMode(next);
     if (next === "system") delete document.documentElement.dataset.theme;
     else document.documentElement.dataset.theme = next;
+    window.dispatchEvent(new Event("innernet-theme-change"));
     try {
-      if (next === "system") localStorage.removeItem("innernet-theme");
-      else localStorage.setItem("innernet-theme", next);
+      localStorage.setItem("innernet-theme", next);
     } catch {
       /* storage unavailable; the choice lasts for this page only */
     }
@@ -31,8 +30,8 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     <button
       type="button"
       onClick={cycle}
-      title={LABEL[mode]}
-      aria-label={LABEL[mode]}
+      title={labels[mode]}
+      aria-label={labels[mode]}
       className={`grid size-9 place-items-center rounded-full text-muted transition-colors hover:bg-bg-sunk hover:text-ink ${className}`}
     >
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden>

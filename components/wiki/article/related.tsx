@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { getPages } from "@/lib/data";
@@ -62,7 +63,7 @@ export function ExternalLinks({ page }: { page: Page }) {
         <span aria-hidden className="mt-[0.6em] size-1 shrink-0 rounded-full bg-faint" />
         <span className="min-w-0 [overflow-wrap:anywhere]">
           <a href={vscodeHref(page.path)} className="link">
-            Open {page.name} in VS Code
+            {uiText("wiki.openNamedEditor", { name: page.name })}
           </a>
           <span className="text-muted">, on this machine at </span>
           <PathText path={fullPath(page)} className="text-[13px] text-ink-2" />

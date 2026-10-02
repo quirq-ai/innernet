@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { IndexEntry } from "@/components/wiki/main/browse";
 import { allCategories, categoryInfo, codeLanguage, KIND_BLURBS, subcollections, type CategoryInfo } from "@/components/wiki/main/insights";
@@ -19,7 +20,7 @@ export function CategoryView({ name, pages }: { name: string; pages: Page[] }) {
 
   return (
     <main className="max-w-[1120px]">
-      <PageTitle prefix="Category: " title={name} />
+      <PageTitle prefix={uiText("wiki.categoryPrefix")} title={name} />
 
       <div className="rise mt-6 max-w-[720px]" style={{ animationDelay: "40ms" }}>
         <Description info={info} pages={pages} />
@@ -47,7 +48,7 @@ export function CategoryView({ name, pages }: { name: string; pages: Page[] }) {
       {subs.length > 0 && (
         <section aria-labelledby="subcats" className="rise mt-12" style={{ animationDelay: "100ms" }}>
           <SectionHeading id="subcats" aside={plural(subs.length, "subcategory", "subcategories")}>
-            Subcategories
+            {uiText("wiki.label.subcategories")}
           </SectionHeading>
           <p className="-mt-1 mb-4 text-[14px] text-muted">
             {subs.length === 1 ? "This category has only the following subcategory." : `This category has the following ${num(subs.length)} subcategories.`}
@@ -63,7 +64,7 @@ export function CategoryView({ name, pages }: { name: string; pages: Page[] }) {
       )}
 
       <section aria-labelledby="pages" className="rise mt-12" style={{ animationDelay: "140ms" }}>
-        <SectionHeading id="pages">Pages in category “{name}”</SectionHeading>
+        <SectionHeading id="pages">{uiText("wiki.categoryPagesTitle", { name })}</SectionHeading>
         <p className="-mt-1 mb-7 text-[14px] text-muted">
           {pages.length === 1 ? "This category contains only the following page." : `The following ${num(pages.length)} pages are in this category.`}
         </p>
@@ -88,14 +89,14 @@ function Description({ info, pages }: { info: CategoryInfo; pages: Page[] }) {
     case "framework":
       return (
         <p className={prose}>
-          Projects built with {strong(info.name)}. Innerpedia spots frameworks in each project&rsquo;s manifest and dependencies, so a project
+          Projects built with {strong(info.name)}. {getUiConfig().brand.encyclopediaName} spots frameworks in each project&rsquo;s manifest and dependencies, so a project
           can sit in several of these categories at once.
         </p>
       );
     case "year":
       return (
         <p className={prose}>
-          Projects begun in {strong(info.subject)}, judged by the oldest file or the first commit Innerpedia found in each folder.
+          Projects begun in {strong(info.subject)}, judged by the oldest file or the first commit {getUiConfig().brand.encyclopediaName} found in each folder.
           {spread(pages)}
         </p>
       );
@@ -104,7 +105,7 @@ function Description({ info, pages }: { info: CategoryInfo; pages: Page[] }) {
     case "maintenance":
       return (
         <p className={prose}>
-          Articles about projects that have no README yet. Innerpedia wrote each of them from metadata alone: the folder&rsquo;s name, its
+          Articles about projects that have no README yet. {getUiConfig().brand.encyclopediaName} wrote each of them from metadata alone: the folder&rsquo;s name, its
           manifest, its languages and its dates.
         </p>
       );
@@ -139,7 +140,7 @@ function Description({ info, pages }: { info: CategoryInfo; pages: Page[] }) {
               , at <span className="font-mono text-[0.8em] text-ink-2 [overflow-wrap:anywhere]">{[info.page.root, info.page.relPath].filter(Boolean).join("/")}</span>
             </>
           )}
-          . Innerpedia treats any folder holding three or more articles as a collection, and files everything beneath it here.
+          . {getUiConfig().brand.encyclopediaName} treats any folder holding three or more articles as a collection, and files everything beneath it here.
         </p>
       );
   }
@@ -160,7 +161,7 @@ function ReadmeNotice() {
     <div className="mt-6 flex items-start gap-3.5 rounded-xl border border-notice-line bg-notice px-4 py-3">
       <span aria-hidden className="font-display text-[22px] leading-[1.1] text-muted">¶</span>
       <p className="font-serif text-[15.5px] italic leading-[1.55] text-ink-2">
-        Each of these would be a richer article with a few paragraphs from the person who made it. You can help Innerpedia by adding a
+        Each of these would be a richer article with a few paragraphs from the person who made it. You can help {getUiConfig().brand.encyclopediaName} by adding a
         README to any of them.
       </p>
     </div>
@@ -175,8 +176,8 @@ function YearNav({ year }: { year: number }) {
     .sort((a, b) => a - b);
   if (years.length < 2) return null;
   return (
-    <nav aria-label="Projects by year begun" className="mt-5 flex flex-wrap items-center gap-x-0.5 gap-y-1 border-y border-line py-1.5">
-      <span className="mr-3 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">Begun in</span>
+    <nav aria-label={uiText("wiki.label.projectsByYearBegun")} className="mt-5 flex flex-wrap items-center gap-x-0.5 gap-y-1 border-y border-line py-1.5">
+      <span className="mr-3 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">{uiText("wiki.label.begunIn")}</span>
       {years.map((y) =>
         y === year ? (
           <span key={y} aria-current="page" className="grid h-8 place-items-center rounded-md bg-bg-sunk px-2 font-display text-[19px] leading-none tabular-nums text-ink">
@@ -225,7 +226,7 @@ function Composition({ info, pages }: { info: CategoryInfo; pages: Page[] }) {
     >
       {showLangs && (
         <div className="min-w-0">
-          <h2 className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">Written in</h2>
+          <h2 className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">{uiText("wiki.label.writtenIn")}</h2>
           <div className="flex h-2 gap-[2px] overflow-hidden rounded-full" role="img" aria-label={segments.map((s) => `${s.name} ${s.n}`).join(", ")}>
             {segments.map((s) => (
               <span
@@ -249,7 +250,7 @@ function Composition({ info, pages }: { info: CategoryInfo; pages: Page[] }) {
       )}
       {together.length > 0 && (
         <div className="min-w-0">
-          <h2 className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">Often found with</h2>
+          <h2 className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">{uiText("wiki.label.oftenFoundWith")}</h2>
           <ul className="flex flex-wrap gap-1.5">
             {together.map(([f, n]) => (
               <li key={f}>

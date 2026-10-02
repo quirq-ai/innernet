@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import { getPage } from "@/lib/data";
 import { plural } from "@/lib/format";
 import { vscodeHref } from "@/lib/links";
@@ -11,24 +12,25 @@ import { Deeper, Excluded, FileList, FolderTree } from "./article/structure";
 // much shorter: what it is, what is in it, and a polite request for a README.
 
 export function StubView({ page }: { page: Page }) {
+  const config = getUiConfig();
   const enclosing = getPage(page.partOf);
   const kids = page.children.length + (page.deeper?.names.length ?? 0);
   // An empty folder says so in its lead; a Contents heading over nothing adds no news.
   const hasContents = kids > 0 || page.files.length > 0 || page.hiddenChildren.length > 0;
 
   return (
-    <main className="xl:grid xl:grid-cols-[200px_minmax(0,1fr)] xl:gap-12">
-      <div className="hidden pt-1 xl:block">
+    <main className={config.wiki.showContents ? "xl:grid xl:grid-cols-[200px_minmax(0,1fr)] xl:gap-12" : ""}>
+      {config.wiki.showContents && <div className="hidden pt-1 xl:block">
         <LocationRail page={page} />
-      </div>
+      </div>}
 
-      <article className="mx-auto min-w-0 max-w-[640px] lg:max-w-[944px] xl:mx-0">
+      <article className={`mx-auto min-w-0 max-w-[min(640px,var(--ui-article-width))] lg:max-w-[var(--ui-article-width)] ${config.wiki.showContents ? "xl:mx-0" : ""}`}>
         <PageHeader
           page={page}
           title={page.title}
           tools={
             <Tool href={vscodeHref(page.path)} external>
-              Open in VS Code
+              {uiText("wiki.openEditor")}
             </Tool>
           }
         />
@@ -36,9 +38,9 @@ export function StubView({ page }: { page: Page }) {
         <div className="flow-root">
           {enclosing && <PartOf page={enclosing} className="rise mt-5" />}
 
-          <Infobox page={page} compact className="rise mx-auto mt-7 w-full max-w-[420px] lg:float-right lg:mb-8 lg:ml-11 lg:w-[300px]" />
+          {config.wiki.showInfobox && <Infobox page={page} compact className="rise mx-auto mt-7 w-full max-w-[420px] lg:float-right lg:mb-8 lg:ml-11 lg:w-[300px]" />}
 
-          <div className="lg:max-w-[600px]">
+          <div className={config.wiki.showInfobox ? "lg:max-w-[600px]" : ""}>
             <div className="prose-wiki rise mt-7">
               <p>
                 <Segs segs={stubLeadSegs(page)} />
@@ -46,9 +48,9 @@ export function StubView({ page }: { page: Page }) {
             </div>
 
             {hasContents && (
-              <Section id="contents" title="Contents" className="!mt-10">
+              <Section id="contents" title={uiText("wiki.stubContents")} className="!mt-10">
                 {kids > 0 && (
-                  <Sub label="Folders" aside={plural(kids, "subfolder")}>
+                  <Sub label={uiText("wiki.folders")} aside={plural(kids, "subfolder")}>
                     <FolderTree page={page} limit={40} />
                     <Deeper page={page} />
                     <Excluded page={page} />
@@ -56,7 +58,7 @@ export function StubView({ page }: { page: Page }) {
                 )}
                 {kids === 0 && <Excluded page={page} />}
                 {page.files.length > 0 && (
-                  <Sub label="Files" aside={plural(page.fileCount, "file")}>
+                  <Sub label={uiText("wiki.files")} aside={plural(page.fileCount, "file")}>
                     <FileList page={page} />
                   </Sub>
                 )}
@@ -64,9 +66,9 @@ export function StubView({ page }: { page: Page }) {
             )}
 
             <Notice page={page} className={hasContents ? "mt-12" : "mt-4"}>
-              This folder is a stub. You can help Innerpedia by{" "}
+              {uiText("wiki.stubNotice")}{" "}
               <a href={vscodeHref(page.path)} className="link whitespace-nowrap not-italic">
-                adding a README
+                {uiText("wiki.addReadme")}
               </a>
               .
             </Notice>

@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -161,7 +162,7 @@ export function Plate({
           <>
             {/* On a phone a drawn plate keeps its size and scrolls inside the frame. */}
             {svg && <span className="sm:hidden">Swipe across the plate</span>}
-            <span className={svg ? "max-sm:hidden" : ""}>The Innernet Field Guide</span>
+            <span className={svg ? "max-sm:hidden" : ""}>{uiText("guide.plate.branding1")}</span>
             <span>
               Plate {n} of {PLATE_IDS.length}
             </span>
@@ -233,7 +234,7 @@ function Sketch({ title, id, terms, flow, loop }: { title: string; id: string; t
                   flow && i === terms.length - 1 ? "border-link/50 text-link" : "border-line-strong text-ink-2"
                 }`}
               >
-                {t}
+                {t === "Innerpedia" ? getUiConfig().brand.encyclopediaName : t}
               </span>
             </li>
           ))}

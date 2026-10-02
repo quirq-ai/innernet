@@ -10,6 +10,7 @@ export type Namesakes = Record<RecipeName, { depths: { depth: number; isArticle:
 export type RecipeCite = "kind" | "article" | "summary" | "normalize" | "names" | "categories" | "lead" | "prior" | "prune" | "secret" | "depth";
 
 export interface RecipeProps {
+  labels?: { articleNotice: string; stubNotice: string; deepNotice: string };
   maxDepth: number;
   rootLabel: string; // "~/Programming"
   rootName: string; // "Programming"

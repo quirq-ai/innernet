@@ -1,97 +1,6 @@
 @import "tailwindcss";
 
-/* ------------------------------------------------------------------ tokens
-   Warm paper by day, quiet ink by night. One accent (link blue), one signature
-   (the aurora). See DESIGN.md before adding colours. */
-
-:root {
-  --bg: #f7f5f0;
-  --bg-sunk: #efece5;
-  --surface: #fffefb;
-  --ink: #1c1b18;
-  --ink-2: #46433c;
-  --muted: #6a655b;
-  --faint: #a9a499;
-  --line: rgb(28 27 24 / 0.09);
-  --line-strong: rgb(28 27 24 / 0.17);
-  --link: #2a52c4;
-  --link-hover: #183a96;
-  --visited: #6747b3;
-  --mark-bg: #fbe7a1;
-  --mark-ink: #1c1b18;
-  --notice-bg: #fbf4e2;
-  --notice-line: #e9dab1;
-  --good: #2f7d4f;
-  --ring: #2a52c4;
-  --shadow-sm: 0 1px 2px rgb(28 27 24 / 0.05);
-  --shadow: 0 1px 2px rgb(28 27 24 / 0.04), 0 10px 30px -12px rgb(28 27 24 / 0.16);
-  --shadow-lg: 0 2px 6px rgb(28 27 24 / 0.05), 0 28px 60px -24px rgb(28 27 24 / 0.28);
-  --aurora-1: oklch(0.86 0.09 40);
-  --aurora-2: oklch(0.84 0.08 285);
-  --aurora-3: oklch(0.89 0.08 165);
-  --aurora-opacity: 0.85;
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0f0f0e;
-    --bg-sunk: #151513;
-    --surface: #1a1a18;
-    --ink: #eceae3;
-    --ink-2: #c8c5bb;
-    --muted: #8f8a7f;
-    --faint: #5e5a52;
-    --line: rgb(236 234 227 / 0.08);
-    --line-strong: rgb(236 234 227 / 0.16);
-    --link: #9db6ff;
-    --link-hover: #c6d5ff;
-    --visited: #c5a9ff;
-    --mark-bg: rgb(250 204 21 / 0.24);
-    --mark-ink: #fff6d6;
-    --notice-bg: #1d1a12;
-    --notice-line: #3b331d;
-    --good: #6fcf97;
-    --ring: #9db6ff;
-    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 14px 36px -14px rgb(0 0 0 / 0.7);
-    --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.4), 0 30px 70px -24px rgb(0 0 0 / 0.85);
-    --aurora-1: oklch(0.45 0.13 35);
-    --aurora-2: oklch(0.4 0.14 285);
-    --aurora-3: oklch(0.45 0.11 170);
-    --aurora-opacity: 0.55;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #0f0f0e;
-  --bg-sunk: #151513;
-  --surface: #1a1a18;
-  --ink: #eceae3;
-  --ink-2: #c8c5bb;
-  --muted: #8f8a7f;
-  --faint: #5e5a52;
-  --line: rgb(236 234 227 / 0.08);
-  --line-strong: rgb(236 234 227 / 0.16);
-  --link: #9db6ff;
-  --link-hover: #c6d5ff;
-  --visited: #c5a9ff;
-  --mark-bg: rgb(250 204 21 / 0.24);
-  --mark-ink: #fff6d6;
-  --notice-bg: #1d1a12;
-  --notice-line: #3b331d;
-  --good: #6fcf97;
-  --ring: #9db6ff;
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 14px 36px -14px rgb(0 0 0 / 0.7);
-  --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.4), 0 30px 70px -24px rgb(0 0 0 / 0.85);
-  --aurora-1: oklch(0.45 0.13 35);
-  --aurora-2: oklch(0.4 0.14 285);
-  --aurora-3: oklch(0.45 0.11 170);
-  --aurora-opacity: 0.55;
-  color-scheme: dark;
-}
+/* Design tokens are emitted from innernet.ui.json by the root layout. */
 
 /* Tailwind utilities that read the tokens: bg-bg, text-ink, border-line, font-display... */
 @theme inline {
@@ -110,10 +19,10 @@
   --color-notice: var(--notice-bg);
   --color-notice-line: var(--notice-line);
   --color-good: var(--good);
-  --font-display: var(--font-instrument), "Iowan Old Style", Georgia, serif;
-  --font-serif: var(--font-newsreader), "Iowan Old Style", Georgia, serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: var(--ui-font-display);
+  --font-serif: var(--ui-font-serif);
+  --font-sans: var(--ui-font-sans);
+  --font-mono: var(--ui-font-mono);
   --shadow-soft: var(--shadow);
   --shadow-lift: var(--shadow-lg);
 }
@@ -134,6 +43,7 @@
     font-family: var(--font-sans);
     font-size: 15px;
     line-height: 1.55;
+    overflow-wrap: anywhere;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -444,4 +354,17 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Instance preferences, with accessibility overrides kept intact. */
+:root[data-ui-aurora="off"] .aurora { display: none; }
+:root[data-ui-grain="off"] .grain::after { display: none; }
+:root[data-ui-density="compact"] body { font-size: 14px; line-height: 1.45; }
+:root[data-ui-density="compact"] .prose-wiki { font-size: 16px; line-height: 1.55; }
+:root[data-ui-motion="off"] *,
+:root[data-ui-motion="off"] *::before,
+:root[data-ui-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
 }

@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { ancestors, getIndex, getPages } from "@/lib/data";
@@ -51,7 +52,7 @@ export function Breadcrumb({ page, className = "" }: { page: Page; className?: s
   const chain = ancestors(page);
   if (!chain.length) return null;
   return (
-    <nav aria-label="Breadcrumb" className={`font-mono text-[12px] leading-relaxed text-muted ${className}`}>
+    <nav aria-label={uiText("wiki.breadcrumb")} className={`font-mono text-[12px] leading-relaxed text-muted ${className}`}>
       {chain.map((a, i) => (
         <span key={a.slug}>
           <Link href={wikiHref(a.slug)} className="transition-colors hover:text-ink hover:underline hover:underline-offset-[3px]">
@@ -84,7 +85,7 @@ export function PageHeader({ page, title, tools }: { page?: Page; title: string;
         <Title title={title} />
         {tools && <div className="mb-1.5 hidden shrink-0 items-center gap-1 md:flex">{tools}</div>}
       </div>
-      <p className="mt-2.5 font-serif text-[14px] italic text-muted">From Innerpedia, the encyclopedia of you</p>
+      <p className="mt-2.5 font-serif text-[14px] italic text-muted">{uiText("wiki.fromEncyclopedia")}</p>
     </header>
   );
 }
@@ -144,8 +145,8 @@ export function PageFoot({ page }: { page: Page }) {
   return (
     <footer className="clear-both pt-14">
       {cats.length > 0 && (
-        <nav aria-label="Categories" className="rounded-xl border border-line px-4 py-3 text-[13.5px] leading-[1.8]">
-          <span className="mr-2 font-medium text-ink">Categories:</span>
+        <nav aria-label={uiText("wiki.special.categories")} className="rounded-xl border border-line px-4 py-3 text-[13.5px] leading-[1.8]">
+          <span className="mr-2 font-medium text-ink">{uiText("wiki.categoriesLabel")}</span>
           {cats.map((c, i) => (
             <span key={c}>
               <span className="whitespace-nowrap">
@@ -184,8 +185,8 @@ export function LocationRail({ page }: { page: Page }) {
   const hidden = sibs.length - shown.length;
   const row = "block truncate py-[5px] leading-snug transition-colors";
   return (
-    <nav aria-label="Location" className="sticky top-[88px] max-h-[calc(100dvh-112px)] overflow-y-auto overscroll-contain pb-6 pr-2 [scrollbar-width:thin]">
-      <div className={`${LABEL} mb-3`}>Location</div>
+    <nav aria-label={uiText("wiki.location")} className="sticky top-[88px] max-h-[calc(100dvh-112px)] overflow-y-auto overscroll-contain pb-6 pr-2 [scrollbar-width:thin]">
+      <div className={`${LABEL} mb-3`}>{uiText("wiki.location")}</div>
       <ol className="border-l border-line">
         {chain.map((a, i) => (
           <li key={a.slug}>
@@ -234,7 +235,7 @@ export function PartOf({ page, className = "" }: { page: Page; className?: strin
       className={`group inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-[13px] shadow-[var(--shadow-sm)] transition-colors hover:border-line-strong ${className}`}
     >
       <Sigil seed={page.slug} name={page.name} kind={page.kind} muted={!page.isArticle} size={20} />
-      <span className="shrink-0 whitespace-nowrap text-muted">Part of</span>
+      <span className="shrink-0 whitespace-nowrap text-muted">{uiText("wiki.partOf")}</span>
       <span className="min-w-0 truncate text-link group-hover:text-link-hover">{page.name}</span>
     </Link>
   );

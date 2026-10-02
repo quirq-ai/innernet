@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { sigilGradient } from "@/components/sigil";
 import { allCategories, globePages, MAINTENANCE, type CategoryInfo } from "@/components/wiki/main/insights";
@@ -22,9 +23,9 @@ export function Welcome() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-9">
           <Globe lacking={categories.get(MAINTENANCE)?.length ?? 0} />
           <div className="min-w-0">
-            <h1 id="welcome" className="font-display text-[38px] leading-[1.04] tracking-[-0.015em] text-balance text-ink sm:text-[54px]">
-              Welcome to <em className="italic">Inner</em>pedia,
-              <span className="block text-balance text-ink-2">the encyclopedia of you.</span>
+            <h1 id="welcome" className="font-display text-[38px] leading-[1.04] tracking-[-0.015em] [overflow-wrap:anywhere] text-balance text-ink sm:text-[54px]">
+              {uiText("wiki.welcomeTitle")}
+              <span className="block text-balance text-ink-2">{uiText("wiki.encyclopediaTagline")}</span>
             </h1>
             <p className="mt-4 text-[14.5px] leading-relaxed text-ink-2">
               <Link href={wikiHref("Special:AllPages")} className="link tabular-nums">
@@ -42,9 +43,9 @@ export function Welcome() {
           </div>
         </div>
 
-        <nav aria-label="Portals" className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-x-8 gap-y-6 border-t border-line pt-6 xl:border-l xl:border-t-0 xl:pl-10 xl:pt-1">
-          <Portal label="Collections" items={collections} />
-          <Portal label="Languages" items={languages} dots />
+        <nav aria-label={uiText("wiki.portals")} className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-x-8 gap-y-6 border-t border-line pt-6 xl:border-l xl:border-t-0 xl:pl-10 xl:pt-1">
+          <Portal label={uiText("wiki.collections")} items={collections} />
+          <Portal label={uiText("wiki.languages")} items={languages} dots />
         </nav>
       </div>
     </section>

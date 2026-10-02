@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import { redactSecrets } from "@/lib/text";
 import { CHAPTERS } from "./chapters";
 import { C, ChapterHead, Excerpt, Fine, Prose, SectionHead } from "./parts";
@@ -71,12 +72,9 @@ const SAMPLES = [
 export function Privacy() {
   return (
     <section aria-labelledby="privacy-title">
-      <ChapterHead chapter={CHAPTERS[4]} kicker="Innernet reads very little, keeps it on this machine, blacks out anything that looks like a key, and answers to no one but you.">
+      <ChapterHead chapter={CHAPTERS[4]} kicker={uiText("guide.privacy.branding1")}>
         <Prose>
-          <p>
-            A search engine over your own folders sees a great deal that was never meant to be published. Innernet is built so that the index holds as little as
-            it needs, and so that the little it holds never leaves the room.
-          </p>
+          <p> {uiText("guide.privacy.branding2")} </p>
         </Prose>
       </ChapterHead>
 
