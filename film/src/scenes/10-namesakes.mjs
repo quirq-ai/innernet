@@ -113,6 +113,8 @@ export default {
     });
 
     // The page's parts, the numeral, and the notes that land on their words.
+    // The field labels converge on purpose; they cross each other mid-flight.
+    for (const t of gField.querySelectorAll("text")) t.setAttribute("data-layout-allow-overlap", "");
     const gPage = mk("g", { class: "s10-page" }, svg);
     const pageMain = mainS.filter((o) => inP(o.b)).map((o) => adopt(o.e, gPage));
     const pageDet = [...detS, ...conS].filter((o) => inP(o.b) && o.e.parentNode !== gPage).map((o) => adopt(o.e, gPage));

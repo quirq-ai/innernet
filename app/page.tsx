@@ -4,6 +4,7 @@ import { HeroSearch } from "@/components/home/hero-search";
 import { HomeFooter } from "@/components/home/home-footer";
 import { MissingIndex } from "@/components/home/missing-index";
 import { RecentlyTouched, recentlyTouched } from "@/components/home/recently-touched";
+import { BrandLinks, QuirqHome } from "@/components/brand-nav";
 import Link from "next/link";
 import { getIndex } from "@/lib/data";
 import { num } from "@/lib/format";
@@ -35,6 +36,16 @@ export default function Home() {
         <span />
         <span />
       </div>
+
+      <header className="relative z-10 mx-auto flex w-full max-w-[1240px] items-center justify-between px-4 pt-5 sm:px-6">
+        <QuirqHome size={30} />
+        <div className="flex items-center gap-1 text-[13.5px]">
+          <Link href="/wiki" className="hidden rounded-full px-3 py-1.5 text-muted transition-colors hover:bg-bg-sunk hover:text-ink sm:block">
+            Innerpedia
+          </Link>
+          <BrandLinks />
+        </div>
+      </header>
 
       <main className="relative flex flex-1 flex-col">
         <section className="flex flex-1 flex-col items-center justify-center px-4 pb-[8vh] pt-[14vh] sm:pt-[12vh]">

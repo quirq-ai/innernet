@@ -10,7 +10,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LINES, VOICE } from "../src/script.mjs";
+import { LINES, VOICE, spoken } from "../src/script.mjs";
 import { tts } from "./eleven.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -42,17 +42,32 @@ function words(alignment) {
   return out.map((w) => ({ text: w.text, start: +w.start.toFixed(3), end: +w.end.toFixed(3) }));
 }
 
+// Timings come back for the spoken words ("read me"); fold them onto the written ones
+// ("README") so captions and scene cues use the words on screen.
+function written(text, said) {
+  const out = [];
+  let k = 0;
+  for (const w of text.split(/\s+/).filter(Boolean)) {
+    const n = spoken(w).split(/\s+/).filter(Boolean).length;
+    const part = said.slice(k, k + n);
+    k += n;
+    if (part.length) out.push({ text: w, start: part[0].start, end: part[part.length - 1].end });
+  }
+  if (k !== said.length) console.warn(`word count mismatch (${k} vs ${said.length}) in: ${text.slice(0, 40)}`);
+  return out;
+}
+
 const run = async (id) => {
   const i = ids.indexOf(id);
   const file = path.join(dir, `${id}.mp3`);
-  const alignment = await tts(VOICE.id, LINES[id], file, null, {
+  const alignment = await tts(VOICE.id, spoken(LINES[id]), file, null, {
     model: VOICE.model,
     voice_settings: { speed: VOICE.speed },
-    previous_text: ids[i - 1] ? LINES[ids[i - 1]] : undefined,
-    next_text: ids[i + 1] ? LINES[ids[i + 1]] : undefined,
+    previous_text: ids[i - 1] ? spoken(LINES[ids[i - 1]]) : undefined,
+    next_text: ids[i + 1] ? spoken(LINES[ids[i + 1]]) : undefined,
   });
   const duration = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], { encoding: "utf8" }).trim());
-  meta[id] = { text: LINES[id], file: `assets/audio/vo/${id}.mp3`, duration: +duration.toFixed(3), words: words(alignment) };
+  meta[id] = { text: LINES[id], file: `assets/audio/vo/${id}.mp3`, duration: +duration.toFixed(3), words: written(LINES[id], words(alignment)) };
   console.log(`${id}  ${duration.toFixed(2)}s  ${LINES[id].slice(0, 60)}`);
 };
 
