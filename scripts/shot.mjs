@@ -1,7 +1,7 @@
 // Headless screenshot of a running page, taken once it has settled: fonts loaded and
 // every finite animation (the staggered `rise`) finished. Drives chrome-headless-shell
 // over the DevTools protocol, because its --screenshot flag fires mid-animation.
-// CHROME_BIN overrides the browser.
+// CHROME_BIN overrides the browser; SHOT_SCALE=2 captures at 2x pixel density.
 //
 //   node scripts/shot.mjs <url-path> <out.png> [width] [height] [light|dark]
 //
@@ -99,7 +99,7 @@ const once = (event) => new Promise((r) => waiters.set(event, r));
 const evaluate = async (expression) => (await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true })).result?.result?.value;
 
 await send("Page.enable");
-await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false });
+await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: Number(process.env.SHOT_SCALE || 1), mobile: false });
 await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: scheme === "dark" ? "dark" : "light" }] });
 const loaded = once("Page.loadEventFired");
 await send("Page.navigate", { url: `http://localhost:3470${route}` });

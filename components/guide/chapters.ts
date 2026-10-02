@@ -75,7 +75,7 @@ export const CHAPTERS: GuideChapter[] = [
     numeral: "V",
     title: "Privacy",
     blurb: "What is read, what never is, what is blacked out, and who may ask.",
-    figs: "Fig. 11",
+    figs: "Figs. 11 and 12",
     sections: [
       { id: "ledger", label: "The ledger" },
       { id: "localhost", label: "Only localhost" },

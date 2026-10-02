@@ -1,0 +1,269 @@
+WEBVTT
+
+1
+00:00:00.620 --> 00:00:03.348
+Somewhere on your machine are thousands of folders.
+
+2
+00:00:03.348 --> 00:00:05.601
+Everything you ever started.
+
+3
+00:00:06.321 --> 00:00:08.573
+Innernet turns them into a web of your
+
+4
+00:00:08.573 --> 00:00:11.011
+own. A search engine,
+
+5
+00:00:11.011 --> 00:00:12.974
+and an encyclopedia.
+
+6
+00:00:13.008 --> 00:00:16.132
+Private, and entirely yours.
+
+7
+00:00:19.602 --> 00:00:21.367
+It starts with a crawl.
+
+8
+00:00:21.367 --> 00:00:23.944
+The indexer walks six levels deep,
+
+9
+00:00:23.944 --> 00:00:26.022
+and quietly skips the noise:
+
+10
+00:00:26.022 --> 00:00:30.249
+dependencies, builds, caches.
+
+11
+00:00:30.969 --> 00:00:32.931
+From each folder it reads only a few
+
+12
+00:00:32.931 --> 00:00:34.742
+things: the README,
+
+13
+00:00:34.742 --> 00:00:36.008
+the package file,
+
+14
+00:00:36.008 --> 00:00:37.320
+the git history,
+
+15
+00:00:37.320 --> 00:00:39.108
+notes for agents.
+
+16
+00:00:39.305 --> 00:00:41.151
+Never your secrets.
+
+17
+00:00:41.186 --> 00:00:43.287
+Key files stay closed,
+
+18
+00:00:43.287 --> 00:00:46.028
+and passwords are blacked out.
+
+19
+00:00:46.748 --> 00:00:47.688
+In under a minute,
+
+20
+00:00:47.688 --> 00:00:50.847
+it all becomes one small index.
+
+21
+00:00:51.567 --> 00:00:53.413
+And all of it stays here.
+
+22
+00:00:53.413 --> 00:00:54.783
+The index, the search,
+
+23
+00:00:54.783 --> 00:00:57.012
+every page lives on your machine,
+
+24
+00:00:57.012 --> 00:00:58.742
+and nothing, ever,
+
+25
+00:00:58.742 --> 00:01:01.331
+is sent away.
+
+26
+00:01:02.851 --> 00:01:04.558
+Two readers share it.
+
+27
+00:01:04.558 --> 00:01:06.369
+Search finds anything you type,
+
+28
+00:01:06.369 --> 00:01:08.575
+in a few milliseconds.
+
+29
+00:01:09.295 --> 00:01:12.023
+And Innerpedia gives every project an article,
+
+30
+00:01:12.023 --> 00:01:14.230
+written from what is inside it.
+
+31
+00:01:14.950 --> 00:01:16.784
+Even namesakes are handled.
+
+32
+00:01:16.784 --> 00:01:19.455
+Two hundred and four folders called src,
+
+33
+00:01:19.455 --> 00:01:21.417
+one tidy page.
+
+34
+00:01:25.887 --> 00:01:28.604
+Every folder is already a site.
+
+35
+00:01:28.604 --> 00:01:31.704
+A little care makes it a great one.
+
+36
+00:01:32.424 --> 00:01:34.073
+Start with a README.
+
+37
+00:01:34.073 --> 00:01:36.499
+Its first paragraph becomes the summary you see
+
+38
+00:01:36.499 --> 00:01:37.916
+in search.
+
+39
+00:01:38.636 --> 00:01:40.029
+Add a package file,
+
+40
+00:01:40.029 --> 00:01:42.038
+and it learns your frameworks.
+
+41
+00:01:42.038 --> 00:01:45.753
+Add git, and it gains a history.
+
+42
+00:01:46.473 --> 00:01:48.133
+Then run one command,
+
+43
+00:01:48.133 --> 00:01:49.654
+right on your machine.
+
+44
+00:01:49.654 --> 00:01:51.013
+Your new site appears,
+
+45
+00:01:51.013 --> 00:01:54.148
+with its own article and its own colours.
+
+46
+00:01:55.268 --> 00:01:57.393
+Want more of your machine in it?
+
+47
+00:01:57.427 --> 00:01:58.554
+Add a root,
+
+48
+00:01:58.554 --> 00:02:01.085
+and the crawl reaches further.
+
+49
+00:02:04.555 --> 00:02:07.040
+Innernet is small and readable.
+
+50
+00:02:07.074 --> 00:02:08.781
+One script writes the index,
+
+51
+00:02:08.781 --> 00:02:10.209
+two libraries read it,
+
+52
+00:02:10.209 --> 00:02:12.345
+and pages render on the server,
+
+53
+00:02:12.345 --> 00:02:15.759
+behind a gate only this computer can open.
+
+54
+00:02:16.479 --> 00:02:18.035
+A new search operator,
+
+55
+00:02:18.035 --> 00:02:19.265
+a special page,
+
+56
+00:02:19.265 --> 00:02:21.309
+a section on every article:
+
+57
+00:02:21.309 --> 00:02:24.293
+each lives in one known place.
+
+58
+00:02:25.013 --> 00:02:26.406
+Make the change.
+
+59
+00:02:26.406 --> 00:02:27.730
+Check the types.
+
+60
+00:02:27.730 --> 00:02:29.169
+Crawl the pages.
+
+61
+00:02:29.169 --> 00:02:30.713
+Look at a screenshot.
+
+62
+00:02:30.713 --> 00:02:32.478
+Open a pull request.
+
+63
+00:02:32.478 --> 00:02:34.371
+And keep the one promise:
+
+64
+00:02:34.371 --> 00:02:36.867
+everything stays local.
+
+65
+00:02:38.137 --> 00:02:40.366
+Your folders were always a web.
+
+66
+00:02:40.366 --> 00:02:41.875
+Now you can wander it:
+
+67
+00:02:41.875 --> 00:02:45.487
+private, local, and yours.

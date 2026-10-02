@@ -1,7 +1,7 @@
 import { redactSecrets } from "@/lib/text";
 import { CHAPTERS } from "./chapters";
 import { C, ChapterHead, Excerpt, Fine, Prose, SectionHead } from "./parts";
-import { Figure } from "./plate";
+import { Figure, Plate } from "./plate";
 import { cite } from "./source";
 
 // Chapter V: what is read, what is only counted, what is blacked out, and who may ask.
@@ -80,9 +80,18 @@ export function Privacy() {
         </Prose>
       </ChapterHead>
 
+      <Plate
+        id="privacy"
+        fig={11}
+        title="Private by design"
+        className="mt-10"
+        alt="This machine drawn as a walled enclosure holding the index, search and Innerpedia. One gate, 127.0.0.1, is the only way in; arrows toward the cloud, telemetry and third parties stop at the wall and are struck through. A dial reads 0 bytes sent."
+        caption={<>Private by design. Everything Innernet makes stays inside this machine; the only door is localhost, and nothing is sent anywhere.</>}
+      />
+
       <SectionHead id="ledger" mark="V.1" title="The ledger" />
       <Figure
-        fig={11}
+        fig={12}
         title="What crosses the line"
         className="mt-10"
         bodyClassName="grid sm:grid-cols-2 xl:grid-cols-4"

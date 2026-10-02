@@ -5,3 +5,5 @@ next-env.d.ts
 # The index holds local paths and README text from this machine. Never commit it.
 data/*.json
 data/*.tmp
+# The explainer film is a large binary; rebuild it from film/ (see film/README.md).
+public/guide/innernet-explainer.mp4
