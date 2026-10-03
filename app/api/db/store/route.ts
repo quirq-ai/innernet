@@ -1,4 +1,4 @@
-import { getIndex } from "@/lib/data";
+import { getLocalIndex } from "@/lib/data";
 import { dbState, getDb } from "@/lib/db";
 import { rememberStore, storeLocal, type LastStore } from "@/lib/db/ingest";
 import { errorText } from "@/lib/db/log";
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   if (!db) last = { at: new Date().toISOString(), error: dbState().note };
   else {
     try {
-      const loaded = getIndex();
+      const loaded = getLocalIndex();
       last = { at: new Date().toISOString(), summary: await storeLocal(db, loaded.source === "file" ? loaded.index : null) };
     } catch (err) {
       last = { at: new Date().toISOString(), error: `The database in ${db.label} did not finish (${errorText(err)}). The files are as they were.` };

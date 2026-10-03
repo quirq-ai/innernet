@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { HistoryNav } from "@/components/activity/history-nav";
+import { DEMO } from "@/lib/mode";
 
 // The quirq mark and the small links every header carries: back and forward through
-// this tab's trail and the way to its history, the field guide, quirq, and the code on
-// GitHub. Plain links and buttons; nothing here fetches.
+// this tab's trail and the way to its history, the field guide, sources, quirq,
+// and the code on GitHub. Sources manages this machine's indexes and storage.
 
 export const QUIRQ_URL = "https://quirq.ai";
 export const GITHUB_URL = "https://github.com/quirq-ai/innernet";
@@ -32,7 +33,7 @@ export function QuirqHome({ size = 28 }: { size?: number }) {
 }
 
 /**
- * The trail, then guide, quirq and GitHub. Below md quirq goes. In a header that also
+ * The trail, then guide, sources, quirq and GitHub. Below md quirq goes. In a header that also
  * holds the search box (`compact`) they give way sooner, so the box keeps its width:
  * quirq waits for lg, the guide is its icon below md, and GitHub goes on a phone.
  */
@@ -53,6 +54,21 @@ export function BrandLinks({ className = "", compact = false }: { className?: st
         </svg>
         <span className={compact ? "max-md:hidden" : ""}>Guide</span>
       </Link>
+      {!DEMO && (
+        <Link
+          href="/sources"
+          aria-label="Sources"
+          title="Sources"
+          className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-line-strong py-1.5 text-[13px] text-ink-2 transition-colors hover:border-ink hover:text-ink focus-visible:rounded-full ${
+            compact ? "max-md:size-8 max-md:justify-center max-md:p-0 md:px-3" : "px-3"
+          }`}
+        >
+          <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5" />
+          </svg>
+          <span className={compact ? "max-md:hidden" : ""}>Sources</span>
+        </Link>
+      )}
       <a
         href={QUIRQ_URL}
         target="_blank"

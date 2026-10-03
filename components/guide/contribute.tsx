@@ -16,6 +16,7 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
     dir: "scripts/",
     items: [
       { path: "scripts/build-index.ts", role: "The crawler: walks the roots, reads, classifies, names, links and writes the index." },
+      { path: "scripts/build-demo-index.ts", role: "Public GitHub indexing for the demo or local Remote source, with separate output and clone caches." },
       { path: "scripts/try-search.ts", role: "The search core from a terminal." },
       { path: "scripts/shot.mjs", role: "Headless screenshots of the running app, with the culprits of any sideways scroll." },
     ],
@@ -28,6 +29,9 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
       { path: "lib/text.ts", role: "Markdown to text, first paragraphs, house style, redaction. Shared with the indexer." },
       { path: "lib/normalize.ts", role: "Brings any index up to today's rules, at write and at load." },
       { path: "lib/data.ts", role: "Loads the index, reloads it when it changes, resolves every /wiki slug." },
+      { path: "lib/sources.ts", role: "Saved Local and Remote choices, configuration and index paths." },
+      { path: "lib/remote-config.ts", role: "Validation of the editable GitHub account and optional repository list." },
+      { path: "lib/source-storage.ts", role: "The Sources page's storage locations and file-manager and editor actions." },
       { path: "lib/search.ts", role: "MiniSearch, operators, the prior, snippets, did you mean, suggestions." },
       { path: "lib/links.ts", role: "wikiHref, categoryHref, searchHref, vscodeHref." },
       { path: "lib/activity.ts", role: "The history's folders: one per session, one JSON Lines file per app." },
@@ -44,6 +48,7 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
       { path: "app/wiki/[slug]/page.tsx", role: "Every Innerpedia page but the Main page, through resolveSlug." },
       { path: "app/api/suggest/route.ts", role: "Suggestions for the search box, as you type." },
       { path: "app/api/activity/route.ts", role: "Writes the history: to this machine's folders, or on a demo with a database, to Neon for 30 days. Same origin only." },
+      { path: "app/api/sources", role: "Local source inspection, selection, sync and named storage actions. Same origin only.", dir: true },
       { path: "app/api/db/store/route.ts", role: "Store now, from the history page: the index and the history into this machine's database." },
       { path: "app/globals.css", role: "The tokens, both themes, the aurora, prose." },
     ],
@@ -359,9 +364,11 @@ const CONVENTIONS: { title: string; text: React.ReactNode }[] = [
     title: "Server first",
     text: (
       <>
-        Pages are Server Components. The browser asks only this app, and only two routes: the search box asks <C>/api/suggest</C>, and the history posts each page to{" "}
-        <C>/api/activity</C> (on a demo with a database, its history page also reads and clears the visitor&apos;s own sessions there). On this machine nothing ever
-        leaves it. A new client component needs a reason only the browser can satisfy.
+        Pages are Server Components. The browser asks only this app: the search box asks <C>/api/suggest</C>, the history posts each page to{" "}
+        <C>/api/activity</C> (on a demo with a database, its history page also reads and clears the visitor&apos;s own sessions there), and the local Sources page
+        uses <C>/api/sources</C>, <C>/api/sources/sync</C> and <C>/api/sources/open</C>. These routes inspect or save choices, refresh selected providers, and open
+        named storage locations on this machine. Remote sync downloads public GitHub content from the saved account and optional repository list; local content
+        and activity stay here. A new client component needs a reason only the browser can satisfy.
       </>
     ),
   },
