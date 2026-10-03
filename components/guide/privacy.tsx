@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import { redactSecrets } from "@/lib/text";
 import { CHAPTERS } from "./chapters";
 import { C, ChapterHead, Excerpt, Fine, Prose, SectionHead } from "./parts";
@@ -69,14 +70,12 @@ const SAMPLES = [
 ];
 
 export function Privacy() {
+  const config = getUiConfig();
   return (
     <section aria-labelledby="privacy-title">
-      <ChapterHead chapter={CHAPTERS[4]} kicker="Innernet reads very little, keeps it on this machine, blacks out anything that looks like a key, and answers to no one but you.">
+      <ChapterHead chapter={CHAPTERS[4]} kicker={uiText("guide.privacy.branding1")}>
         <Prose>
-          <p>
-            A search engine over your own folders sees a great deal that was never meant to be published. Innernet is built so that the index holds as little as
-            it needs, and so that the little it holds never leaves the room.
-          </p>
+          <p> {uiText("guide.privacy.branding2")} </p>
         </Prose>
       </ChapterHead>
 
@@ -85,8 +84,8 @@ export function Privacy() {
         fig={11}
         title="Private by design"
         className="mt-10"
-        alt="This machine drawn as a walled enclosure holding the index, search and Innerpedia. One gate, 127.0.0.1, is the only way in; arrows toward the cloud, telemetry and third parties stop at the wall and are struck through. A dial reads 0 bytes sent."
-        caption={<>Private by design. Everything Innernet makes stays inside this machine; the only door is localhost, and nothing is sent anywhere.</>}
+        alt={uiText("guide.privacyDiagramAlt", {}, config)}
+        caption={uiText("guide.privacyDiagramCaption", {}, config)}
       />
 
       <SectionHead id="ledger" mark="V.1" title="The ledger" />

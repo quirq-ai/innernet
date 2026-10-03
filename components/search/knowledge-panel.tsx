@@ -7,6 +7,7 @@ import { wikiHref } from "@/lib/links";
 import { displayPath, fallbackDescription, pageSummary } from "@/lib/search";
 import type { Page } from "@/lib/types";
 import { kindLine, primaryLanguage } from "./query-tools";
+import { uiText } from "@/lib/ui-config";
 
 // The card beside the results when one article clearly answers the query: who it is,
 // what it is made of, and where it lives, with the way into Innerpedia.
@@ -20,25 +21,25 @@ export function KnowledgePanel({ page }: { page: Page }) {
   const facts: [string, React.ReactNode][] = [];
   if (lang)
     facts.push([
-      "Language",
+      uiText("search.fact.language"),
       <span key="l">
         <span aria-hidden className="mr-1.5 inline-block size-2 rounded-full align-[0.05em]" style={{ background: langColor(lang.name) }} />
         {lang.name}
-        {then && <span className="text-muted">, then {then.name}</span>}
+        {then && <span className="text-muted">{uiText("search.thenLanguage", { language: then.name })}</span>}
       </span>,
     ]);
-  if (page.frameworks.length) facts.push(["Frameworks", page.frameworks.slice(0, 4).join(", ")]);
-  if (page.created) facts.push(["Created", <time key="c" dateTime={page.created}>{monthYear(page.created)}</time>]);
+  if (page.frameworks.length) facts.push([uiText("search.fact.frameworks"), page.frameworks.slice(0, 4).join(", ")]);
+  if (page.created) facts.push([uiText("search.fact.created"), <time key="c" dateTime={page.created}>{monthYear(page.created)}</time>]);
   if (page.modified)
     facts.push([
-      "Last touched",
+      uiText("search.fact.lastTouched"),
       <time key="m" dateTime={page.modified} title={longDate(page.modified)}>
         {timeAgo(page.modified)}
       </time>,
     ]);
-  facts.push(["Files", <span key="f" className="tabular-nums">{num(page.totalFiles)}</span>]);
-  if (page.totalBytes) facts.push(["Size", <span key="s" className="tabular-nums">{bytes(page.totalBytes)}</span>]);
-  if (page.git) facts.push(["Commits", <span key="g" className="tabular-nums">{num(page.git.commitCount)}</span>]);
+  facts.push([uiText("search.fact.files"), <span key="f" className="tabular-nums">{num(page.totalFiles)}</span>]);
+  if (page.totalBytes) facts.push([uiText("search.fact.size"), <span key="s" className="tabular-nums">{bytes(page.totalBytes)}</span>]);
+  if (page.git) facts.push([uiText("search.fact.commits"), <span key="g" className="tabular-nums">{num(page.git.commitCount)}</span>]);
   // Break long paths only after a slash.
   const where = displayPath(page)
     .split("/")
@@ -50,7 +51,7 @@ export function KnowledgePanel({ page }: { page: Page }) {
       </span>
     ));
   facts.push([
-    "Location",
+    uiText("search.fact.location"),
     parent ? (
       <Link key="p" href={wikiHref(parent.slug)} className="link font-mono text-[12px] leading-[1.6] [overflow-wrap:anywhere]">
         {where}
@@ -61,13 +62,13 @@ export function KnowledgePanel({ page }: { page: Page }) {
   ]);
 
   const quick = [
-    page.modified ? { k: "Touched", v: timeAgo(page.modified).replace(/ ago$/, "") } : null,
-    { k: "Files", v: num(page.totalFiles) },
-    page.git ? { k: "Commits", v: num(page.git.commitCount) } : page.totalBytes ? { k: "Size", v: bytes(page.totalBytes) } : null,
+    page.modified ? { k: uiText("search.fact.touched"), v: timeAgo(page.modified).replace(/ ago$/, "") } : null,
+    { k: uiText("search.fact.files"), v: num(page.totalFiles) },
+    page.git ? { k: uiText("search.fact.commits"), v: num(page.git.commitCount) } : page.totalBytes ? { k: uiText("search.fact.size"), v: bytes(page.totalBytes) } : null,
   ].filter((x): x is { k: string; v: string } => !!x);
 
   return (
-    <aside aria-label={`About ${page.title}`} className="rise relative overflow-hidden rounded-[22px] border border-line bg-surface shadow-soft">
+    <aside aria-label={uiText("search.panelAbout", { title: page.title })} className="ui-panel rise relative overflow-hidden rounded-[22px] border border-line bg-surface shadow-soft">
       {/* A wash of the sigil's own colours, fading into the card. */}
       <div
         aria-hidden
@@ -101,8 +102,8 @@ export function KnowledgePanel({ page }: { page: Page }) {
 
         {/* Phones get three numbers; the full table waits for room. */}
         <dl className="mt-4 grid grid-cols-3 divide-x divide-line rounded-xl border border-line lg:hidden">
-          {quick.map((q) => (
-            <div key={q.k} className="px-3 py-2.5 text-center">
+          {quick.map((q, i) => (
+            <div key={i} className="px-3 py-2.5 text-center">
               <dt className="text-[10.5px] uppercase tracking-[0.12em] text-muted">{q.k}</dt>
               <dd className="mt-0.5 font-display text-[22px] leading-none tabular-nums text-ink">{q.v}</dd>
             </div>
@@ -110,8 +111,8 @@ export function KnowledgePanel({ page }: { page: Page }) {
         </dl>
 
         <dl className="mt-5 hidden border-t border-line pt-1 lg:block">
-          {facts.map(([k, v]) => (
-            <div key={k} className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 border-b border-line py-2 text-[13.5px] last:border-b-0">
+          {facts.map(([k, v], i) => (
+            <div key={i} className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 border-b border-line py-2 text-[13.5px] last:border-b-0">
               <dt className="text-muted">{k}</dt>
               <dd className="min-w-0 text-ink">{v}</dd>
             </div>
@@ -120,7 +121,7 @@ export function KnowledgePanel({ page }: { page: Page }) {
 
         {related.length > 0 && (
           <section className="mt-5 hidden lg:block">
-            <h3 className="text-[11px] uppercase tracking-[0.12em] text-muted">See also</h3>
+            <h3 className="text-[11px] uppercase tracking-[0.12em] text-muted">{uiText("search.seeAlso")}</h3>
             <ul className="mt-2.5 flex flex-wrap gap-1.5">
               {related.map((r) => (
                 <li key={r.slug}>
@@ -141,7 +142,7 @@ export function KnowledgePanel({ page }: { page: Page }) {
           href={wikiHref(page.slug)}
           className="group mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-link hover:text-link-hover"
         >
-          Read on <span className="font-display text-[17px] font-normal"><em>Inner</em>pedia</span>
+          {uiText("search.openArticle")}
           <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
         </Link>
       </div>

@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -117,6 +118,12 @@ export function hasPlate(id: PlateId): boolean {
   return plateSvg(id) !== null;
 }
 
+/** Instance copy enters a text node, never SVG markup or attributes. */
+function xmlText(value: string): string {
+  const entities: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" };
+  return value.replace(/[&<>"']/g, (character) => entities[character]);
+}
+
 /** What each plate will show, as an engraver's first sketch: the terms in order, joined
  * by arrows when they flow from one to the next. */
 const SKETCHES: Record<PlateId, { terms: string[]; flow: boolean; loop?: boolean }> = {
@@ -149,7 +156,13 @@ export function Plate({
   imprint?: React.ReactNode;
   className?: string;
 }) {
-  const svg = plateSvg(id);
+  const config = getUiConfig();
+  const cachedSvg = plateSvg(id);
+  // Keep cached artwork independent of the instance. The encyclopedia byline is
+  // UI copy; the drawing's project names and source paths remain its examples.
+  const svg = id === "add-site" && cachedSvg
+    ? cachedSvg.replace(">From Innerpedia, the encyclopedia of you</text>", () => `>${xmlText(uiText("wiki.fromEncyclopedia", {}, config))}</text>`)
+    : cachedSvg;
   const n = PLATE_IDS.indexOf(id) + 1;
   return (
     <Figure
@@ -162,7 +175,7 @@ export function Plate({
           <>
             {/* On a phone a drawn plate keeps its size and scrolls inside the frame. */}
             {svg && <span className="sm:hidden">Swipe across the plate</span>}
-            <span className={svg ? "max-sm:hidden" : ""}>The Innernet Field Guide</span>
+            <span className={svg ? "max-sm:hidden" : ""}>{uiText("guide.plate.branding1", {}, config)}</span>
             <span>
               Plate {n} of {PLATE_IDS.length}
             </span>
@@ -234,7 +247,7 @@ function Sketch({ title, id, terms, flow, loop }: { title: string; id: string; t
                   flow && i === terms.length - 1 ? "border-link/50 text-link" : "border-line-strong text-ink-2"
                 }`}
               >
-                {t}
+                {t === "Innerpedia" ? getUiConfig().brand.encyclopediaName : t}
               </span>
             </li>
           ))}

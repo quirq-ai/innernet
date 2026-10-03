@@ -1,0 +1,234 @@
+{
+  "$schema": "../innernet.ui.override.schema.json",
+  "version": 1,
+  "brand": {
+    "name": "relay",
+    "encyclopediaName": "relay reference",
+    "tagline": "Find the signal in your code.",
+    "description": "A local signal console for searching your repositories, inspecting their structure and following project context.",
+    "language": "en",
+    "creator": "relay",
+    "logo": null,
+    "encyclopediaLogo": null,
+    "icon": "/brand/relay.svg",
+    "appleIcon": "/brand/relay-apple.png",
+    "italicPrefix": "",
+    "encyclopediaItalicPrefix": "",
+    "headerLogo": {
+      "src": "/brand/relay.svg",
+      "alt": "relay signal emblem",
+      "width": 64,
+      "height": 64
+    },
+    "showPublisherLink": false,
+    "sourceLink": {
+      "enabled": false,
+      "label": "{app} source",
+      "href": "/"
+    },
+    "attribution": {
+      "enabled": false,
+      "label": "Built with",
+      "name": "relay",
+      "href": "/",
+      "logo": null
+    }
+  },
+  "theme": {
+    "style": "cyberpunk",
+    "defaultMode": "dark",
+    "allowToggle": true,
+    "light": {
+      "bg": "#f9f6ff",
+      "bg-sunk": "#eee8f7",
+      "surface": "#ffffff",
+      "ink": "#1c1531",
+      "ink-2": "#48385f",
+      "muted": "#756486",
+      "faint": "#a596b6",
+      "line": "rgb(63 32 92 / 0.11)",
+      "line-strong": "rgb(63 32 92 / 0.24)",
+      "link": "#007978",
+      "link-hover": "#005555",
+      "visited": "#98549e",
+      "mark-bg": "#c9f5ec",
+      "mark-ink": "#124b4a",
+      "notice-bg": "#f6eafa",
+      "notice-line": "#e4c4e9",
+      "good": "#17764c",
+      "ring": "#007978",
+      "aurora-1": "#00bfb5",
+      "aurora-2": "#cb13b8",
+      "aurora-3": "#8657db",
+      "aurora-opacity": 0,
+      "shadow-sm": [
+        { "x": 0, "y": 1, "blur": 2, "spread": 0, "color": "rgb(42 13 67 / 0.07)" }
+      ],
+      "shadow": [
+        { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgb(42 13 67 / 0.05)" },
+        { "x": 0, "y": 8, "blur": 20, "spread": -10, "color": "rgb(42 13 67 / 0.16)" }
+      ],
+      "shadow-lg": [
+        { "x": 0, "y": 2, "blur": 4, "spread": 0, "color": "rgb(42 13 67 / 0.06)" },
+        { "x": 0, "y": 20, "blur": 40, "spread": -18, "color": "rgb(42 13 67 / 0.24)" }
+      ]
+    },
+    "dark": {
+      "bg": "#0a0712",
+      "bg-sunk": "#100c1d",
+      "surface": "#161026",
+      "ink": "#f1eaff",
+      "ink-2": "#d6cce9",
+      "muted": "#aba0c3",
+      "faint": "#716380",
+      "line": "rgb(217 182 255 / 0.12)",
+      "line-strong": "rgb(217 182 255 / 0.26)",
+      "link": "#6afff3",
+      "link-hover": "#acfff8",
+      "visited": "#efa8f5",
+      "mark-bg": "rgb(106 255 243 / 0.17)",
+      "mark-ink": "#c6fff6",
+      "notice-bg": "#27102c",
+      "notice-line": "#69285d",
+      "good": "#73f5b0",
+      "ring": "#6afff3",
+      "aurora-1": "#6afff3",
+      "aurora-2": "#ff4de6",
+      "aurora-3": "#9c6bff",
+      "aurora-opacity": 0,
+      "shadow-sm": [
+        { "x": 0, "y": 1, "blur": 2, "spread": 0, "color": "rgb(4 0 12 / 0.55)" }
+      ],
+      "shadow": [
+        { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgb(4 0 12 / 0.45)" },
+        { "x": 0, "y": 8, "blur": 20, "spread": -10, "color": "rgb(4 0 12 / 0.80)" }
+      ],
+      "shadow-lg": [
+        { "x": 0, "y": 2, "blur": 4, "spread": 0, "color": "rgb(4 0 12 / 0.55)" },
+        { "x": 0, "y": 20, "blur": 40, "spread": -18, "color": "rgb(4 0 12 / 0.95)" }
+      ]
+    },
+    "fonts": {
+      "display": "jetbrains",
+      "serif": "jetbrains",
+      "sans": "inter",
+      "mono": "jetbrains"
+    },
+    "effects": {
+      "aurora": false,
+      "grain": false,
+      "motion": false
+    }
+  },
+  "layout": {
+    "maxWidth": 1360,
+    "searchWidth": 720,
+    "articleWidth": 1000,
+    "density": "compact"
+  },
+  "navigation": {
+    "home": ["wiki", "allPages", "statistics", "guide"],
+    "search": ["wiki", "allPages", "categories", "guide"],
+    "wiki": ["search", "wiki", "allPages", "categories", "statistics", "guide"],
+    "guide": ["search", "wiki", "statistics", "top"],
+    "headerSearch": ["wiki", "allPages", "guide"],
+    "headerWiki": ["search", "allPages", "guide"],
+    "labels": {
+      "search": "Console",
+      "wiki": "Reference",
+      "guide": "Operator guide",
+      "random": "Random project",
+      "allPages": "Project index",
+      "categories": "Tech categories",
+      "statistics": "Index status",
+      "top": "Return to top"
+    }
+  },
+  "home": {
+    "layout": "console",
+    "showCounts": true,
+    "showExamples": true,
+    "exampleQueries": ["kind:repo", "lang:typescript", "fw:next", "is:article"],
+    "showRecent": false,
+    "recentLimit": 4,
+    "showCurious": false,
+    "autoFocus": true
+  },
+  "search": {
+    "suggestions": true,
+    "suggestionLimit": 5,
+    "debounceMs": 80,
+    "focusShortcut": true,
+    "perPage": 12,
+    "showKnowledgePanel": true,
+    "tabs": ["all", "repos", "articles", "docs", "folders"]
+  },
+  "wiki": {
+    "showContents": true,
+    "showInfobox": true,
+    "mainSections": ["welcome", "news", "featured", "browse", "areas"],
+    "articleSections": ["overview", "technology", "structure", "history", "see-also", "external-links"]
+  },
+  "guide": {
+    "showRecipe": false
+  },
+  "copy": {
+    "home.eyebrow": "{app} / local signal console",
+    "home.sideTitle": "Signal routes",
+    "home.sideDescription": "Query the index. Inspect a project. Follow its source. Your workspace is the network.",
+    "home.title": "{app} / project console",
+    "home.searchPlaceholder": "Search repositories, languages or frameworks",
+    "home.searchButton": "Run search",
+    "home.try": "Queries",
+    "home.folders": "indexed folders",
+    "home.articles": "project notes",
+    "home.repositories": "repositories",
+    "searchPlaceholder": "Search the project index",
+    "wikiSearchPlaceholder": "Search the reference",
+    "search.placeholder": "Search the project index",
+    "search.wikiPlaceholder": "Search the reference",
+    "search.label": "Find code and context",
+    "search.clear": "Reset query",
+    "search.suggestionsLabel": "Matching projects",
+    "search.everything": "Run query: {query}",
+    "search.title": "{query} / {app}",
+    "search.tab.all": "All matches",
+    "search.tab.articles": "Project notes",
+    "search.tab.repos": "Repositories",
+    "search.tab.docs": "Docs",
+    "search.tab.folders": "Directories",
+    "search.noResultsTitle": "No indexed projects match {query}{filters}.",
+    "search.noResultsDescription": "Refine the query",
+    "search.panelAbout": "Project context: {title}",
+    "search.openArticle": "Open reference",
+    "wiki.mainTitle": "{wiki} / project index",
+    "wiki.welcomeTitle": "{wiki}",
+    "wiki.encyclopediaTagline": "projects, tools and implementation context",
+    "wiki.fromEncyclopedia": "{wiki} / project notes",
+    "wiki.news": "Recent repository activity",
+    "wiki.featured": "Repository spotlight",
+    "wiki.browse": "Browse the stack",
+    "wiki.areas": "Reference views",
+    "wiki.contents": "On this page",
+    "wiki.infoboxTitle": "Project facts: {name}",
+    "wiki.article.overview": "README and notes",
+    "wiki.article.technology": "Technology stack",
+    "wiki.article.structure": "Directory map",
+    "wiki.article.history": "Git history",
+    "wiki.article.see-also": "Related projects",
+    "wiki.article.external-links": "Source links",
+    "guideTitle": "{app} / operator guide",
+    "guideDescription": "The indexing workflow, query syntax and local privacy boundary behind your developer console.",
+    "continueWiki": "Open project reference",
+    "missingPageTitle": "Reference entry unavailable",
+    "missingPageDescription": "No project entry exists at this address. Search the index or inspect its crawl depth.",
+    "nothingIndexed": "Index offline",
+    "indexedFrom": "Index synced {age} / {roots}",
+    "refreshWith": "Resync with",
+    "buildWith": "Initialize with",
+    "demo.homeTitle": "{app} / public project console",
+    "demo.homeDescription": "A public {app} console over github.com/{org}, with repository search and a project reference.",
+    "demo.tagline": "Public code and context from {org}",
+    "demo.indexedFrom": "Public index of {roots}, synced {age}"
+  }
+}

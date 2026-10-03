@@ -66,6 +66,16 @@ const GUIDE_SOURCES = [
 // does not depend on VERCEL reaching the deployed functions at run time.
 const demoBuild = process.env.INNERNET_DEMO === "1" || process.env.VERCEL === "1";
 
+// A deployment only carries traced files. Include a selected override from this
+// checkout; absolute overrides outside it remain a local-server option.
+const uiOverride = process.env.INNERNET_UI_CONFIG
+  ? path.relative(process.cwd(), path.resolve(process.env.INNERNET_UI_CONFIG))
+  : "";
+const uiFiles = ["innernet.ui.json", "innernet.ui.schema.json", "innernet.ui.override.schema.json"];
+if (uiOverride && uiOverride !== ".." && !uiOverride.startsWith(`..${path.sep}`) && !path.isAbsolute(uiOverride)) {
+  uiFiles.push(uiOverride.split(path.sep).join("/"));
+}
+
 const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
@@ -76,7 +86,7 @@ const nextConfig: NextConfig = {
   // matches these patterns anywhere below the project, not only at its top, so they
   // name files exactly rather than whole folders.)
   outputFileTracingIncludes: {
-    "/**": ["data/demo/index.json"],
+    "/**": ["data/demo/index.json", ...uiFiles],
     "/guide": [...GUIDE_SOURCES, "public/guide/plates/*.svg"],
   },
   outputFileTracingExcludes: {

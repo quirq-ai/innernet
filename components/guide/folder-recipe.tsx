@@ -301,8 +301,8 @@ function simulate(s: State, p: RecipeProps): Outcome {
   const notice = isArticle
     ? readme
       ? ""
-      : "This article was written from the folder alone. You can help Innerpedia by adding a README."
-    : "This folder is a stub. You can help Innerpedia by adding a README.";
+      : p.labels?.articleNotice ?? "Add a README to help describe this article."
+    : p.labels?.stubNotice ?? "Add a README to help describe this folder.";
 
   const categories: string[] = [];
   if (isArticle) {
@@ -548,7 +548,7 @@ function Verdict({ o }: { o: Outcome }) {
 function NoPage({ o, s, props }: { o: Outcome; s: State; props: RecipeProps }) {
   const text =
     o.none === "deep"
-      ? `Past the ${props.maxDepth} levels Innerpedia reads, a folder gets no page. Its files, size and languages are counted into the tally of its depth ${props.maxDepth} parent, which names what lies below; a .git down here is never read.`
+      ? props.labels?.deepNotice ?? `Past depth ${props.maxDepth}, a folder has no page.`
       : o.none === "pruned"
         ? `${s.name} is a pruned name, like node_modules, dist and vendor: the crawler never enters it. Its parent lists it among the folders left out.`
         : `A name that starts with a dot is pruned and never mentioned, not even among the folders left out.`;

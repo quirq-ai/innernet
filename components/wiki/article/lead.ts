@@ -1,3 +1,4 @@
+import { getUiConfig } from "@/lib/ui-config";
 import { workspaces } from "@/components/wiki/main/insights";
 import { ancestors, getIndex, getPage, getPages } from "@/lib/data";
 import { bytes, monthYear, num, plural, timeAgo } from "@/lib/format";
@@ -256,7 +257,7 @@ export function leadSegs(p: Page): Seg[] {
   if (p.depth === 0) {
     // In the demo the root is a GitHub organization rather than a folder on disk.
     const where = isRemote(p.path) ? `the GitHub organization at ${p.root},` : `the folder at ${p.root}`;
-    out.push({ text: ` is the root of Innerpedia: ${where} from which all ${num(index.meta.counts.pages)} indexed folders descend.` });
+    out.push({ text: ` is the root of ${getUiConfig().brand.encyclopediaName}: ${where} from which all ${num(index.meta.counts.pages)} indexed folders descend.` });
   } else {
     const d = descriptor(p);
     const what = p.kind === "docs" && p.totalFiles > 0 ? `collection of ${countOf(p.totalFiles, docNoun)}` : d;
@@ -282,8 +283,8 @@ export function leadSegs(p: Page): Seg[] {
   } else if (p.depth > 0 && past !== "unknown") {
     out.push({ text: " The index found no files in it." });
   }
-  if (past === "unknown") out.push({ text: ` Innerpedia reads ${levels()} deep, so anything below that is not counted here.` });
-  else if (past) out.push({ text: ` Of its folders, ${count(past.folders)} ${past.folders === 1 ? "lies" : "lie"} past the ${levels()} Innerpedia reads: ${past.folders === 1 ? "its files are counted, but it has no page" : "their files are counted, but they have no pages"} of ${past.folders === 1 ? "its" : "their"} own.` });
+  if (past === "unknown") out.push({ text: ` ${getUiConfig().brand.encyclopediaName} reads ${levels()} deep, so anything below that is not counted here.` });
+  else if (past) out.push({ text: ` Of its folders, ${count(past.folders)} ${past.folders === 1 ? "lies" : "lie"} past the ${levels()} ${getUiConfig().brand.encyclopediaName} reads: ${past.folders === 1 ? "its files are counted, but it has no page" : "their files are counted, but they have no pages"} of ${past.folders === 1 ? "its" : "their"} own.` });
 
   // 4. History, for repositories.
   const g = p.git;
@@ -309,7 +310,7 @@ export function leadSegs(p: Page): Seg[] {
     const direct = getPages(p.children).filter((q) => q.isArticle);
     const pool = direct.length >= 3 ? direct : inner;
     const largest = [...pool].sort((a, b) => b.totalFiles - a.totalFiles).slice(0, 3);
-    out.push({ text: ` Innerpedia has ${count(inner.length)} articles on folders inside it, the largest being ` }, ...listSegs(largest), { text: "." });
+    out.push({ text: ` ${getUiConfig().brand.encyclopediaName} has ${count(inner.length)} articles on folders inside it, the largest being ` }, ...listSegs(largest), { text: "." });
   }
 
   // 6. A small courtesy to the agents.
@@ -365,15 +366,15 @@ export function stubLeadSegs(p: Page): Seg[] {
     out.push({ text: " It holds no files of its own." });
   }
   if (past === "unknown") {
-    out.push({ text: ` Innerpedia reads ${levels()} deep, so any folders ${p.children.length ? "further down" : "inside it"} are not indexed.` });
+    out.push({ text: ` ${getUiConfig().brand.encyclopediaName} reads ${levels()} deep, so any folders ${p.children.length ? "further down" : "inside it"} are not indexed.` });
   } else if (past) {
     const files = past.files === 0 ? "" : past.files === 1 ? "the one file inside is" : `the ${count(past.files)} files inside are`;
     out.push({
       text: p.children.length
-        ? ` Of the folders below it, ${count(past.folders)} ${past.folders === 1 ? "lies" : "lie"} past the ${levels()} Innerpedia reads and ${past.folders === 1 ? "has no page of its own" : "have no pages of their own"}.`
+        ? ` Of the folders below it, ${count(past.folders)} ${past.folders === 1 ? "lies" : "lie"} past the ${levels()} ${getUiConfig().brand.encyclopediaName} reads and ${past.folders === 1 ? "has no page of its own" : "have no pages of their own"}.`
         : deeper === 1
-          ? ` That subfolder lies past the ${levels()} Innerpedia reads${files ? `: ${files} counted here, but the folder has` : " and has"} no page of its own.`
-          : ` These subfolders lie past the ${levels()} Innerpedia reads${files ? `: ${files} counted here, but the folders have` : " and have"} no pages of their own.`,
+          ? ` That subfolder lies past the ${levels()} ${getUiConfig().brand.encyclopediaName} reads${files ? `: ${files} counted here, but the folder has` : " and has"} no page of its own.`
+          : ` These subfolders lie past the ${levels()} ${getUiConfig().brand.encyclopediaName} reads${files ? `: ${files} counted here, but the folders have` : " and have"} no pages of their own.`,
     });
   }
 
@@ -426,4 +427,3 @@ export function splitTitle(title: string): [string, string | null] {
   }
   return [title, null];
 }
-

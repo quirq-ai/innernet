@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Fragment } from "react";
 import { splitTitle } from "@/components/wiki/main/insights";
@@ -39,12 +40,12 @@ export function Box({
 export function PageTitle({ prefix, title, children }: { prefix?: string; title: React.ReactNode; children?: React.ReactNode }) {
   return (
     <header className="rise">
-      <h1 className="font-display text-[40px] leading-[1.06] tracking-[-0.012em] text-ink sm:text-[50px]">
+      <h1 className="font-display text-[40px] leading-[1.06] tracking-[-0.012em] text-ink [overflow-wrap:anywhere] sm:text-[50px]">
         {prefix && <span className="text-muted">{prefix}</span>}
         {title}
       </h1>
       <div className="mt-3 border-t border-line-strong pt-2.5">
-        <p className="font-serif text-[14px] italic text-muted">From Innerpedia, the encyclopedia of you</p>
+        <p className="font-serif text-[14px] italic text-muted">{uiText("wiki.fromEncyclopedia")}</p>
       </div>
       {children}
     </header>

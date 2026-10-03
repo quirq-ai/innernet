@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { cap, featured, gloss, undash } from "@/components/wiki/main/insights";
@@ -15,7 +16,7 @@ export function FeaturedArticle({ delay, className }: { delay?: number; classNam
   const href = wikiHref(page.slug);
 
   return (
-    <Box id="featured" title="From today’s featured article" delay={delay} className={className}>
+    <Box id="featured" title={uiText("wiki.featured")} delay={delay} className={className}>
       <article className="flow-root">
         <Link href={href} tabIndex={-1} aria-hidden className="float-left mb-3 mr-5 mt-1 block transition-transform duration-300 hover:-rotate-3">
           <Sigil seed={page.slug} name={page.name} kind={page.kind} size={84} className="shadow-soft" />
@@ -37,13 +38,13 @@ export function FeaturedArticle({ delay, className }: { delay?: number; classNam
         <p className="mt-4 font-serif text-[17.5px] leading-[1.65] text-ink">
           {blurb}{" "}
           <Link href={href} className="link whitespace-nowrap font-sans text-[14px] font-medium">
-            Read more →
+            {uiText("wiki.readMore")}
           </Link>
         </p>
       </article>
       {others.length > 0 && (
         <p className="mt-5 border-t border-line pt-3 text-[13px] leading-relaxed text-muted">
-          <span className="mr-1.5 font-medium text-ink-2">Also notable:</span>
+          <span className="mr-1.5 font-medium text-ink-2">{uiText("wiki.alsoNotable")}</span>
           <Dotted>
             {others.map((p) => (
               <PageLink key={p.slug} page={p} />

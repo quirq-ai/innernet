@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil, sigilGradient } from "@/components/sigil";
 import { authorTotal } from "@/components/wiki/article/lead";
@@ -29,28 +30,28 @@ export function StatisticsView() {
   const roots = m.roots.map((r) => r.label).join(", ");
 
   const figures = [
-    { k: "Folders", v: num(m.counts.pages), note: "each with a page" },
-    { k: "Articles", v: num(m.counts.articles), note: "projects, repositories, documents" },
-    { k: "Stubs", v: num(m.counts.stubs), note: "folders without a story yet" },
-    { k: "Repositories", v: num(m.counts.repos), note: s.withHistory === m.counts.repos ? "with a Git history" : `${num(s.withHistory)} with commits` },
-    { k: "Files", v: num(s.files), note: m.deeperCounted ? "in every folder, indexed or counted" : "in indexed folders" },
-    { k: DEMO ? "Size" : "On disk", v: bytes(s.bytes), note: DEMO ? "at each repository's latest commit" : "dependencies and builds excluded" },
-    { k: "Commits", v: num(s.commits), note: `in ${num(s.histories)} distinct histories` },
-    { k: "Categories", v: num(m.counts.categories), note: "ways to browse" },
+    { k: uiText("wiki.label.folders"), v: num(m.counts.pages), note: "each with a page" },
+    { k: uiText("wiki.label.articles"), v: num(m.counts.articles), note: "projects, repositories, documents" },
+    { k: uiText("wiki.label.stubs"), v: num(m.counts.stubs), note: "folders without a story yet" },
+    { k: uiText("wiki.label.repositories"), v: num(m.counts.repos), note: s.withHistory === m.counts.repos ? "with a Git history" : `${num(s.withHistory)} with commits` },
+    { k: uiText("wiki.label.files"), v: num(s.files), note: m.deeperCounted ? "in every folder, indexed or counted" : "in indexed folders" },
+    { k: uiText(DEMO ? "wiki.label.size" : "wiki.label.onDisk"), v: bytes(s.bytes), note: DEMO ? "at each repository's latest commit" : "dependencies and builds excluded" },
+    { k: uiText("wiki.label.commits"), v: num(s.commits), note: `in ${num(s.histories)} distinct histories` },
+    { k: uiText("wiki.label.categories"), v: num(m.counts.categories), note: "ways to browse" },
   ];
 
   return (
     <main className="max-w-[1120px]">
-      <PageTitle prefix="Special: " title="Statistics" />
+      <PageTitle prefix={uiText("wiki.specialPrefix")} title={uiText("wiki.special.statistics")} />
       <p className="rise mt-6 max-w-[720px] font-serif text-[18px] leading-[1.68] text-ink" style={{ animationDelay: "40ms" }}>
-        Innerpedia was last written on {longDate(m.generatedAt)} from <span className="font-mono text-[0.8em] text-ink-2">{roots}</span>, reading{" "}
+        {getUiConfig().brand.encyclopediaName} was last written on {longDate(m.generatedAt)} from <span className="font-mono text-[0.8em] text-ink-2">{roots}</span>, reading{" "}
         {num(m.counts.pages)} folders in {(m.durationMs / 1000).toFixed(1)} seconds. Of those, {num(m.counts.articles)} earned an article; the
         other {num(m.counts.stubs)} are stubs.
       </p>
 
       <dl className="rise mt-10 grid grid-cols-2 gap-x-8 gap-y-8 sm:grid-cols-4" style={{ animationDelay: "80ms" }}>
-        {figures.map((f) => (
-          <div key={f.k} className="min-w-0 border-t border-line-strong pt-3">
+        {figures.map((f, figure) => (
+          <div key={figure} className="min-w-0 border-t border-line-strong pt-3">
             <dt className={label}>{f.k}</dt>
             <dd className="mt-2 font-display text-[40px] leading-none tracking-[-0.01em] text-ink tabular-nums sm:text-[46px]">{f.v}</dd>
             <dd className="mt-1.5 text-[12.5px] text-muted">{f.note}</dd>
@@ -59,11 +60,11 @@ export function StatisticsView() {
       </dl>
 
       <section aria-labelledby="languages" className="rise mt-16" style={{ animationDelay: "120ms" }}>
-        <SectionHeading id="languages">Languages</SectionHeading>
+        <SectionHeading id="languages">{uiText("wiki.label.languages")}</SectionHeading>
         <div className="grid gap-x-14 gap-y-10 md:grid-cols-2">
           <FileLanguages langs={s.fileLanguages} roots={roots} />
           <div className="min-w-0">
-            <h3 className={`${label} mb-3`}>Leading language of each article</h3>
+            <h3 className={`${label} mb-3`}>{uiText("wiki.label.leadingLanguageOfEachArticle")}</h3>
             <Bars
               rows={s.articleLanguages.map((c) => ({
                 key: c.name,
@@ -83,7 +84,7 @@ export function StatisticsView() {
       <div className="mt-16 grid gap-x-14 gap-y-16 lg:grid-cols-2">
         <section aria-labelledby="biggest" className="min-w-0">
           <SectionHeading id="biggest" aside="by files">
-            Biggest folders
+            {uiText("wiki.label.biggestFolders")}
           </SectionHeading>
           <ol>
             {s.biggest.map((p, i) => (
@@ -109,7 +110,7 @@ export function StatisticsView() {
 
         <section aria-labelledby="busiest" className="min-w-0">
           <SectionHeading id="busiest" aside="by commits">
-            Busiest repositories
+            {uiText("wiki.label.busiestRepositories")}
           </SectionHeading>
           <ol>
             {s.busiest.map((p, i) => {
@@ -142,7 +143,7 @@ export function StatisticsView() {
       <div className="mt-16 grid gap-x-14 gap-y-16 lg:grid-cols-2">
         <section aria-labelledby="frameworks" className="min-w-0">
           <SectionHeading id="frameworks" aside="articles using each">
-            Frameworks
+            {uiText("wiki.label.frameworks")}
           </SectionHeading>
           <Bars
             rows={s.frameworks.map((c) => ({ key: c.name, label: c.name, href: categoryHref(c.name), value: c.count, title: `${c.name}: ${plural(c.count, "article")}` }))}
@@ -150,16 +151,16 @@ export function StatisticsView() {
         </section>
 
         <section aria-labelledby="kinds" className="min-w-0">
-          <SectionHeading id="kinds">Kinds of folder</SectionHeading>
+          <SectionHeading id="kinds">{uiText("wiki.label.kindsOfFolder")}</SectionHeading>
           <table className="w-full border-collapse text-[14px]">
-            <caption className="sr-only">Folders and articles by kind</caption>
+            <caption className="sr-only">{uiText("wiki.label.foldersAndArticlesByKind")}</caption>
             <thead>
               <tr>
                 <th scope="col" className="pb-2 text-left font-normal">
-                  <span className="sr-only">Kind</span>
+                  <span className="sr-only">{uiText("wiki.label.kind")}</span>
                 </th>
-                <th scope="col" className={`${label} w-24 pb-2 text-right`}>Folders</th>
-                <th scope="col" className={`${label} w-24 pb-2 text-right`}>Articles</th>
+                <th scope="col" className={`${label} w-24 pb-2 text-right`}>{uiText("wiki.label.folders")}</th>
+                <th scope="col" className={`${label} w-24 pb-2 text-right`}>{uiText("wiki.label.articles")}</th>
               </tr>
             </thead>
             <tbody>
@@ -217,7 +218,7 @@ function FileLanguages({ langs, roots }: { langs: { name: string; files: number 
   return (
     <div className="min-w-0">
       <h3 className={`${label} mb-3`}>
-        Files by language, across <span className="font-mono normal-case tracking-normal">{roots}</span>
+        {uiText("wiki.filesAcrossRoots", { roots })}
       </h3>
       <div className="flex h-3 gap-[2px] overflow-hidden rounded-full" role="img" aria-label={langs.map((l) => `${l.name} ${l.files} files`).join(", ")}>
         {langs.map((l) => (
@@ -248,7 +249,7 @@ function Activity() {
   return (
     <section aria-labelledby="activity" className="rise mt-16" style={{ animationDelay: "160ms" }}>
       <SectionHeading id="activity" aside={`${plural(total, "commit")} in ${months.length} months`}>
-        Activity
+        {uiText("wiki.label.activity")}
       </SectionHeading>
       <div className="relative">
         <div className="flex h-44 items-end gap-[3px] sm:gap-1.5" role="img" aria-label={`Commits per month. Busiest: ${monthYear(`${peak.month}-15`)}, ${peak.count} commits.`}>
@@ -303,7 +304,7 @@ function Eras({ years }: { years: { year: string; count: number }[] }) {
   const max = Math.max(1, ...all.map((y) => y.count));
   return (
     <div className="mt-10">
-      <h3 className={`${label} mb-3`}>Articles by the year they were begun</h3>
+      <h3 className={`${label} mb-3`}>{uiText("wiki.label.articlesByTheYearTheyWereBegun")}</h3>
       <div className="flex h-28 items-end gap-1.5">
         {all.map((y) => {
           const body = (

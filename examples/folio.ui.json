@@ -1,0 +1,216 @@
+{
+  "$schema": "../innernet.ui.override.schema.json",
+  "version": 1,
+  "brand": {
+    "name": "folio",
+    "encyclopediaName": "folio library",
+    "tagline": "A reading room for your projects",
+    "description": "A quiet reading room for projects, notes and the stories in your folders.",
+    "creator": "folio",
+    "logo": null,
+    "encyclopediaLogo": null,
+    "icon": "/brand/folio.svg",
+    "appleIcon": "/brand/folio-apple.png",
+    "italicPrefix": "folio",
+    "encyclopediaItalicPrefix": "folio",
+    "headerLogo": {
+      "src": "/brand/folio.svg",
+      "alt": "folio",
+      "width": 64,
+      "height": 64
+    },
+    "showPublisherLink": false,
+    "sourceLink": {
+      "enabled": false
+    },
+    "attribution": {
+      "enabled": false
+    }
+  },
+  "theme": {
+    "style": "editorial",
+    "defaultMode": "light",
+    "allowToggle": true,
+    "light": {
+      "bg": "#f8f2e7",
+      "bg-sunk": "#eee4d4",
+      "surface": "#fffbf3",
+      "ink": "#2c241f",
+      "ink-2": "#51443b",
+      "muted": "#79695a",
+      "faint": "#ad9e8c",
+      "line": "rgb(65 43 30 / 0.1)",
+      "line-strong": "rgb(65 43 30 / 0.2)",
+      "link": "#762e3e",
+      "link-hover": "#4e1d2a",
+      "visited": "#775276",
+      "mark-bg": "#eddaa4",
+      "mark-ink": "#35251a",
+      "notice-bg": "#f4e8d4",
+      "notice-line": "#d9bd92",
+      "good": "#496745",
+      "ring": "#762e3e",
+      "aurora-1": "#edcdb4",
+      "aurora-2": "#dbc3c9",
+      "aurora-3": "#d9ddbf",
+      "aurora-opacity": 0,
+      "shadow-sm": [
+        { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgb(65 43 30 / 0.06)" }
+      ],
+      "shadow": [
+        { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgb(65 43 30 / 0.05)" },
+        { "x": 0, "y": 12, "blur": 32, "spread": -12, "color": "rgb(65 43 30 / 0.16)" }
+      ],
+      "shadow-lg": [
+        { "x": 0, "y": 2, "blur": 8, "spread": 0, "color": "rgb(65 43 30 / 0.07)" },
+        { "x": 0, "y": 28, "blur": 64, "spread": -24, "color": "rgb(65 43 30 / 0.25)" }
+      ]
+    },
+    "dark": {
+      "bg": "#1c1816",
+      "bg-sunk": "#231e1a",
+      "surface": "#2b2420",
+      "ink": "#f2e6d6",
+      "ink-2": "#d5c4ae",
+      "muted": "#b09b85",
+      "faint": "#78695a",
+      "line": "rgb(242 230 214 / 0.1)",
+      "line-strong": "rgb(242 230 214 / 0.2)",
+      "link": "#e5a6b3",
+      "link-hover": "#f4c9d1",
+      "visited": "#c5abd0",
+      "mark-bg": "#594a2d",
+      "mark-ink": "#ffebbb",
+      "notice-bg": "#30261d",
+      "notice-line": "#66503a",
+      "good": "#a4c29a",
+      "ring": "#e5a6b3",
+      "aurora-1": "#654337",
+      "aurora-2": "#5a3943",
+      "aurora-3": "#454735",
+      "aurora-opacity": 0,
+      "shadow-sm": [
+        { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgb(0 0 0 / 0.3)" }
+      ],
+      "shadow": [
+        { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgb(0 0 0 / 0.3)" },
+        { "x": 0, "y": 12, "blur": 32, "spread": -12, "color": "rgb(0 0 0 / 0.55)" }
+      ],
+      "shadow-lg": [
+        { "x": 0, "y": 2, "blur": 8, "spread": 0, "color": "rgb(0 0 0 / 0.35)" },
+        { "x": 0, "y": 28, "blur": 64, "spread": -24, "color": "rgb(0 0 0 / 0.7)" }
+      ]
+    },
+    "fonts": {
+      "display": "instrument",
+      "serif": "newsreader",
+      "sans": "inter",
+      "mono": "jetbrains"
+    },
+    "effects": {
+      "aurora": false,
+      "grain": true,
+      "motion": false
+    }
+  },
+  "layout": {
+    "maxWidth": 1160,
+    "searchWidth": 660,
+    "articleWidth": 920,
+    "density": "comfortable"
+  },
+  "navigation": {
+    "home": ["wiki", "allPages", "guide"],
+    "search": ["wiki", "categories", "guide"],
+    "wiki": ["search", "allPages", "categories", "random", "statistics", "guide"],
+    "guide": ["wiki", "search", "top"],
+    "headerSearch": ["wiki", "allPages", "guide"],
+    "headerWiki": ["search", "categories", "guide"],
+    "labels": {
+      "search": "Find a page",
+      "wiki": "Reading room",
+      "guide": "Reader's guide",
+      "random": "A page at random",
+      "allPages": "Library catalogue",
+      "categories": "Browse the shelves",
+      "statistics": "Library figures",
+      "top": "Back to the beginning"
+    }
+  },
+  "home": {
+    "layout": "editorial",
+    "showCounts": true,
+    "showExamples": true,
+    "exampleQueries": ["is:article", "kind:docs", "kind:repo"],
+    "showRecent": true,
+    "recentLimit": 6,
+    "showCurious": true,
+    "autoFocus": false
+  },
+  "search": {
+    "suggestions": true,
+    "suggestionLimit": 5,
+    "debounceMs": 160,
+    "focusShortcut": true,
+    "perPage": 8,
+    "showKnowledgePanel": true,
+    "tabs": ["all", "articles", "docs", "repos", "folders"]
+  },
+  "wiki": {
+    "showContents": true,
+    "showInfobox": true,
+    "mainSections": ["welcome", "featured", "did-you-know", "browse", "news", "on-this-day", "areas"],
+    "articleSections": ["overview", "history", "structure", "technology", "see-also", "external-links"]
+  },
+  "guide": {
+    "showRecipe": true
+  },
+  "copy": {
+    "home.eyebrow": "An archive of work and ideas",
+    "home.sideTitle": "The reading index",
+    "home.sideDescription": "Follow a shelf, open a page, or begin with a name. Every folder has a place in the archive.",
+    "searchPlaceholder": "Find a project, note or folder",
+    "wikiSearchPlaceholder": "Search the library",
+    "home.searchPlaceholder": "Find a project, note or folder",
+    "home.searchButton": "Find a page",
+    "home.curiousButton": "Open a page",
+    "home.try": "A place to begin",
+    "home.recentlyTouched": "Recently on the desk",
+    "home.missingTitle": "The shelves are still empty",
+    "home.missingDescription": "{app} is ready to read your folders. Build an index in the project folder, then return to the reading room.",
+    "search.placeholder": "Find a project, note or folder",
+    "search.wikiPlaceholder": "Search the library",
+    "search.tab.all": "Everything",
+    "search.tab.articles": "Projects",
+    "search.tab.docs": "Documents",
+    "search.tab.repos": "Repositories",
+    "search.tab.folders": "Folders",
+    "search.recentHeading": "Or return to a recent page",
+    "search.openArticle": "Read in {wiki}",
+    "wiki.mainTitle": "{wiki} · a reading room for your projects",
+    "wiki.fromEncyclopedia": "From {wiki}, a collection of projects and their stories",
+    "wiki.welcomeTitle": "Welcome to the reading room",
+    "wiki.encyclopediaTagline": "projects, notes and the stories between them",
+    "wiki.featured": "A page worth opening",
+    "wiki.news": "On the worktable",
+    "wiki.didYouKnow": "From the margins",
+    "wiki.onThisDay": "From this day in the archive",
+    "wiki.browse": "Browse the shelves",
+    "wiki.areas": "Around the library",
+    "wiki.contents": "On this page",
+    "wiki.article.overview": "Opening pages",
+    "wiki.article.history": "The story so far",
+    "wiki.article.structure": "Inside the folder",
+    "wiki.article.technology": "Tools and materials",
+    "wiki.article.see-also": "Further reading",
+    "wiki.article.external-links": "Beyond the library",
+    "wiki.special.random": "A page at random",
+    "wiki.special.allPages": "Library catalogue",
+    "wiki.special.categories": "The shelves",
+    "wiki.special.statistics": "Library figures",
+    "guideTitle": "The {app} Reader's Guide",
+    "continueWiki": "Return to the reading room",
+    "demo.homeTitle": "{app} · a public reading room",
+    "demo.tagline": "A reading room for the public projects of {org}"
+  }
+}

@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil, sigilGradient } from "@/components/sigil";
 import { ancestors, getIndex } from "@/lib/data";
@@ -59,12 +60,12 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
   const groups: { head?: string; rows: (Row | false | null | undefined | "")[] }[] = [
     {
       rows: [
-        { label: "Type", value: typeLabel(page) },
-        !compact && page.depth > 0 && { label: "Location", value: <Location page={page} /> },
-        page.languages.length > 0 && { label: page.languages.length > 1 && codeLanguages(page).length > 1 ? "Languages" : "Language", value: <Languages page={page} /> },
+        { label: uiText("wiki.label.type"), value: typeLabel(page) },
+        !compact && page.depth > 0 && { label: uiText("wiki.label.location"), value: <Location page={page} /> },
+        page.languages.length > 0 && { label: page.languages.length > 1 && codeLanguages(page).length > 1 ? uiText("wiki.label.languages") : uiText("wiki.label.language"), value: <Languages page={page} /> },
         !compact &&
           page.frameworks.length > 0 && {
-            label: "Frameworks",
+            label: uiText("wiki.label.frameworks"),
             value: (
               <span>
                 {page.frameworks.slice(0, 5).map((f, i) => (
@@ -85,21 +86,21 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
       ],
     },
     {
-      head: "Package",
+      head: uiText("wiki.label.package"),
       rows: compact
         ? []
         : [
-            m?.name ? { label: "Name", value: <span className="font-mono text-[12px] [overflow-wrap:anywhere]">{m.name}</span> } : m && { label: "Manifest", value: <span className="font-mono text-[12px]">{m.file}</span> },
-            m?.version && { label: "Version", value: <span className="font-mono text-[12px] [overflow-wrap:anywhere]">{m.version}</span> },
-            m?.name && { label: "Manifest", value: <span className="font-mono text-[12px] text-ink-2">{m.file}</span> },
+            m?.name ? { label: uiText("wiki.label.name"), value: <span className="font-mono text-[12px] [overflow-wrap:anywhere]">{m.name}</span> } : m && { label: uiText("wiki.label.manifest"), value: <span className="font-mono text-[12px]">{m.file}</span> },
+            m?.version && { label: uiText("wiki.label.version"), value: <span className="font-mono text-[12px] [overflow-wrap:anywhere]">{m.version}</span> },
+            m?.name && { label: uiText("wiki.label.manifest"), value: <span className="font-mono text-[12px] text-ink-2">{m.file}</span> },
           ],
     },
     {
-      head: "Activity",
+      head: uiText("wiki.label.activity"),
       rows: [
-        !compact && page.created && { label: "Created", value: longDate(page.created) },
+        !compact && page.created && { label: uiText("wiki.label.created"), value: longDate(page.created) },
         page.modified && {
-          label: "Last touched",
+          label: uiText("wiki.label.lastTouched"),
           value: (
             <span>
               {longDate(page.modified)}
@@ -110,10 +111,10 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
       ],
     },
     {
-      head: "Contents",
+      head: uiText("wiki.label.contents"),
       rows: [
         {
-          label: "Files",
+          label: uiText("wiki.label.files"),
           value: (
             <span className="tabular-nums">
               {page.totalFiles ? num(page.totalFiles) : past === "unknown" ? "None of its own" : "None"}
@@ -121,17 +122,17 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
             </span>
           ),
         },
-        page.totalBytes > 0 && { label: "Size", value: <span className="tabular-nums">{bytes(page.totalBytes)}</span> },
+        page.totalBytes > 0 && { label: uiText("wiki.label.size"), value: <span className="tabular-nums">{bytes(page.totalBytes)}</span> },
       ],
     },
     {
-      head: "Git",
+      head: uiText("wiki.label.git"),
       rows: g
         ? [
-            { label: "Commits", value: <span className="tabular-nums">{num(g.commitCount)}</span> },
-            g.branch && { label: "Branch", value: <span className="font-mono text-[12px] [overflow-wrap:anywhere]">{g.branch}</span> },
+            { label: uiText("wiki.label.commits"), value: <span className="tabular-nums">{num(g.commitCount)}</span> },
+            g.branch && { label: uiText("wiki.label.branch"), value: <span className="font-mono text-[12px] [overflow-wrap:anywhere]">{g.branch}</span> },
             remote && {
-              label: "Repository",
+              label: uiText("wiki.label.repository"),
               value: (
                 <a href={remote.href} target="_blank" rel="noopener noreferrer" className="link font-mono text-[12px] [overflow-wrap:anywhere]">
                   {remote.label.split("/").map((part, i) => (
@@ -152,7 +153,7 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
   const shown = groups.map((gr) => ({ ...gr, rows: gr.rows.filter((r): r is Row => !!r) })).filter((gr) => gr.rows.length);
 
   return (
-    <aside aria-label={`Facts about ${name}`} className={`overflow-hidden rounded-2xl border border-line bg-surface shadow-soft ${className}`}>
+    <aside aria-label={uiText("wiki.infoboxTitle", { name })} className={`ui-panel overflow-hidden rounded-2xl border border-line bg-surface shadow-soft ${className}`}>
       <div className={`relative isolate grid place-items-center overflow-hidden px-6 text-center ${compact ? "pb-4 pt-6" : "pb-5 pt-8"}`}>
         <div aria-hidden className="absolute inset-0 -z-10 scale-110 opacity-[0.22] blur-2xl" style={{ background: sigilGradient(page.slug, !page.isArticle) }} />
         <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-2/3 bg-linear-to-b from-transparent to-surface" />
@@ -166,9 +167,9 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
         {shown.map((gr, i) => (
           <div key={i} className={i > 0 ? "mt-2.5 border-t border-line pt-3" : ""}>
             {gr.head && <div className={`${LABEL} mb-1`}>{gr.head}</div>}
-            {gr.rows.map((r) => (
-              <div key={r.label} className="grid grid-cols-[88px_minmax(0,1fr)] gap-x-3 py-[5px]">
-                <dt className="text-muted">{r.label}</dt>
+            {gr.rows.map((r, row) => (
+              <div key={row} className="grid grid-cols-[88px_minmax(0,1fr)] gap-x-3 py-[5px]">
+                <dt className="text-muted [overflow-wrap:anywhere]">{r.label}</dt>
                 <dd className="text-ink">{r.value}</dd>
               </div>
             ))}

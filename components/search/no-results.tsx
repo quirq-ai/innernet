@@ -3,11 +3,13 @@ import { getIndex } from "@/lib/data";
 import { num } from "@/lib/format";
 import { searchHref, wikiHref } from "@/lib/links";
 import { Sigil } from "@/components/sigil";
+import { getUiConfig, uiText } from "@/lib/ui-config";
 
 // When nothing matches: say so kindly, offer a spelling if there is one, and three
 // ways forward.
 
 export function NoResults({ text, filtered, correction }: { text: string; filtered: boolean; correction: string | null }) {
+  const config = getUiConfig();
   const { index, articles } = getIndex();
   const recent = articles
     .filter((p) => p.modified && p.depth >= 3 && (p.kind === "repo" || p.kind === "project") && !p.partOf)
@@ -17,47 +19,35 @@ export function NoResults({ text, filtered, correction }: { text: string; filter
     .slice(0, 6);
   return (
     <section aria-live="polite" className="rise max-w-[560px] pt-2">
-      <h2 className="font-display text-[30px] leading-[1.15] tracking-[-0.01em] text-ink sm:text-[34px]">
+      <h2 className="font-display text-[30px] leading-[1.15] tracking-[-0.01em] text-ink [overflow-wrap:anywhere] sm:text-[34px]">
         {/* Operators are already on show as chips above, so the sentence names only the words. */}
-        Nothing on your internet matches{" "}
-        {text ? (
-          <>
-            <em className="[overflow-wrap:anywhere]">{text}</em>
-            {filtered ? " with these filters" : ""}
-          </>
-        ) : (
-          "these filters"
-        )}
-        .
+        {uiText("search.noResultsTitle", {
+          query: text || uiText("search.filters", undefined, config),
+          filters: text && filtered ? uiText("search.withFilters", undefined, config) : "",
+        }, config)}
       </h2>
       {correction && (
         <p className="mt-4 text-[17px] text-ink-2">
-          Did you mean{" "}
+          {uiText("search.didYouMean", undefined, config)}{" "}
           <Link href={searchHref(correction)} className="link font-serif text-[19px] font-medium italic">
             {correction}
           </Link>
-          ?
+          {uiText("search.questionMark", undefined, config)}
         </p>
       )}
 
       <div className="mt-8 border-t border-line pt-6">
-        <h3 className="text-[11px] uppercase tracking-[0.12em] text-muted">Some things to try</h3>
+        <h3 className="text-[11px] uppercase tracking-[0.12em] text-muted">{uiText("search.noResultsDescription", undefined, config)}</h3>
         <ol className="mt-4 space-y-4">
           {[
+            uiText("search.spellingTip", undefined, config),
+            uiText("search.fewerWordsTip", undefined, config),
             <>
-              <span className="text-ink">Check the spelling.</span> Folder names are matched closely, so{" "}
-              <span className="font-mono text-[13px]">linear-clone</span> will find what <span className="font-mono text-[13px]">linerclone</span> might not.
-            </>,
-            <>
-              <span className="text-ink">Try fewer words,</span> or drop an operator such as{" "}
-              <span className="font-mono text-[13px]">lang:</span> or <span className="font-mono text-[13px]">in:</span> to widen the net.
-            </>,
-            <>
-              <span className="text-ink">Browse instead.</span>{" "}
+              <span className="text-ink">{uiText("search.browseTip", undefined, config)}</span>{" "}
               <Link href="/wiki" className="link">
-                Innerpedia
+                {config.brand.encyclopediaName}
               </Link>{" "}
-              has {num(index.meta.counts.articles)} articles about {num(index.meta.counts.pages)} folders, one click from here.
+              {uiText("search.browseDescription", { articles: num(index.meta.counts.articles), folders: num(index.meta.counts.pages) }, config)}
             </>,
           ].map((tip, i) => (
             <li key={i} className="flex gap-4 text-[14.5px] leading-[1.6] text-ink-2">
@@ -72,7 +62,7 @@ export function NoResults({ text, filtered, correction }: { text: string; filter
 
       {recent.length > 0 && (
         <div className="mt-10">
-          <h3 className="text-[11px] uppercase tracking-[0.12em] text-muted">Or wander somewhere recent</h3>
+          <h3 className="text-[11px] uppercase tracking-[0.12em] text-muted">{uiText("search.recentHeading", undefined, config)}</h3>
           <ul className="mt-3 flex flex-wrap gap-1.5">
             {recent.map((p) => (
               <li key={p.slug}>

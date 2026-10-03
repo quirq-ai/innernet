@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import { Sigil } from "@/components/sigil";
 import { cap, gloss, indexTime, news, undash } from "@/components/wiki/main/insights";
 import { Box, Dotted, Lead, PageLink } from "@/components/wiki/main/section";
@@ -35,7 +36,7 @@ function Headline({ page }: { page: Page }) {
 export function InTheNews({ delay, className }: { delay?: number; className?: string }) {
   const { items, ongoing, quiet } = news();
   return (
-    <Box id="news" title="In the news" delay={delay} className={className}>
+    <Box id="news" title={uiText("wiki.news")} delay={delay} className={className}>
       <ul className="space-y-4">
         {items.map(({ page, commit }) => (
           <li key={page.slug} className="flex gap-3.5">
@@ -59,8 +60,8 @@ export function InTheNews({ delay, className }: { delay?: number; className?: st
       </ul>
       {(ongoing.length > 0 || quiet.length > 0) && (
         <dl className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 border-t border-line pt-3 text-[13px] leading-relaxed text-muted">
-          {ongoing.length > 0 && <Roll label="Ongoing" pages={ongoing} />}
-          {quiet.length > 0 && <Roll label="Gone quiet" pages={quiet} />}
+          {ongoing.length > 0 && <Roll label={uiText("wiki.ongoing")} pages={ongoing} />}
+          {quiet.length > 0 && <Roll label={uiText("wiki.goneQuiet")} pages={quiet} />}
         </dl>
       )}
     </Box>

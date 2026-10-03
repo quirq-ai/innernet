@@ -1,29 +1,25 @@
 import Link from "next/link";
 import { num } from "@/lib/format";
 import { searchHref } from "@/lib/links";
-import { TABS, type Tab } from "@/lib/search";
+import type { Tab } from "@/lib/search";
+import { uiText } from "@/lib/ui-config";
+import { getSearchTabs } from "./search-config";
 
 // The query found things, just none of this kind. Saying "nothing matches" would be
 // untrue, so point at the tabs that do have results instead.
 
-const NOUN: Record<Exclude<Tab, "all">, [string, string]> = {
-  articles: ["project", "projects"],
-  repos: ["repository", "repositories"],
-  docs: ["document", "documents"],
-  folders: ["folder", "folders"],
-};
-
 export function EmptyTab({ q, tab, counts }: { q: string; tab: Exclude<Tab, "all">; counts: Record<Tab, number> }) {
-  const [one, many] = NOUN[tab];
   const total = counts.all;
-  const elsewhere = TABS.filter((t) => t.id !== tab && counts[t.id] > 0);
+  const elsewhere = getSearchTabs().filter((t) => t.id !== tab && counts[t.id] > 0);
   return (
     <section className="rise max-w-[560px] pt-2">
-      <h2 className="font-display text-[30px] leading-[1.15] tracking-[-0.01em] text-ink sm:text-[34px]">
-        {total === 1 ? `The one result is not a ${one}.` : `None of the ${num(total)} results are ${many}.`}
+      <h2 className="font-display text-[30px] leading-[1.15] tracking-[-0.01em] text-ink [overflow-wrap:anywhere] sm:text-[34px]">
+        {uiText(total === 1 ? "search.emptyTabSingleTitle" : "search.emptyTabTitle", {
+          count: num(total), type: uiText(`search.type.${tab}.${total === 1 ? "singular" : "plural"}`),
+        })}
       </h2>
-      <p className="mt-3 text-[15px] leading-[1.6] text-ink-2">They live under the other tabs.</p>
-      <ul aria-label="Tabs with results" className="mt-5 flex flex-wrap gap-1.5">
+      <p className="mt-3 text-[15px] leading-[1.6] text-ink-2">{uiText("search.emptyTabDescription")}</p>
+      <ul aria-label={uiText("search.tabsWithResults")} className="mt-5 flex flex-wrap gap-1.5">
         {elsewhere.map((t) => (
           <li key={t.id}>
             <Link
