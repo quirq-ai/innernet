@@ -1,162 +1,132 @@
 import Link from "next/link";
-import { sigilGradient } from "@/components/sigil";
-import { allCategories, globePages, MAINTENANCE, type CategoryInfo } from "@/components/wiki/main/insights";
+import { PageSigil } from "@/components/page-sigil";
+import { Globe, type GlobeTile } from "@/components/wiki/main/globe";
+import { allCategories, cap, globeTiles, gloss, indexTime, type CategoryInfo } from "@/components/wiki/main/insights";
 import { getIndex } from "@/lib/data";
-import { num, timeAgo } from "@/lib/format";
+import { logoSrc } from "@/lib/logo";
+import { longDate, num, timeAgo } from "@/lib/format";
 import { langColor } from "@/lib/lang-colors";
 import { categoryHref, wikiHref } from "@/lib/links";
 
-// The welcome banner: the Innerpedia globe, the greeting, live counts, and portals into
-// the largest collections and languages.
+// The Main page's first screen: the Innerpedia globe, every project a tile you can reach
+// from here, beside the greeting, the live counts and the portals. The rest of the Main
+// page waits below the scroll cue.
+
+const TILES = 96;
 
 export function Welcome() {
-  const { index, categories } = getIndex();
+  const { index } = getIndex();
   const { counts, generatedAt, roots } = index.meta;
   const cats = allCategories();
-  const collections = cats.filter((c) => c.kind === "collection").slice(0, 5);
-  const languages = cats.filter((c) => c.kind === "language").slice(0, 5);
+  // Portals: the largest collections, or where folders are not gathered into any (the
+  // demo is one organization's repositories), the most substantial repositories.
+  const collections = cats.filter((c) => c.kind === "collection" && c.page).slice(0, 4);
+  const languages = cats.filter((c) => c.kind === "language").slice(0, 4);
+  const repos = collections.length >= 2 ? [] : globeTiles(TILES).filter((p) => p.kind === "repo" && p.depth === 1).slice(0, 5);
+  const withHistory = index.pages.filter((p) => p.git && p.git.commitCount > 0).length;
+
+  const tiles: GlobeTile[] = globeTiles(TILES).map((p) => ({
+    slug: p.slug,
+    href: wikiHref(p.slug),
+    title: p.title,
+    name: p.name,
+    kind: p.kind,
+    gloss: cap(gloss(p)),
+    logo: logoSrc(p),
+    logoSurface: p.logoSurface ?? null,
+  }));
+  // The demo's root carries its organization's avatar: it becomes the globe's core.
+  const root = index.pages.find((p) => p.depth === 0 && p.logo);
+  const coreLogo = logoSrc(root);
+  const core = root && coreLogo ? { href: wikiHref(root.slug), title: root.title, logo: coreLogo } : null;
 
   return (
-    <section aria-labelledby="welcome" className="rise relative overflow-hidden rounded-[28px] border border-line bg-surface shadow-soft">
-      <div className="grid gap-9 px-6 py-8 sm:px-10 sm:py-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,408px)] xl:gap-12">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-9">
-          <Globe lacking={categories.get(MAINTENANCE)?.length ?? 0} />
-          <div className="min-w-0">
-            <h1 id="welcome" className="font-display text-[38px] leading-[1.04] tracking-[-0.015em] text-balance text-ink sm:text-[54px]">
-              Welcome to <em className="italic">Inner</em>pedia,
-              <span className="block text-balance text-ink-2">the encyclopedia of you.</span>
-            </h1>
-            <p className="mt-4 text-[14.5px] leading-relaxed text-ink-2">
-              <Link href={wikiHref("Special:AllPages")} className="link tabular-nums">
-                {num(counts.articles)} articles
-              </Link>{" "}
-              about{" "}
-              <Link href={wikiHref("Special:Statistics")} className="link tabular-nums">
-                {num(counts.pages)} folders
-              </Link>
-              , <span className="tabular-nums">{num(index.pages.filter((p) => p.git && p.git.commitCount > 0).length)}</span> of them with a history in Git.
-            </p>
-            <p className="mt-0.5 text-[13px] text-muted">
-              Written from <span className="font-mono text-[12px]">{roots.map((r) => r.label).join(", ")}</span>, {timeAgo(generatedAt)}.
-            </p>
-          </div>
+    <section aria-labelledby="welcome" className="relative -mt-8 flex min-h-[calc(100svh-var(--demo-bar,0px)-4rem)] flex-col">
+      <div className="grid flex-1 content-center items-center gap-y-4 pb-2 pt-8 sm:gap-y-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-8 lg:pt-6">
+        <div className="relative z-10 min-w-0 text-center lg:pb-10 lg:text-left">
+          <h1 id="welcome" className="rise font-display text-[38px] leading-[1.02] tracking-[-0.02em] text-balance text-ink min-[400px]:text-[42px] sm:text-[58px] xl:text-[68px]">
+            Welcome to <em className="italic">Inner</em>pedia,
+            <span className="block text-ink-2">the encyclopedia of you.</span>
+          </h1>
+          <p className="rise mx-auto mt-4 max-w-[34rem] text-pretty text-[14.5px] leading-relaxed text-ink-2 sm:mt-6 sm:text-[15.5px] lg:mx-0" style={{ animationDelay: "60ms" }}>
+            <Link href={wikiHref("Special:AllPages")} className="link tabular-nums">
+              {num(counts.articles)} articles
+            </Link>{" "}
+            about{" "}
+            <Link href={wikiHref("Special:Statistics")} className="link tabular-nums">
+              {num(counts.pages)} folders
+            </Link>
+            , <span className="tabular-nums">{num(withHistory)}</span> of them with a history in Git.
+          </p>
+          <p className="rise mt-1 text-[13px] text-muted" style={{ animationDelay: "90ms" }}>
+            Written from{" "}
+            <span className="inline-flex items-center gap-1.5 align-bottom">
+              {root && <PageSigil page={root} size={16} />}
+              <span className="font-mono text-[12px]">{roots.map((r) => r.label).join(", ")}</span>
+            </span>
+            , {timeAgo(generatedAt)}.
+          </p>
+          <nav aria-label="Portals" className="rise mx-auto mt-6 hidden max-w-[34rem] gap-y-2 text-[14px] sm:mt-8 sm:grid lg:mx-0" style={{ animationDelay: "120ms" }}>
+            {repos.length ? (
+              <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 lg:justify-start">
+                <span className="w-full text-[11px] font-medium uppercase tracking-[0.12em] text-muted min-[480px]:w-auto lg:w-24">Repositories</span>
+                {repos.map((p) => (
+                  <Link key={p.slug} href={wikiHref(p.slug)} className="link inline-flex items-baseline gap-1.5 whitespace-nowrap">
+                    {/* Centred on its own, so the name sets the baseline the row lines up on. */}
+                    <PageSigil page={p} size={16} className="self-center" />
+                    {p.title}
+                  </Link>
+                ))}
+              </p>
+            ) : (
+              <Portal label="Collections" items={collections} />
+            )}
+            <Portal label="Languages" items={languages} dots />
+          </nav>
         </div>
 
-        <nav aria-label="Portals" className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-x-8 gap-y-6 border-t border-line pt-6 xl:border-l xl:border-t-0 xl:pl-10 xl:pt-1">
-          <Portal label="Collections" items={collections} />
-          <Portal label="Languages" items={languages} dots />
-        </nav>
+        <div className="relative min-w-0">
+          <div aria-hidden className="aurora">
+            <span />
+            <span />
+            <span />
+          </div>
+          <div className="relative mx-auto w-[min(100%,52svh,440px)] sm:w-[min(100%,50svh,520px)] lg:w-[min(100%,calc(100svh-var(--demo-bar,0px)-12rem),720px)]">
+            <Globe tiles={tiles} core={core} label={`The globe of ${num(tiles.length)} projects. Each tile opens its article; use the arrow keys to move between them.`} />
+          </div>
+          <p className="relative mt-1 text-center text-[12.5px] text-muted">
+            Every tile is an article. <span className="hidden sm:inline">Drag to turn the globe, or pick one.</span>
+            <span className="sm:hidden">Swipe to turn it, tap to open one.</span>
+          </p>
+        </div>
       </div>
+
+      <a href="#today" className="group relative mx-auto mb-3 mt-2 flex flex-col items-center gap-2 rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted transition-colors hover:text-ink">
+        <span>
+          Today on Innerpedia<span aria-hidden className="px-2 text-faint">·</span>
+          <span className="tabular-nums">{longDate(new Date(indexTime()).toISOString())}</span>
+        </span>
+        <span aria-hidden className="relative block h-8 w-px overflow-hidden bg-line-strong">
+          <span className="absolute inset-x-0 top-0 block h-3 bg-ink/55 animate-[innerpedia-cue_2.6s_cubic-bezier(0.45,0,0.25,1)_infinite]" />
+        </span>
+      </a>
+      <style href="innerpedia-cue" precedence="default">{`@keyframes innerpedia-cue{0%{transform:translateY(-100%)}70%,100%{transform:translateY(270%)}}`}</style>
     </section>
   );
 }
 
 function Portal({ label, items, dots = false }: { label: string; items: CategoryInfo[]; dots?: boolean }) {
+  if (!items.length) return null;
   return (
-    <div className="min-w-0">
-      <h2 className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">{label}</h2>
-      <ul className="space-y-0.5 text-[14.5px]">
-        {items.map((c) => (
-          <li key={c.name}>
-            <Link href={categoryHref(c.name)} className="link flex items-center gap-2 py-[2px]">
-              {dots && <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: langColor(c.subject) }} />}
-              <span className="truncate">{c.subject}</span>
-              <span className="ml-auto hidden pl-2 text-[12px] tabular-nums text-muted min-[420px]:inline">{num(c.count)}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-// Innerpedia's answer to the puzzle globe: a sphere of sigils, one per substantial
-// project, laid out on lines of latitude and longitude and foreshortened towards the
-// rim. One piece is missing, for the articles still waiting on a README.
-const ROWS = 7;
-const COLS = 8;
-const STEP = Math.PI / 8; // 22.5 degrees
-const MISSING = [5, 5]; // row, column: up and to the right, where Wikipedia's globe is unfinished
-
-interface Tile {
-  key: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-function tiles(size: number, gap: number): Tile[] {
-  const r = size / 2;
-  const out: Tile[] = [];
-  for (let row = 0; row < ROWS; row++) {
-    const lat = (row - (ROWS - 1) / 2) * STEP;
-    const top = r - r * Math.sin(lat + STEP / 2);
-    const bottom = r - r * Math.sin(lat - STEP / 2);
-    // Width at the row's equator-side edge; the sphere's clip trims the pole side.
-    const span = r * Math.cos(Math.max(0, Math.abs(lat) - STEP / 2));
-    for (let col = 0; col < COLS; col++) {
-      const lon = (col - (COLS - 1) / 2) * STEP;
-      const left = r + span * Math.sin(Math.max(-Math.PI / 2, lon - STEP / 2));
-      const right = r + span * Math.sin(Math.min(Math.PI / 2, lon + STEP / 2));
-      out.push({ key: `${row}-${col}`, x: left + gap / 2, y: top + gap / 2, w: right - left - gap, h: bottom - top - gap });
-    }
-  }
-  return out;
-}
-
-function Globe({ lacking }: { lacking: number }) {
-  const size = 132;
-  const grid = tiles(size, 2.2);
-  const pages = globePages(grid.length);
-  const order = [...grid].sort((a, b) => b.w * b.h - a.w * a.h); // biggest projects on the biggest pieces
-  const assigned = new Map(order.map((t, i) => [t.key, pages[i]]));
-  const missingKey = `${MISSING[0]}-${MISSING[1]}`;
-
-  return (
-    <div className="relative size-[112px] shrink-0 sm:size-[132px]">
-      {pages[0] && <span aria-hidden className="absolute inset-4 rounded-full opacity-40 blur-2xl" style={{ background: sigilGradient(pages[0].slug) }} />}
-      <div className="absolute left-1/2 top-1/2 size-[132px] -translate-x-1/2 -translate-y-1/2 -rotate-12 scale-[0.8485] overflow-hidden rounded-full bg-ink/8 sm:scale-100">
-        {grid.map((t) => {
-          const box = { left: t.x, top: t.y, width: Math.max(0, t.w), height: Math.max(0, t.h), borderRadius: Math.min(4, t.w / 3) };
-          if (t.w < 1.5) return null;
-          if (t.key === missingKey && lacking)
-            return (
-              <Link
-                key={t.key}
-                href={categoryHref(MAINTENANCE)}
-                title={`${num(lacking)} articles still lack a README. You can help.`}
-                aria-label={`${num(lacking)} articles lacking a README`}
-                className="absolute z-10 border border-dashed border-line-strong transition-colors before:absolute before:-inset-2 before:content-[''] hover:border-link"
-                style={box}
-              />
-            );
-          const p = assigned.get(t.key);
-          if (!p) return null;
-          const big = t.w >= 12;
-          return big ? (
-            <Link
-              key={t.key}
-              href={wikiHref(p.slug)}
-              title={p.title}
-              tabIndex={-1}
-              aria-hidden
-              className="absolute grid place-items-center transition-transform duration-200 hover:z-10 hover:scale-[1.25]"
-              style={{ ...box, background: sigilGradient(p.slug) }}
-            >
-              <span aria-hidden className="font-display leading-none text-white/90" style={{ fontSize: Math.min(t.w, t.h) * 0.62 }}>
-                {(p.name.replace(/^[^\p{L}\p{N}]+/u, "")[0] ?? "·").toUpperCase()}
-              </span>
-            </Link>
-          ) : (
-            <span key={t.key} aria-hidden className="absolute" style={{ ...box, background: sigilGradient(p.slug) }} />
-          );
-        })}
-      </div>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full bg-radial-[circle_farthest-side_at_36%_30%] from-white/45 via-white/0 via-60% to-black/30"
-      />
-    </div>
+    <p className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 lg:justify-start">
+      <span className="w-full text-[11px] font-medium uppercase tracking-[0.12em] text-muted min-[480px]:w-auto lg:w-24">{label}</span>
+      {items.map((c) => (
+        <Link key={c.name} href={categoryHref(c.name)} className="link inline-flex items-center gap-1.5 whitespace-nowrap">
+          {dots && <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: langColor(c.subject) }} />}
+          {c.subject}
+          <span className="text-[12px] tabular-nums text-faint">{num(c.count)}</span>
+        </Link>
+      ))}
+    </p>
   );
 }

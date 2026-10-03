@@ -2,10 +2,25 @@
 
 import { useEffect, useState } from "react";
 
-// Copies a command to the clipboard. localhost is a secure context, so the async
-// clipboard works; if it is refused, the button says so and the text stays selectable.
+// Copies a command (or a prompt) to the clipboard. localhost is a secure context, so the
+// async clipboard works; if it is refused, the button says so and the text stays
+// selectable. `quiet` drops the box, for a button that sits in a line of text.
 
-export function CopyButton({ text, className = "" }: { text: string; className?: string }) {
+export function CopyButton({
+  text,
+  label = "Copy",
+  ariaLabel = "Copy command",
+  quiet = false,
+  className = "",
+}: {
+  text: string;
+  /** What the button says before it is pressed. */
+  label?: string;
+  /** What it says to a screen reader before it is pressed. */
+  ariaLabel?: string;
+  quiet?: boolean;
+  className?: string;
+}) {
   const [state, setState] = useState<"idle" | "done" | "failed">("idle");
 
   useEffect(() => {
@@ -23,15 +38,13 @@ export function CopyButton({ text, className = "" }: { text: string; className?:
     }
   }
 
-  const label = state === "done" ? "Copied" : state === "failed" ? "Select and copy" : "Copy";
+  const shown = state === "done" ? "Copied" : state === "failed" ? "Select and copy" : label;
+  const look = quiet
+    ? "-my-1 h-7 rounded-md px-1.5 text-muted hover:bg-bg-sunk hover:text-ink"
+    : "h-7 rounded-md border border-line bg-surface px-2 text-[11.5px] text-muted shadow-[var(--shadow-sm)] hover:border-line-strong hover:text-ink";
   return (
-    <button
-      type="button"
-      onClick={copy}
-      aria-label={state === "idle" ? "Copy command" : label}
-      className={`inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface px-2 text-[11.5px] text-muted shadow-[var(--shadow-sm)] transition-colors hover:border-line-strong hover:text-ink ${className}`}
-    >
-      <svg aria-hidden width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    <button type="button" onClick={copy} aria-label={state === "idle" ? ariaLabel : shown} className={`inline-flex items-center gap-1.5 transition-colors ${look} ${className}`}>
+      <svg aria-hidden width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
         {state === "done" ? (
           <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
         ) : (
@@ -41,7 +54,9 @@ export function CopyButton({ text, className = "" }: { text: string; className?:
           </>
         )}
       </svg>
-      <span aria-live="polite">{label}</span>
+      <span aria-live="polite" className="whitespace-nowrap">
+        {shown}
+      </span>
     </button>
   );
 }

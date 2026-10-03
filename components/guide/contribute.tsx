@@ -36,11 +36,12 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
     group: "The routes",
     dir: "app/",
     items: [
-      { path: "app/page.tsx", role: "Home: the wordmark, the box, recently touched." },
+      { path: "app/page.tsx", role: "Home: the wordmark, the box, recently touched, then this guide." },
+      { path: "app/activity/page.tsx", role: "History: every session, newest first, merged across apps." },
       { path: "app/search/page.tsx", role: "Results, tabs, the knowledge panel." },
       { path: "app/wiki/[slug]/page.tsx", role: "Every Innerpedia page but the Main page, through resolveSlug." },
-      { path: "app/api/suggest/route.ts", role: "The one route the browser calls." },
-      { path: "app/guide/page.tsx", role: "This guide." },
+      { path: "app/api/suggest/route.ts", role: "Suggestions for the search box, as you type." },
+      { path: "app/api/activity/route.ts", role: "Writes the history on this machine; same origin only, and shut on the demo." },
       { path: "app/globals.css", role: "The tokens, both themes, the aurora, prose." },
     ],
   },
@@ -51,8 +52,8 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
       { path: "components/home", role: "The front page's pieces.", dir: true },
       { path: "components/search", role: "Results, chips, tabs, the panel, pagination.", dir: true },
       { path: "components/wiki", role: "Articles, stubs, categories, the Main page, specials.", dir: true },
-      { path: "components/guide", role: "This guide, its plates and its recipe.", dir: true },
-      { path: "components/sigil.tsx", role: "Every folder's identity, from its slug." },
+      { path: "components/guide", role: "This guide, its plates and its recipe, bound in field-guide.tsx.", dir: true },
+      { path: "components/sigil.tsx", role: "Every folder's identity: its own logo, or a sigil drawn from its slug." },
     ],
   },
   {
@@ -78,7 +79,7 @@ export function Contribute() {
         <Prose>
           <p>
             It is a Next.js 16 app in TypeScript, served by the same machine it describes. Pages are Server Components that read the index directly; the browser
-            receives HTML, four small client components, and this guide&apos;s few. The setup is three commands:
+            receives HTML and a handful of small client components, each doing something only a browser can. The setup is three commands:
           </p>
         </Prose>
         <Command code={"pnpm install\npnpm index\npnpm dev"} className="mt-6 max-w-[640px]" caption="From this folder" />
@@ -342,8 +343,8 @@ function Loop() {
         ))}
       </ol>
       <Fine className="mt-6">
-        <C>try-search</C> needs <C>--conditions=react-server</C> because the search core imports <C>server-only</C>. <C>shot.sh</C> always talks to port 3470; its
-        last arguments are the height and the theme.
+        <C>try-search</C> needs <C>--conditions=react-server</C> because the search core imports <C>server-only</C>. <C>shot.sh</C> talks to port 3470 unless{" "}
+        <C>SHOT_BASE</C> says otherwise; its last arguments are the height and the theme, and <C>SHOT_SCROLL</C> captures the window scrolled to an element.
       </Fine>
     </>
   );
@@ -354,8 +355,8 @@ const CONVENTIONS: { title: string; text: React.ReactNode }[] = [
     title: "Server first",
     text: (
       <>
-        Pages are Server Components. The only fetch the browser makes of its own is the search box asking <C>/api/suggest</C>, and nothing ever leaves the
-        machine. A new client component needs a reason only the browser can satisfy.
+        Pages are Server Components. The browser asks only this app, and only twice: the search box asks <C>/api/suggest</C>, and the history posts each page to{" "}
+        <C>/api/activity</C>. Nothing ever leaves the machine. A new client component needs a reason only the browser can satisfy.
       </>
     ),
   },

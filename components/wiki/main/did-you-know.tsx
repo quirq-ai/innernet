@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { facts, type Fact } from "@/components/wiki/main/insights";
 import { Box, Lead } from "@/components/wiki/main/section";
 import { getIndex, getPage } from "@/lib/data";
@@ -21,7 +21,7 @@ export function DidYouKnow({ delay, className }: { delay?: number; className?: s
       <div className="flow-root">
         {pictured && (
           <figure className="float-right mb-3 ml-5 mt-1 w-[76px] text-center">
-            <Sigil seed={pictured.slug} name={pictured.name} kind={pictured.kind} size={64} className="shadow-soft" />
+            <PageSigil page={pictured} size={64} muted={false} className="shadow-soft" />
             <figcaption className="mt-1.5 truncate text-[11.5px] italic text-muted">{pictured.name}</figcaption>
           </figure>
         )}

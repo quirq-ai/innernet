@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { getPages } from "@/lib/data";
 import { num, timeAgo } from "@/lib/format";
 import { langColor } from "@/lib/lang-colors";
@@ -67,7 +67,7 @@ export function ResultItem({
       <article>
         <Link href={href} aria-labelledby={`${id}-t`} aria-describedby={`${id}-s`} className="group block text-link visited:text-visited">
           <span id={`${id}-s`} className="flex items-center gap-3">
-            <Sigil seed={p.slug} name={p.name} kind={p.kind} muted={!p.isArticle} size={26} />
+            <PageSigil page={p} size={26} />
             <span className="min-w-0 leading-tight">
               <span className="block truncate text-[14px] text-ink">{kindLabel(p)}</span>
               <cite className="mt-0.5 block truncate font-mono text-[12px] not-italic text-muted">
@@ -119,7 +119,7 @@ export function ResultItem({
                 href={wikiHref(c.slug)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface py-1 pl-1.5 pr-2.5 text-[12.5px] text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
               >
-                <Sigil seed={c.slug} name={c.name} kind={c.kind} muted={!c.isArticle} size={14} />
+                <PageSigil page={c} size={14} />
                 <span className="font-mono text-[12px]">{c.name}</span>
               </Link>
             ))}

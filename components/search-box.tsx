@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { sigilGradient } from "@/components/sigil";
+import { Sigil, sigilGradient } from "@/components/sigil";
 import { wikiHref } from "@/lib/links";
 import type { Suggestion } from "@/lib/search";
 
@@ -201,11 +201,15 @@ export function SearchBox({
               onMouseEnter={() => setActive(i)}
               className={`flex cursor-pointer items-center gap-3 ${hero ? "px-5 py-2" : "px-4 py-1.5"} ${i === active ? "bg-bg-sunk" : ""}`}
             >
-              <span
-                aria-hidden
-                className="size-5 shrink-0"
-                style={{ borderRadius: s.kind === "repo" ? 999 : 6, background: sigilGradient(s.slug, !s.isArticle) }}
-              />
+              {s.logo ? (
+                <Sigil seed={s.slug} name={s.title} kind={s.kind} size={20} logo={s.logo} logoSurface={s.logoSurface} />
+              ) : (
+                <span
+                  aria-hidden
+                  className="size-5 shrink-0"
+                  style={{ borderRadius: s.kind === "repo" ? 999 : 6, background: sigilGradient(s.slug, !s.isArticle) }}
+                />
+              )}
               <span className="min-w-0 flex-1 truncate">
                 <span className="text-ink">{s.title}</span>
                 <span className="ml-2 font-mono text-[11.5px] text-muted">{s.path}</span>

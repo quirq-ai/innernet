@@ -35,7 +35,7 @@ export default async function WikiPage({ params }: Props) {
     redirect(page ? wikiHref(page.slug) : "/wiki");
   }
   // Wikipedia keeps its help at Help:Contents; Innerpedia keeps it in the field guide.
-  if (r.type === "missing" && /^help:(contents|guide)$/i.test(r.slug)) redirect("/guide");
+  if (r.type === "missing" && /^help:(contents|guide)$/i.test(r.slug)) redirect("/#guide");
   if (r.type === "missing") notFound();
 
   return (

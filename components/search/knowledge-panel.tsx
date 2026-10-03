@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Sigil, sigilGradient } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
+import { sigilGradient } from "@/components/sigil";
 import { getPage, getPages } from "@/lib/data";
 import { bytes, longDate, monthYear, num, timeAgo } from "@/lib/format";
 import { langColor } from "@/lib/lang-colors";
@@ -82,10 +83,10 @@ export function KnowledgePanel({ page }: { page: Page }) {
       <div className="relative px-6 pb-6 pt-6">
         <div className="flex items-start gap-4 lg:block">
           <span className="shrink-0 lg:hidden">
-            <Sigil seed={page.slug} name={page.name} kind={page.kind} size={48} className="shadow-soft" />
+            <PageSigil page={page} size={48} muted={false} className="shadow-soft" />
           </span>
           <span className="hidden lg:block">
-            <Sigil seed={page.slug} name={page.name} kind={page.kind} size={64} className="shadow-soft" />
+            <PageSigil page={page} size={64} muted={false} className="shadow-soft" />
           </span>
           <div className="min-w-0 lg:mt-5">
             <h2 className="font-display text-[30px] leading-[1.05] tracking-[-0.01em] text-ink [overflow-wrap:anywhere] lg:text-[34px]">
@@ -128,7 +129,7 @@ export function KnowledgePanel({ page }: { page: Page }) {
                     href={wikiHref(r.slug)}
                     className="inline-flex max-w-[15rem] items-center gap-1.5 rounded-full border border-line bg-bg py-1 pl-1 pr-2.5 text-[12.5px] text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
                   >
-                    <Sigil seed={r.slug} name={r.name} kind={r.kind} muted={!r.isArticle} size={18} />
+                    <PageSigil page={r} size={18} />
                     <span className="truncate">{r.title}</span>
                   </Link>
                 </li>

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Instrument_Serif, JetBrains_Mono, Newsreader } from "next/font/google";
+import { Suspense } from "react";
+import { ActivityRecorder } from "@/components/activity/recorder";
 import { DEMO_BAR, DemoBanner } from "@/components/demo-banner";
 import { DEMO } from "@/lib/mode";
 import "./globals.css";
@@ -41,6 +43,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="grain min-h-dvh bg-bg text-ink">
         {DEMO && <DemoBanner />}
         {children}
+        {/* Writes each page visited to the history (lib/activity.ts); on the demo, to this browser only. */}
+        <Suspense fallback={null}>
+          <ActivityRecorder demo={DEMO} />
+        </Suspense>
       </body>
     </html>
   );

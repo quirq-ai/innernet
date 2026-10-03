@@ -76,7 +76,18 @@ export interface Page {
   categories: string[];
   related: string[]; // slugs, "See also"
   words: number; // README word count
+  // The project's own logo, found by name in its folder (logo, icon, mark, favicon...)
+  // and embedded as a base64 data URI, so no page ever fetches it. Repositories and
+  // projects only; on the demo's root, the organisation's GitHub avatar. Absent or null:
+  // the letter sigil stands in. Always drawn with <img>, never as inline markup.
+  logo?: string | null;
+  // The tile a logo wants beneath it, read from its colours at index time: "dark" for a
+  // mark drawn in light ink, "light" for one drawn in dark ink, "none" for an opaque
+  // picture that fills its tile edge to edge. Absent: any quiet surface will do.
+  logoSurface?: LogoSurface | null;
 }
+
+export type LogoSurface = "dark" | "light" | "none";
 
 export interface IndexMeta {
   generatedAt: string; // ISO

@@ -205,20 +205,41 @@ export function featured(): Page[] {
   });
 }
 
-/** Pieces of the Innerpedia globe: the most substantial articles, one per distinct project. */
-export function globePages(n: number): Page[] {
-  return once(`globe:${n}`, ({ articles }) => {
+const KIND_ORDER: Record<Page["kind"], number> = { repo: 0, project: 1, docs: 2, code: 3, assets: 4, folder: 5 };
+
+/** The tiles of the Main page's globe, best first. The most substantial independent
+ * projects, one per distinct project, with those that keep a logo of their own drawn
+ * forward; when they run short (a small index, like the demo's), every other article
+ * joins them. No one logo is used more than twice, so a family of projects that share a
+ * mark does not paper over the rest. */
+export function globeTiles(n: number): Page[] {
+  return once(`globeTiles:${n}`, ({ articles }) => {
     const seen = new Set<string>();
-    return articles
-      .filter((p) => independent(p) && p.kind !== "docs")
-      .sort((a, b) => substance(b) - substance(a))
-      .filter((p) => {
-        const key = p.summary?.slice(0, 60) ?? p.name;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .slice(0, n);
+    const distinct = (p: Page) => {
+      const key = p.summary?.slice(0, 60) ?? p.name;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    };
+    const score = (p: Page) => substance(p) * (p.logo ? 1.25 : 1) + (p.logo ? 0.25 : 0);
+    const lead = (p: Page) => independent(p) && p.kind !== "docs";
+    const ranked = [
+      ...articles.filter(lead).sort((a, b) => score(b) - score(a)),
+      ...articles.filter((p) => p.depth > 0 && !lead(p)).sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || score(b) - score(a)),
+    ].filter(distinct);
+    const uses = new Map<string, number>();
+    const picked: Page[] = [];
+    const spare: Page[] = [];
+    for (const p of ranked) {
+      const u = p.logo ? (uses.get(p.logo) ?? 0) : 0;
+      if (p.logo && u >= 2) {
+        spare.push(p);
+        continue;
+      }
+      if (p.logo) uses.set(p.logo, u + 1);
+      picked.push(p);
+    }
+    return [...picked, ...spare].slice(0, n);
   });
 }
 

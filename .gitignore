@@ -11,3 +11,7 @@ public/guide/innernet-explainer.mp4
 # (public repositories only; that one is meant to ship).
 .demo-cache/
 data/demo/*.tmp
+
+# Vercel link and pulled env files hold secrets (the Neon connection string). Never commit them.
+.vercel
+.env*.local

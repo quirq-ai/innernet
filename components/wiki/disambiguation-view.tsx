@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { ancestors } from "@/lib/data";
 import { plural } from "@/lib/format";
 import { wikiHref } from "@/lib/links";
@@ -133,7 +133,7 @@ function GroupHeading({ g, small }: { g: Group; small?: boolean }) {
     <h2 id={`${g.id}-h`} className="mb-3 flex items-center gap-2.5 border-b border-line pb-2">
       {g.page ? (
         <>
-          <Sigil seed={g.page.slug} name={g.page.name} kind={g.page.kind} muted={!g.page.isArticle} size={small ? 20 : 22} />
+          <PageSigil page={g.page} size={small ? 20 : 22} />
           <span className="font-sans text-[13px] text-muted">In</span>
           <Link href={wikiHref(g.page.slug)} className={`min-w-0 truncate font-display leading-[1.15] text-ink hover:text-link ${size}`}>
             {g.page.name}

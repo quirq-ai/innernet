@@ -1,7 +1,8 @@
 // One pass that brings an index up to the current rules, shared by the indexer (before
 // it writes) and the server (when it loads an index written by an older indexer). It
 // only does what needs no disk: credentials redacted, text in house style, summaries
-// re-picked, dates in UTC and rolled up the tree, categories completed. Idempotent.
+// re-picked, logos checked, dates in UTC and rolled up the tree, categories completed.
+// Idempotent.
 // No imports beyond lib/text, so the indexer can use it outside Next.
 
 import { cleanLine, dropLeadIn, firstParagraph, readsAsInstructions, redactSecrets, undash } from "./text";
@@ -59,6 +60,19 @@ function cleanText(p: Page) {
   p.summary = summary || null;
 }
 
+/** The only logos a page may carry: a base64 data URI of an image type the indexer
+ * writes, of a size it could have written. Anything else (a URL, markup, a type no
+ * browser draws in <img>) is dropped, and the letter sigil stands in. */
+const LOGO_URI = /^data:image\/(?:svg\+xml|png|webp|jpeg|x-icon);base64,[A-Za-z0-9+/]+={0,2}$/;
+const LOGO_MAX = 140_000; // 96 KB of image, base64
+const SURFACES = new Set(["dark", "light", "none"]);
+
+function cleanLogo(p: Page) {
+  if (p.logo == null && p.logoSurface == null) return;
+  if (typeof p.logo !== "string" || p.logo.length > LOGO_MAX || !LOGO_URI.test(p.logo)) p.logo = null;
+  if (!p.logo || (p.logoSurface != null && !SURFACES.has(p.logoSurface))) p.logoSurface = null;
+}
+
 /** A folder named like source ("assets", "public") that holds nothing but media. */
 function mediaOnly(p: Page): boolean {
   return p.fileCount > 0 && p.files.length === p.fileCount && p.files.every((f) => MEDIA_EXT.has(extOf(f)));
@@ -69,6 +83,7 @@ export function normalizeIndex(index: SiteIndex): SiteIndex {
 
   for (const p of index.pages) {
     cleanText(p);
+    cleanLogo(p);
     p.created = utc(p.created);
     p.modified = utc(p.modified);
     if (p.git) {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { timeAgo } from "@/lib/format";
 import { wikiHref } from "@/lib/links";
 import { displayPath } from "@/lib/search";
@@ -66,7 +66,7 @@ export function RecentlyTouched({ pages, delay = 0 }: { pages: Page[]; delay?: n
               title={`${displayPath(p)}/${p.name} · touched ${timeAgo(p.modified)}`}
               className="group flex h-10 min-w-0 items-center gap-2.5 rounded-full border border-line bg-surface/70 pl-[7px] pr-4 text-[13.5px] text-ink-2 shadow-[var(--shadow-sm)] backdrop-blur-sm transition-[color,border-color,box-shadow] duration-150 hover:border-line-strong hover:text-ink hover:shadow-soft"
             >
-              <Sigil seed={p.slug} name={p.name} kind={p.kind} size={26} />
+              <PageSigil page={p} size={26} muted={false} />
               {/* Baseline-aligned so the small mono age sits on the name's line, not its centre. */}
               <span className="flex min-w-0 items-baseline gap-2">
                 <span className="min-w-0 max-w-[190px] truncate">{p.name}</span>

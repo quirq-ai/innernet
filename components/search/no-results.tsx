@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getIndex } from "@/lib/data";
 import { num } from "@/lib/format";
 import { searchHref, wikiHref } from "@/lib/links";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 
 // When nothing matches: say so kindly, offer a spelling if there is one, and three
 // ways forward.
@@ -80,7 +80,7 @@ export function NoResults({ text, filtered, correction }: { text: string; filter
                   href={wikiHref(p.slug)}
                   className="inline-flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-[13px] text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
                 >
-                  <Sigil seed={p.slug} name={p.name} kind={p.kind} size={20} />
+                  <PageSigil page={p} size={20} muted={false} />
                   {p.title}
                 </Link>
               </li>

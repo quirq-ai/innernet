@@ -12,9 +12,12 @@
 //     URL rewrite can reach anything an anonymous visitor could not.
 //   - Clones live in .demo-cache/ (gitignored). Anything there that is not on the public
 //     list is deleted before the crawl, so a repository made private drops out.
-//   - The crawl is the ordinary one (scripts/build-index.ts, through its env overrides).
-//     Afterwards every page path becomes its GitHub URL, file dates become git dates, and
-//     the run fails if any string in the output still names this machine.
+//   - The crawl is the ordinary one (scripts/build-index.ts, through its env overrides),
+//     logos included. Afterwards every page path becomes its GitHub URL, file dates become
+//     git dates, and the run fails if any string in the output, or any SVG logo once
+//     decoded, still names this machine.
+//   - The root's logo is the organization's public GitHub avatar, fetched here once,
+//     anonymously, and embedded, so the demo itself never asks GitHub for anything.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -84,6 +87,29 @@ async function listPublicRepos(): Promise<GhRepo[]> {
     if (batch.length < 100) break;
   }
   return all.filter((r) => r.private === false && r.visibility === "public");
+}
+
+/** The organization's avatar as a data URI: github.com/<org>.png, redirected to GitHub's
+ * avatar host, anonymously. Null when it cannot be had (the caller keeps the last one). */
+async function orgAvatar(): Promise<string | null> {
+  for (const size of [256, 160, 96]) {
+    let res: Response;
+    try {
+      res = await anonymousGet(`${DEMO_ORG_URL}.png?size=${size}`);
+    } catch {
+      return null;
+    }
+    const host = new URL(res.url).hostname;
+    if (!res.ok || (host !== "github.com" && !host.endsWith(".githubusercontent.com"))) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    const type =
+      buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff ? "image/jpeg"
+      : buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) ? "image/png"
+      : null;
+    if (!type) return null;
+    if (buf.length <= 96 * 1024) return `data:${type};base64,${buf.toString("base64")}`;
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------- git, with no config
@@ -327,6 +353,21 @@ async function main() {
     if (rootPage.readme) rootPage.categories = rootPage.categories.filter((c) => c !== "Articles lacking a README");
   }
 
+  // The root's logo: the organization's avatar. Should GitHub not answer, the avatar of
+  // the last demo index stands in, so an offline rebuild does not lose it.
+  let avatar = await orgAvatar();
+  if (!avatar) {
+    try {
+      const last = (JSON.parse(fs.readFileSync(outFile, "utf8")) as SiteIndex).pages.find((p) => p.depth === 0)?.logo;
+      if (typeof last === "string" && last.startsWith("data:image/")) avatar = last;
+    } catch {
+      /* no earlier index */
+    }
+    console.warn(avatar ? "  could not fetch the organization's avatar; keeping the last one" : "  could not fetch the organization's avatar; the root keeps its sigil");
+  }
+  rootPage.logo = avatar;
+  rootPage.logoSurface = avatar ? "none" : null;
+
   const meta: IndexMeta = {
     ...crawled.meta,
     roots: [{ label: ROOT_LABEL, path: DEMO_ORG_URL }],
@@ -363,7 +404,7 @@ async function main() {
   // manifest, commit subjects) they pass only when that repository publishes the same
   // path itself; everywhere else they fail outright.
   const LOCAL = /(?:~\/|\/Users\/|\/private\/)[^\s"'`<>()[\]{}|,;*]*/g;
-  const QUOTED = new Set(["readme", "summary", "agentNotes", "subject", "manifest"]);
+  const QUOTED = new Set(["readme", "summary", "agentNotes", "subject", "manifest", "logo"]);
   const published = new Map<string, boolean>();
   const quotedPaths = new Set<string>(); // home-style paths a repository itself publishes
   const subjects = new Map<string, string>();
@@ -390,6 +431,15 @@ async function main() {
     }
   };
   index.pages.forEach((p) => walkStrings(p, (s, at) => checkLocal(s, [`pages[${p.slug}]`, ...at], repoKeyOf(p))));
+  // Logos travel as base64, which the checks above cannot read: an SVG is text, so it is
+  // decoded and held to the same rules as a README quoted from the same repository.
+  for (const p of index.pages) {
+    const svg = p.logo?.match(/^data:image\/svg\+xml;base64,(.*)$/)?.[1];
+    if (!svg) continue;
+    const text = Buffer.from(svg, "base64").toString("utf8");
+    for (const b of banned) if (text.includes(b)) problems.push(`pages[${p.slug}].logo contains ${JSON.stringify(b)}`);
+    checkLocal(text, [`pages[${p.slug}]`, "logo"], repoKeyOf(p));
+  }
   walkStrings(index.disambiguation, (s, at) => checkLocal(s, ["disambiguation", ...at], undefined));
   walkStrings({ ...index.meta, demo: { ...index.meta.demo, repos: index.meta.demo!.repos.map((r) => ({ ...r, description: null })) } }, (s, at) =>
     checkLocal(s, ["meta", ...at], undefined),
@@ -421,9 +471,11 @@ async function main() {
 
   const c = index.meta.counts;
   const shallow = [...info.values()].filter((r) => r.truncated).map((r) => r.repo.name);
+  const projects = index.pages.filter((p) => p.isArticle && (p.kind === "repo" || p.kind === "project"));
   console.log(
     `demo index: ${repoNames.size} repositories, ${c.pages} folders, ${c.articles} articles, ${c.categories} categories, ` +
       `${(json.length / 1024 / 1024).toFixed(2)} MB -> ${path.relative(projectDir, outFile)} in ${Date.now() - started} ms` +
+      `\n  logos: ${projects.filter((p) => p.logo).length} of ${projects.length} repositories and projects${rootPage.logo ? ", and the organization's avatar on the root" : ""}` +
       (shallow.length ? `\n  history read to the last ${HISTORY} commits for: ${shallow.join(", ")}` : "") +
       (quotedPaths.size ? `\n  paths quoted from the repositories' own text: ${[...quotedPaths].join(", ")}` : ""),
   );

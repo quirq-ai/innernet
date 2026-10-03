@@ -9,7 +9,8 @@ import { Figure, PLATE_IDS } from "./plate";
 import { exists } from "./source";
 
 // The title page: the aurora, the promise, the live counts, the explainer film as a
-// frontispiece, and the contents.
+// frontispiece, and the contents. It opens the guide's half of the home page, so it is
+// revealed as the reader scrolls down to it rather than on first paint.
 
 // The film in full HD when it has been rendered here (it is gitignored), else the
 // committed 720p copy, else a placeholder.
@@ -26,13 +27,16 @@ const has = (name: string) => exists(`public/guide/${name}`) || BUILT.has(name);
 
 const AURORA_MASK = "radial-gradient(ellipse min(760px, 110vw) min(520px, 70vh) at 50% 30%, #000 18%, transparent 100%)";
 
+/** A reveal that waits a beat behind the one before it. */
+const after = (ms: number) => ({ "--reveal-delay": `${ms}ms` }) as React.CSSProperties;
+
 export function Hero() {
   const { index, missing } = getIndex();
   const { counts } = index.meta;
   const facts = indexFacts();
 
   return (
-    <section id="top" aria-labelledby="guide-title" className="relative isolate scroll-mt-20 overflow-x-clip">
+    <div className="relative isolate overflow-x-clip">
       <div className="aurora" aria-hidden style={{ maskImage: AURORA_MASK, WebkitMaskImage: AURORA_MASK }}>
         <span />
         <span />
@@ -40,16 +44,24 @@ export function Hero() {
       </div>
 
       <div className="relative mx-auto max-w-[1240px] px-4 pb-10 pt-16 sm:px-6 sm:pt-24">
-        <p className="fg-smallcaps rise text-center">
-          {missing ? "A field guide in five chapters" : <>A field guide in five chapters · Edition of {longDate(index.meta.generatedAt)}</>}
+        <p className="fg-smallcaps text-center" data-reveal>
+          {missing ? (
+            "A field guide in five chapters"
+          ) : (
+            <>
+              {/* On a phone the edition takes its own line rather than breaking in two. */}
+              A field guide in five chapters<span className="max-sm:hidden"> · </span>
+              <span className="max-sm:block whitespace-nowrap">Edition of {longDate(index.meta.generatedAt)}</span>
+            </>
+          )}
         </p>
-        <h1 id="guide-title" className="rise mt-6 text-center font-display text-[58px] leading-[0.92] tracking-[-0.025em] text-ink sm:text-[104px]" style={{ animationDelay: "60ms" }}>
+        <h2 id="guide-title" className="mt-6 text-center font-display text-[58px] leading-[0.92] tracking-[-0.025em] text-ink sm:text-[104px]" data-reveal style={after(80)}>
           The <em>Inner</em>net <span className="block">Field Guide</span>
-        </h1>
-        <p className="rise mx-auto mt-7 max-w-[600px] text-center font-serif text-[20px] leading-[1.5] text-ink-2 sm:text-[23px]" style={{ animationDelay: "120ms" }}>
-          How the folders on this machine become a search engine and an encyclopedia, and how to add to both.
+        </h2>
+        <p className="mx-auto mt-7 max-w-[600px] text-center font-serif text-[20px] leading-[1.5] text-ink-2 sm:text-[23px]" data-reveal style={after(160)}>
+          How the folders on {DEMO ? "your machine" : "this machine"} become a search engine and an encyclopedia, and how to add to both.
         </p>
-        <p className="rise mt-6 flex justify-center" style={{ animationDelay: "150ms" }}>
+        <p className="mt-6 flex justify-center" data-reveal style={after(220)}>
           <a
             href="#privacy"
             className="inline-flex items-center gap-2.5 rounded-full border border-link/40 px-4 py-1.5 font-mono text-[11.5px] uppercase tracking-[0.18em] text-link transition-colors hover:border-link hover:bg-link/5"
@@ -63,7 +75,7 @@ export function Hero() {
         </p>
 
         {!missing && (
-          <dl className="rise mx-auto mt-10 grid max-w-[860px] grid-cols-3 gap-y-6 text-center sm:flex sm:flex-wrap sm:justify-center sm:gap-y-5" style={{ animationDelay: "180ms" }}>
+          <dl className="mx-auto mt-10 grid max-w-[860px] grid-cols-3 gap-y-6 text-center sm:flex sm:flex-wrap sm:justify-center sm:gap-y-5" data-reveal style={after(280)}>
             {[
               { n: counts.pages, label: "folders", href: wikiHref("Special:Statistics") },
               { n: counts.articles, label: "articles", href: wikiHref("Special:AllPages") },
@@ -85,13 +97,13 @@ export function Hero() {
           </dl>
         )}
 
-        <div className="rise mx-auto mt-14 max-w-[1000px] sm:mt-16" style={{ animationDelay: "240ms" }}>
+        <div className="mx-auto mt-14 max-w-[1000px] sm:mt-16">
           <Film />
         </div>
 
         <Contents />
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -155,12 +167,12 @@ function FilmPlaceholder() {
 function Contents() {
   return (
     <nav aria-labelledby="contents-h" className="mx-auto mt-20 max-w-[860px] sm:mt-24">
-      <h2 id="contents-h" className="fg-smallcaps text-center">
+      <h3 id="contents-h" className="fg-smallcaps text-center">
         Contents
-      </h2>
+      </h3>
       <ol className="mt-6 border-t border-line-strong">
-        {CHAPTERS.map((c) => (
-          <li key={c.id} className="border-b border-line" data-reveal>
+        {CHAPTERS.map((c, i) => (
+          <li key={c.id} className="border-b border-line" data-reveal style={after(i * 60)}>
             <a href={`#${c.id}`} className="group grid grid-cols-[52px_minmax(0,1fr)] items-baseline gap-x-4 py-4 sm:grid-cols-[72px_minmax(0,1fr)_auto] sm:py-5">
               <span className="font-display text-[30px] leading-none text-faint transition-colors group-hover:text-ink sm:text-[38px]">{c.numeral}</span>
               <span className="min-w-0">

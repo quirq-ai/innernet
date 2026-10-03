@@ -1,4 +1,4 @@
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { cap, gloss, indexTime, news, undash } from "@/components/wiki/main/insights";
 import { Box, Dotted, Lead, PageLink } from "@/components/wiki/main/section";
 import { timeAgo } from "@/lib/format";
@@ -39,7 +39,7 @@ export function InTheNews({ delay, className }: { delay?: number; className?: st
       <ul className="space-y-4">
         {items.map(({ page, commit }) => (
           <li key={page.slug} className="flex gap-3.5">
-            <Sigil seed={page.slug} name={page.name} kind={page.kind} size={22} className="mt-[3px]" />
+            <PageSigil page={page} size={22} muted={false} className="mt-[3px]" />
             <div className="min-w-0">
               <p className="font-serif text-[16.5px] leading-[1.45] text-ink">
                 <Headline page={page} />

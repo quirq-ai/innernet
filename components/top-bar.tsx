@@ -5,7 +5,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { PediaMark, Wordmark } from "@/components/wordmark";
 
 // Header for every page except home: the quirq mark home, the wordmark, compact search,
-// the way across to the other half of the site, and the guide, quirq and GitHub links.
+// the way across to the other half of the site, back and forward through this tab's
+// trail with the way to its history, and the guide, quirq and GitHub links.
 
 export function TopBar({ q = "", variant = "search" }: { q?: string; variant?: "search" | "wiki" }) {
   return (
@@ -38,7 +39,7 @@ export function TopBar({ q = "", variant = "search" }: { q?: string; variant?: "
               </Link>
             )}
           </nav>
-          <BrandLinks />
+          <BrandLinks compact />
           <ThemeToggle />
         </div>
       </div>

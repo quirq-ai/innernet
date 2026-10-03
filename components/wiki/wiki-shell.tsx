@@ -13,7 +13,7 @@ const LINKS = [
   { href: wikiHref("Special:AllPages"), label: "All pages" },
   { href: wikiHref("Special:Categories"), label: "Categories" },
   { href: wikiHref("Special:Statistics"), label: "Statistics" },
-  { href: "/guide", label: "Field guide" },
+  { href: "/#guide", label: "Field guide" },
 ];
 
 export function WikiShell({ children, q = "" }: { children: React.ReactNode; q?: string }) {

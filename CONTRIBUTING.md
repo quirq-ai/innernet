@@ -3,7 +3,7 @@
 Innernet is small enough to hold in your head: one crawler, one JSON file, one search
 engine and an encyclopedia drawn from it. This page is how to work on it. For how it
 behaves (the crawl rules, ranking, operators, every kind of Innerpedia page), read the
-field guide in the app at [/guide](http://localhost:3470/guide). For how it should look
+field guide on the home page at [/#guide](http://localhost:3470/#guide). For how it should look
 and sound, read [DESIGN.md](DESIGN.md).
 
 ## Setup
@@ -38,9 +38,12 @@ A few things worth knowing about these tools:
 
 - `try-search` needs `--conditions=react-server`, because `lib/search.ts` and
   `lib/data.ts` import `server-only`. Any terminal script that imports them does too.
-- `shot.sh` always talks to `http://localhost:3470`. Its last two arguments are the
-  height and `light` or `dark` (it sets `prefers-color-scheme`). A narrow width gives
-  the narrow layout but not a phone user agent. Pass a tall height to see a whole page.
+- `shot.sh` talks to `http://localhost:3470` unless `SHOT_BASE` names another server.
+  Its last two arguments are the height and `light` or `dark` (it sets
+  `prefers-color-scheme`). A narrow width gives the narrow layout but not a phone user
+  agent. Pass a tall height to see a whole page, or `SHOT_SCROLL=#guide` (an element or
+  a number of pixels) to capture the window scrolled there, as the home page's hand-off
+  to the field guide needs.
 - The server cannot show an index written with `INNERNET_OUT`. Inspect that file with
   `node`, or point `INNERNET_ROOTS` at a small folder and let it write the real one when
   you are happy to rebuild. Terminal scripts can search it, though: `lib/data.ts` reads
@@ -56,12 +59,16 @@ A few things worth knowing about these tools:
 ## Conventions
 
 **Server first.** Pages are Server Components that read `lib/data.ts` and
-`lib/search.ts`. The site has four client components (the search box, the theme toggle,
-the home hero search and the contents rail), the field guide four more of its own (the
-copy button, the folder recipe, the reveal motion and the progress ruler), and there is
-one browser request, the search box calling our own `/api/suggest`. Keep it that way: no
-browser fetches, no external requests, no new client components without a reason only
-the browser can satisfy.
+`lib/search.ts`. The client components are few and each has a reason only the browser
+can satisfy: the search box, the home hero search, the theme toggle and the contents
+rail; the field guide's copy button, folder recipe, reveal motion and progress ruler;
+the Innerpedia globe and the reveal of the boxes below it; and the history's recorder,
+the header's back and forward buttons, and the history page's two views of this browser.
+The browser makes two requests of its own, both to this app: the search box asks
+`/api/suggest`, and the recorder posts each page visited to `/api/activity` (local mode
+only, same origin only; the demo keeps history in `localStorage` and sends nothing). Keep
+it that way: no other browser fetches, no external requests, no new client components
+without a reason only the browser can satisfy.
 
 **Shared code stays shared.** The indexer imports `lib/text.ts`, `lib/normalize.ts` and
 `lib/types.ts`, and `lib/links.ts`, `lib/format.ts` and `lib/lang-colors.ts` are meant to
@@ -79,8 +86,8 @@ hex. Check both themes.
 nodes; READMEs go through react-markdown with `skipHtml`. Nothing from the index goes
 near `dangerouslySetInnerHTML`.
 
-**Privacy is a feature.** The indexer reads READMEs, CLAUDE.md or AGENTS.md, manifests
-and git metadata, and nothing else. If you need a new kind of input, read names rather
+**Privacy is a feature.** The indexer reads READMEs, CLAUDE.md or AGENTS.md, manifests,
+git metadata and a project's own logo image (found by name), and nothing else. If you need a new kind of input, read names rather
 than contents where you can, and run anything textual through `redactSecrets` and
 `cleanLine` in `lib/text.ts`.
 
@@ -166,5 +173,5 @@ aliases, add them to both `LANG_ALIASES` copies (`lib/search.ts` and
 - [ ] No em or en dashes, no exclamation marks, encyclopedia voice in prose.
 - [ ] Colours from tokens, links from `lib/links.ts`, index text as React nodes.
 - [ ] No new browser requests, no new reads from disk beyond names and the files listed above.
-- [ ] README.md, DESIGN.md and the [/guide](http://localhost:3470/guide) page updated if behaviour changed.
+- [ ] README.md, DESIGN.md and the [field guide](http://localhost:3470/#guide) updated if behaviour changed.
 - [ ] `data/` and `.next/` left out of the commit.

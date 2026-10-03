@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { ancestors, getIndex, getPages } from "@/lib/data";
 import { longDate } from "@/lib/format";
 import { categoryHref, isRemote, wikiHref } from "@/lib/links";
@@ -131,7 +131,7 @@ export function Sub({ label, aside, children, className = "" }: { label: string;
 export function Notice({ page, children, className = "" }: { page: Page; children: React.ReactNode; className?: string }) {
   return (
     <div role="note" className={`flex items-center gap-3.5 rounded-xl border border-notice-line bg-notice px-4 py-3 ${className}`}>
-      <Sigil seed={page.slug} name={page.name} kind={page.kind} muted={!page.isArticle} size={30} />
+      <PageSigil page={page} size={30} />
       <p className="font-serif text-[15.5px] italic leading-snug text-ink-2">{children}</p>
     </div>
   );
@@ -233,7 +233,7 @@ export function PartOf({ page, className = "" }: { page: Page; className?: strin
       href={wikiHref(page.slug)}
       className={`group inline-flex max-w-full items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-[13px] shadow-[var(--shadow-sm)] transition-colors hover:border-line-strong ${className}`}
     >
-      <Sigil seed={page.slug} name={page.name} kind={page.kind} muted={!page.isArticle} size={20} />
+      <PageSigil page={page} size={20} />
       <span className="shrink-0 whitespace-nowrap text-muted">Part of</span>
       <span className="min-w-0 truncate text-link group-hover:text-link-hover">{page.name}</span>
     </Link>

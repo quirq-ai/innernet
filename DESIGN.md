@@ -19,17 +19,27 @@ decoration for its own sake.
 2. **One accent.** `--link` blue is the only saturated colour in the chrome. All other
    colour comes from sigils and the home-page aurora.
 3. **Every folder has an identity.** The `<Sigil>` (components/sigil.tsx) is a
-   deterministic three-hue gradient per slug. Use it wherever a page is represented:
-   results, suggestions, knowledge panel, infobox, lists of related pages.
+   deterministic three-hue gradient per slug; a repository or project whose folder holds
+   its own logo shows that instead, on a tile chosen from the logo's colours. Server
+   components use `<PageSigil page>` (components/page-sigil.tsx), which picks the logo
+   when there is one, wherever a page is represented: results, knowledge panel, infobox,
+   lists of related pages, the Main page's boxes.
 4. **The web's conventions are features.** Blue links that turn violet once visited,
    breadcrumbs above result titles, "About N results (0.01 seconds)", Wikipedia's lead
    paragraph, infobox, contents, hatnotes, "See also", categories at the foot. Keep them;
    make them beautiful.
 5. **Server first.** Pages are Server Components that read `lib/data.ts` and
-   `lib/search.ts` directly. The only browser fetch in the whole app is the search box's
-   call to our own `/api/suggest` route. No external requests from the browser, ever.
-6. **Calm motion.** Only `rise` (fade + 6px lift) on first paint, staggered by ~40ms in
-   lists, and the slow aurora drift. Everything respects `prefers-reduced-motion`.
+   `lib/search.ts` directly. The browser fetches from two of our own routes and nothing
+   else: the search box asks `/api/suggest`, and the history recorder posts each page
+   visited to `/api/activity` (local mode only, same origin only; the demo keeps history
+   in the visitor's `localStorage`). No external requests from the browser, ever. Links
+   out (GitHub, quirq, the AI assistants) are plain links that open in a new tab.
+6. **Calm motion.** `rise` (fade + 6px lift) on first paint, staggered by ~40ms in
+   lists; the slow aurora drift; things that ease in once as they scroll into view (the
+   field guide's plates, the Main page's boxes); the home page's hand-off, where the
+   first screen's aurora dims and the wordmark lifts as the guide arrives (only where
+   the browser ties animation to scrolling); and the Innerpedia globe's slow turn.
+   Everything respects `prefers-reduced-motion`: under it nothing moves on its own.
 
 ## Tokens (app/globals.css)
 
@@ -78,10 +88,18 @@ Dark mode is automatic (`prefers-color-scheme`) with a manual override
   in lowercase, including accessible labels, metadata and documentation. Use the
   approved quirq logo for attribution and preserve its artwork and proportions.
 - `components/top-bar.tsx` `<TopBar q variant="search"|"wiki">`: sticky header with
-  wordmark, compact `<SearchBox>`, link across, theme toggle.
+  the quirq mark home, wordmark, compact `<SearchBox>`, link across, `<BrandLinks
+  compact>` and the theme toggle.
+- `components/brand-nav.tsx` `<BrandLinks>`: what every header carries on its right:
+  the trail (`<HistoryNav>`: back, forward and the clock to `/activity`), the Guide
+  button (to `/#guide`), quirq and GitHub. `compact` lets them give way on narrow
+  screens (the Guide to its icon, GitHub off phones), to a search box in `<TopBar>` and
+  to the Innerpedia link on home. Every header also has exactly one `<ThemeToggle>`,
+  beside it.
 - `components/search-box.tsx` `<SearchBox size="hero"|"compact">`: combobox with live
   suggestions, `/` to focus, Enter to search, arrow keys to pick a page.
-- `components/sigil.tsx` `<Sigil seed={slug} name kind muted={!isArticle} size>`.
+- `components/sigil.tsx` `<Sigil seed={slug} name kind muted={!isArticle} size logo logoSurface>`;
+  in server components, `components/page-sigil.tsx` `<PageSigil page={page|slug} size>`.
 - `components/wordmark.tsx` `<Wordmark>` and `<PediaMark>`.
 - `components/site-footer.tsx` `<SiteFooter links>`: the small print under results and
   Innerpedia pages (ways onward, index freshness, the `pnpm index` hint). Home keeps its
@@ -105,18 +123,36 @@ Dark mode is automatic (`prefers-color-scheme`) with a manual override
 
 ### Home `/`
 
-- Full-viewport, vertically centred slightly above the middle. The `.aurora` field (three
-  `<span>`s) sits behind the wordmark and search box.
+One page in two movements: the search engine, then the field guide.
+
+- **The first screen** is full-viewport, vertically centred slightly above the middle,
+  with the `.aurora` field (three `<span>`s) behind the wordmark and search box, masked
+  to a pool of light so the paper shows around it at every width.
+- A header row across the top: the quirq mark home on the left; Innerpedia (kept on
+  phones, where the footer is a whole guide away), `<BrandLinks compact>` (trail, Guide,
+  quirq, GitHub) and the theme toggle on the right.
 - Wordmark large (Instrument Serif ~96px desktop, ~64px mobile), `<em>inner</em>net`.
 - One line beneath in `text-muted`: what this is, with live counts, e.g.
-  "Your personal internet · 5,479 folders · 958 articles". Separators are middots.
-- `<SearchBox size="hero" autoFocus>` at max-width ~620px.
-- Two quiet buttons under it: **Search** and **I'm feeling curious** (goes to
-  `/wiki/Special:Random`). Pill buttons, `bg-bg-sunk`, `text-ink-2`, 13.5px.
-- Below the fold-line, a single row "Recently touched": 6 to 8 articles with the most
-  recent `modified`, each a sigil + name chip linking to the article.
-- Footer: "Innerpedia" link, "Indexed 12 minutes ago from ~/Programming", the
-  `pnpm index` hint in mono for re-indexing, theme toggle.
+  "Your personal internet · 5,479 folders · 958 articles". Separators are middots; each
+  count is a quiet link to where those things are listed.
+- `<SearchBox size="hero" autoFocus>` at max-width ~620px, then two quiet pill buttons
+  (**Search** and **I'm feeling curious**, which goes to `/wiki/Special:Random`), then a
+  "Try" row of example operators.
+- One quiet invitation to an AI (`<AskAnAiRow>`): "Work on Innernet with an AI like
+  Claude, ChatGPT or Grok" (the demo: "Run Innernet on your own folders with..."), each
+  name a plain link that opens the assistant in a new tab with the prompt written, and a
+  **Copy prompt** button. Its headline links to the full card.
+- "Recently touched": 6 to 8 articles with the most recent `modified`, each a sigil or
+  logo + name chip linking to the article.
+- At the foot of the screen, the cue: "The field guide" in small mono caps over a
+  hairline with a drop of ink running down it.
+- **The field guide** (`components/guide/field-guide.tsx`, `<section id="guide">`)
+  follows: the title page (revealed as it scrolls in), the five chapters beside their
+  sticky rail (a sticky chapter bar on phones), then the full AI card (`<AskAnAiCard>`,
+  `#ask-an-ai`: the assistants as buttons, the prompt to copy, `claude` and `codex`
+  one-liners), then the colophon. `/guide` redirects here for good (308 to `/#guide`).
+- Footer, at the end of the page: Innerpedia, Field guide and Back to the top; "Indexed
+  12 minutes ago from ~/Programming"; the `pnpm index` hint in mono; the quirq credit.
 - If the index is missing, the home page says so plainly and shows `pnpm index`.
 
 ### Results `/search?q=&t=&p=`
@@ -210,9 +246,16 @@ in a responsive 3-column flow (CSS columns), each with a small sigil.
 
 Innerpedia's front page, a love letter to Wikipedia's.
 
-- Welcome banner: "Welcome to *Inner*pedia, the encyclopedia of you." with counts
-  ("958 articles about 5,479 folders"), and a row of portal links to the largest
-  collections and languages.
+- **The first screen** is the welcome and the globe. On the left: "Welcome to
+  *Inner*pedia, the encyclopedia of you." with counts ("958 articles about 5,479
+  folders"), a "Written from" line, and rows of portal links to the largest collections
+  (or, in the demo, repositories) and languages. On the right: the globe, every tile a
+  project (its logo, or its sigil) on a slowly turning sphere with latitude rings and
+  orbits, over a soft pool of aurora. Drag or swipe to turn it, hover or focus for a
+  name, arrow keys between tiles; it holds still under reduced motion. In the demo the
+  organisation's avatar glows at its core.
+- A cue at the foot of the screen, "Today on Innerpedia · date", leads to the boxes,
+  which ease in as they scroll into view (they render visible without JavaScript).
 - Two-column grid of boxes, each with a small-caps heading and a hairline:
   - **Featured article**: the most substantial recently-active article with a README.
     Sigil, title, first ~80 words of its summary, "Read more".
@@ -232,6 +275,18 @@ Innerpedia's front page, a love letter to Wikipedia's.
 - `Special:AllPages`: every article A to Z, compact columns.
 - `Special:Statistics`: counts, languages across everything, biggest folders, busiest
   repos. A small, handsome table page.
+
+### History `/activity`
+
+- `<TopBar>`, then "History" in the display serif with the stats (sessions, events,
+  apps) and a two-week strip of small bars.
+- Sessions newest first, grouped by day: start time, duration, event count, app badges,
+  "This tab" for the current one, and a strip of the articles' sigils. Each opens onto
+  its events merged across apps: time in mono, kind, app badge, the page as a link.
+- A side column explains the format (one folder per session, one JSON Lines file per
+  app), names the folder and gives the shell one-liner.
+- In the demo the list is read from this browser's `localStorage`, the page says that
+  nothing reaches the server, and a button clears it.
 
 ## Voice
 

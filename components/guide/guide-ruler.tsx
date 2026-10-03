@@ -5,7 +5,9 @@ import type { GuideChapter } from "./chapters";
 
 // The progress ruler: one segment per chapter, filling as the reader moves through it.
 // On wide screens a sticky rail beside the text, with the open chapter's sections; on
-// narrow ones a compact bar under the header that unfolds into the contents.
+// narrow ones a compact bar pinned to the top of the window that unfolds into the
+// contents. The guide sits under the home page's search, which has no sticky header,
+// so both hold to the top of the window itself.
 
 interface Progress {
   chapter: number; // index of the chapter being read, -1 before the first
@@ -71,7 +73,7 @@ export function GuideRail({ chapters }: { chapters: GuideChapter[] }) {
   const { chapter, section, fill } = useProgress(chapters);
   const total = fill.length ? fill.reduce((s, f) => s + f, 0) / fill.length : 0;
   return (
-    <nav aria-label="Chapters" className="sticky top-[96px] max-h-[calc(100dvh-120px)] overflow-y-auto overscroll-contain pb-8 pr-1 [scrollbar-width:none]">
+    <nav aria-label="Chapters" className="sticky top-10 max-h-[calc(100dvh-64px)] overflow-y-auto overscroll-contain pb-8 pr-1 [scrollbar-width:none]">
       <div className="fg-smallcaps mb-4 flex items-baseline justify-between">
         <span>The field guide</span>
         <span className="tabular-nums text-faint">{Math.round(total * 100)}%</span>
@@ -121,7 +123,7 @@ export function GuideRail({ chapters }: { chapters: GuideChapter[] }) {
         })}
       </ol>
       <a href="#top" className="fg-smallcaps mt-6 inline-block pl-[22px] transition-colors hover:text-ink">
-        Back to the top
+        Back to the search
       </a>
     </nav>
   );
@@ -133,7 +135,7 @@ export function GuideBar({ chapters }: { chapters: GuideChapter[] }) {
   // Folds itself away once a chapter is chosen, so the page is not left under it.
   const fold = useRef<HTMLDetailsElement>(null);
   return (
-    <nav aria-label="Chapters" className="sticky top-16 z-30 -mx-4 border-b border-line bg-bg/90 backdrop-blur-md sm:-mx-6 lg:hidden">
+    <nav aria-label="Chapters" className="sticky top-0 z-30 -mx-4 border-b border-line bg-bg/90 backdrop-blur-md sm:-mx-6 lg:hidden">
       <details ref={fold} className="group">
         <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-2.5 sm:px-6 [&::-webkit-details-marker]:hidden">
           <span className="w-8 font-display text-[20px] leading-none text-ink">{chapter >= 0 ? c.numeral : "§"}</span>

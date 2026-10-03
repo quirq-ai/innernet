@@ -1,7 +1,9 @@
 // Headless screenshot of a running page, taken once it has settled: fonts loaded and
 // every finite animation (the staggered `rise`) finished. Drives chrome-headless-shell
 // over the DevTools protocol, because its --screenshot flag fires mid-animation.
-// CHROME_BIN overrides the browser; SHOT_SCALE=2 captures at 2x pixel density.
+// CHROME_BIN overrides the browser; SHOT_SCALE=2 captures at 2x pixel density;
+// SHOT_BASE points it at another server (default http://localhost:3470); SHOT_SCROLL
+// scrolls the window first, to a number of pixels or to an element (`#guide`).
 //
 //   node scripts/shot.mjs <url-path> <out.png> [width] [height] [light|dark]
 //
@@ -15,6 +17,8 @@ import path from "node:path";
 const [route = "/", out = "shot.png", w = "1440", h = "1000", scheme = "light"] = process.argv.slice(2);
 const width = Number(w);
 const height = Number(h);
+const base = (process.env.SHOT_BASE || "http://localhost:3470").replace(/\/$/, "");
+const scrollTo = process.env.SHOT_SCROLL || "";
 
 function findChrome() {
   if (process.env.CHROME_BIN) return process.env.CHROME_BIN;
@@ -102,29 +106,44 @@ await send("Page.enable");
 await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: Number(process.env.SHOT_SCALE || 1), mobile: false });
 await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: scheme === "dark" ? "dark" : "light" }] });
 const loaded = once("Page.loadEventFired");
-await send("Page.navigate", { url: `http://localhost:3470${route}` });
+await send("Page.navigate", { url: `${base}${route}` });
 await Promise.race([loaded, sleep(10_000)]);
 
 // Settle: fonts loaded and every animation that ends finished (the aurora drifts
-// forever, so it is skipped). Headless Chrome draws only when asked, and a composited
-// fade that is never drawn while it runs stays half-faded in the capture, so keep
-// asking for frames until everything has landed.
-const settled = `document.fonts.status === "loaded" && document.getAnimations().every((a) => a.effect?.getComputedTiming().endTime === Infinity || a.playState === "finished")`;
+// forever, and motion tied to scrolling never finishes, so both are skipped). Headless
+// Chrome draws only when asked, and a composited fade that is never drawn while it runs
+// stays half-faded in the capture, so keep asking for frames until everything has landed.
+const settled = `document.fonts.status === "loaded" && document.getAnimations().every((a) => !(a.timeline instanceof DocumentTimeline) || a.effect?.getComputedTiming().endTime === Infinity || a.playState === "finished")`;
 const frame = () => send("Page.captureScreenshot", { format: "jpeg", quality: 1 });
-for (let t = Date.now(); Date.now() - t < 5000; ) {
+const settle = async (ms) => {
+  for (let t = Date.now(); Date.now() - t < ms; ) {
+    await frame();
+    if (await evaluate(settled)) break;
+    await sleep(40);
+  }
   await frame();
-  if (await evaluate(settled)) break;
-  await sleep(40);
+  await sleep(100);
+};
+await settle(5000);
+// The top of the page, unless asked otherwise, even if focus scrolled the window.
+if (!scrollTo) await evaluate(`window.scrollTo({ top: 0, behavior: "instant" })`);
+if (scrollTo) {
+  // Instant, so smooth scrolling on the page cannot leave the capture mid-way.
+  await evaluate(`(() => {
+    const y = ${JSON.stringify(scrollTo)};
+    const el = /^\\d+$/.test(y) ? null : document.querySelector(y);
+    window.scrollTo({ top: el ? el.getBoundingClientRect().top + scrollY : Number(y), behavior: "instant" });
+  })()`);
+  await sleep(150);
+  await settle(4000);
 }
-await frame();
-await sleep(100);
 
 // The window is as tall as the shot, so the capture stays inside the viewport. Chrome's
 // beyond-viewport capture redraws composited animations from a stale frame.
-const size = await evaluate(`({ w: document.documentElement.scrollWidth, h: document.documentElement.scrollHeight })`);
+const size = await evaluate(`({ w: document.documentElement.scrollWidth, h: document.documentElement.scrollHeight, y: scrollY })`);
 const shot = await send("Page.captureScreenshot", {
   format: "png",
-  clip: { x: 0, y: 0, width, height: Math.min(height, size.h), scale: 1 },
+  clip: { x: 0, y: size.y, width, height: Math.min(height, size.h - size.y), scale: 1 },
 });
 fs.writeFileSync(out, Buffer.from(shot.result.data, "base64"));
 console.log(`${out}  doc ${size.w}x${size.h}${size.w > width ? "  HORIZONTAL OVERFLOW" : ""}`);

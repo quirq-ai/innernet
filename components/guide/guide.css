@@ -577,12 +577,13 @@
   opacity: 0;
   transform: translateY(14px);
 }
+/* A block may wait a beat behind the one before it: style="--reveal-delay: 80ms". */
 [data-reveal="in"] {
   opacity: 1;
   transform: none;
   transition:
-    opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+    opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) var(--reveal-delay, 0s),
+    transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) var(--reveal-delay, 0s);
 }
 
 @media (prefers-reduced-motion: reduce), print {

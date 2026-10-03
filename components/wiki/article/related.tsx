@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { getPages } from "@/lib/data";
 import { isRemote, sourceHref, wikiHref } from "@/lib/links";
 import type { Page } from "@/lib/types";
@@ -30,7 +30,7 @@ export function SeeAlso({ page }: { page: Page }) {
         return (
           <li key={p.slug}>
             <Link href={wikiHref(p.slug)} className="group -mx-2.5 flex gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-bg-sunk">
-              <Sigil seed={p.slug} name={p.name} kind={p.kind} muted={!p.isArticle} size={32} className="mt-0.5" />
+              <PageSigil page={p} size={32} className="mt-0.5" />
               <span className="min-w-0">
                 <span className="block truncate text-[15px] text-link group-hover:text-link-hover group-hover:underline group-hover:underline-offset-[3px]">
                   {name}

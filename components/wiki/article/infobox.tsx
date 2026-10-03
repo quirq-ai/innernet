@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Sigil, sigilGradient } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
+import { sigilGradient } from "@/components/sigil";
 import { ancestors, getIndex } from "@/lib/data";
 import { bytes, longDate, num, plural, timeAgo } from "@/lib/format";
 import { langColor } from "@/lib/lang-colors";
@@ -156,7 +157,7 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
       <div className={`relative isolate grid place-items-center overflow-hidden px-6 text-center ${compact ? "pb-4 pt-6" : "pb-5 pt-8"}`}>
         <div aria-hidden className="absolute inset-0 -z-10 scale-110 opacity-[0.22] blur-2xl" style={{ background: sigilGradient(page.slug, !page.isArticle) }} />
         <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-2/3 bg-linear-to-b from-transparent to-surface" />
-        <Sigil seed={page.slug} name={page.name} kind={page.kind} muted={!page.isArticle} size={compact ? 60 : 88} className="shadow-soft" />
+        <PageSigil page={page} size={compact ? 60 : 88} className="shadow-soft" />
         <div className={`mt-4 font-display leading-[1.1] text-ink [overflow-wrap:anywhere] ${compact ? "text-[22px]" : "text-[26px]"}`}>
           {name}
           {qualifier && <span className="block pt-1 font-sans text-[12px] text-muted">{qualifier}</span>}

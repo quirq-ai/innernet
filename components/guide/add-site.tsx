@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { count } from "@/components/wiki/article/lead";
 import { getIndex } from "@/lib/data";
 import { longDate, monthYear, num } from "@/lib/format";
@@ -245,7 +245,7 @@ export function AddSite() {
 function PageRow({ page, note }: { page: Page; note?: React.ReactNode }) {
   return (
     <li className="flex items-start gap-3 py-2.5">
-      <Sigil seed={page.slug} name={page.name} kind={page.kind} muted={!page.isArticle} size={24} className="mt-0.5" />
+      <PageSigil page={page} size={24} className="mt-0.5" />
       <div className="min-w-0 flex-1">
         <Link href={wikiHref(page.slug)} className="link text-[15px] [overflow-wrap:anywhere]">
           {page.title}
@@ -374,7 +374,7 @@ function MostWanted() {
   }
   const row = (p: Page) => (
     <li key={p.slug} className="flex items-center gap-3 py-3">
-      <Sigil seed={p.slug} name={p.name} kind={p.kind} muted={!p.isArticle} size={30} />
+      <PageSigil page={p} size={30} />
       <div className="min-w-0 flex-1">
         <Link href={wikiHref(p.slug)} className="link text-[15.5px] [overflow-wrap:anywhere]">
           {p.title}

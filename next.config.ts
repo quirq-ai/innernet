@@ -32,8 +32,9 @@ const guideMedia = (() => {
   }
 })();
 
-// The guide (components/guide/source.ts) quotes these files of Innernet's own as it
-// serves them, and counts the TypeScript files in its four component folders.
+// The field guide (components/guide/source.ts) quotes these files of Innernet's own as
+// it serves them, and counts the TypeScript files in its four component folders. It is
+// bound into the home page, so "/" is the route that carries them.
 const GUIDE_SOURCES = [
   "scripts/build-index.ts",
   "scripts/try-search.ts",
@@ -47,8 +48,9 @@ const GUIDE_SOURCES = [
   "app/page.tsx",
   "app/search/page.tsx",
   "app/wiki/*/page.tsx",
+  "app/activity/page.tsx",
   "app/api/suggest/route.ts",
-  "app/guide/page.tsx",
+  "app/api/activity/route.ts",
   "app/globals.css",
   "components/sigil.tsx",
   "components/home/*.tsx",
@@ -71,13 +73,16 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   env: { INNERNET_GUIDE_MEDIA: guideMedia, INNERNET_DEMO_BUILD: demoBuild ? "1" : "" },
   // What each server function carries when deployed: Vercel ships only traced files.
-  // Every page reads the demo index, and the guide reads its sources and plates. The
-  // local index, the film, its renders and the demo's clones never ship. (Turbopack
-  // matches these patterns anywhere below the project, not only at its top, so they
-  // name files exactly rather than whole folders.)
+  // Every page reads the demo index, and the home page's field guide reads its sources
+  // and plates. The local index, the film, its renders and the demo's clones never ship.
+  // (Turbopack matches these patterns anywhere below the project, not only at its top,
+  // so they name files exactly rather than whole folders.)
   outputFileTracingIncludes: {
     "/**": ["data/demo/index.json"],
-    "/guide": [...GUIDE_SOURCES, "public/guide/plates/*.svg"],
+    // The home page alone. Turbopack matches each key anywhere inside an entry's name
+    // ("app/page", "app/wiki/[slug]/page"), so a bare "/" would ship the guide with
+    // every function; "app/page" names the home page's entry and no other.
+    "app/page": [...GUIDE_SOURCES, "public/guide/plates/*.svg"],
   },
   outputFileTracingExcludes: {
     "/**": ["film/**", "brand/**", ".demo-cache/**", "data/index.json", "data/*.tmp", "data/demo/*.tmp", "public/guide/*.mp4"],
@@ -92,6 +97,12 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
         ],
+      },
+      {
+        // Project logos (app/api/logo/[id]/route.ts): images only, so an SVG opened on
+        // its own can load and run nothing. Listed last, so it replaces the policy above.
+        source: "/api/logo/:id",
+        headers: [{ key: "Content-Security-Policy", value: "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox" }],
       },
     ];
   },

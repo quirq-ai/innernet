@@ -1,10 +1,14 @@
-import type { PageKind } from "@/lib/types";
+import type { LogoSurface, PageKind } from "@/lib/types";
 
 // Every folder gets a deterministic "sigil": a small aurora of three hues derived from
 // its slug, with its initial set in the display serif. Repos are round, projects are
 // soft squares, plain folders are muted. The same sigil appears in search results,
 // suggestions, the knowledge panel and the article infobox, so a project is
 // recognisable by colour before its name is read.
+//
+// A project that keeps a logo of its own shows that instead, in the same tile shape on
+// a quiet surface. Server components pass a page through <PageSigil> (page-sigil.tsx),
+// which fills in the logo; the letter sigil stands in wherever there is none.
 
 function hash(s: string): number {
   let h = 2166136261;
@@ -44,6 +48,19 @@ export function sigilDot(seed: string, kind: PageKind, muted = false): { classNa
   return { className: `${shape}${muted ? " sigil-muted" : ""}`, style: { "--a": a, "--b": b, "--c": c } as React.CSSProperties };
 }
 
+/** The tile beneath a logo. A mark in light ink gets a dark tile in both themes, one in
+ * dark ink a light tile; light-dark() follows the theme's color-scheme, so the manual
+ * theme toggle is honoured too. Everything else sits on the raised surface. */
+const LOGO_TILE: Record<LogoSurface | "quiet", string> = {
+  quiet: "var(--surface)",
+  dark: "light-dark(color-mix(in oklab, var(--ink) 90%, var(--surface)), var(--bg-sunk))",
+  light: "light-dark(var(--surface), var(--ink))",
+  none: "var(--bg-sunk)",
+};
+
+export const sigilRadius = (kind: PageKind, size: number) =>
+  kind === "repo" ? "9999px" : kind === "project" || kind === "docs" ? `${Math.round(size * 0.3)}px` : `${Math.round(size * 0.18)}px`;
+
 export function Sigil({
   seed,
   name,
@@ -51,6 +68,8 @@ export function Sigil({
   muted,
   size = 28,
   className = "",
+  logo,
+  logoSurface,
 }: {
   seed: string;
   name: string;
@@ -58,9 +77,39 @@ export function Sigil({
   muted?: boolean;
   size?: number;
   className?: string;
+  /** Where the logo is served (logoSrc in lib/logo.ts, same origin). Drawn with <img>, never as markup. */
+  logo?: string | null;
+  logoSurface?: LogoSurface | null;
 }) {
+  const radius = sigilRadius(kind, size);
+  if (logo) {
+    const full = logoSurface === "none";
+    // A circle holds less than a square of the same width, so round tiles pad more; the
+    // smallest tiles pad least, or the mark would shrink to a speck.
+    const share = kind === "repo" ? (size < 24 ? 0.7 : 0.6) : size < 24 ? 0.8 : 0.68;
+    const inner = full ? size : Math.round(size * share);
+    return (
+      <span
+        aria-hidden
+        className={`sigil relative inline-grid shrink-0 place-items-center overflow-hidden ${className}`}
+        style={{ width: size, height: size, borderRadius: radius, background: LOGO_TILE[logoSurface ?? "quiet"] }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- a small same-origin logo, cached for good: nothing to optimise */}
+        <img
+          src={logo}
+          alt=""
+          width={inner}
+          height={inner}
+          decoding="async"
+          draggable={false}
+          className={`block select-none ${full ? "object-cover" : "object-contain"}`}
+          style={{ width: inner, height: inner }}
+        />
+        {!full && <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_0_0_1px_var(--line-strong)]" />}
+      </span>
+    );
+  }
   const letter = (name.replace(/^[^\p{L}\p{N}]+/u, "")[0] ?? "·").toUpperCase();
-  const radius = kind === "repo" ? "9999px" : kind === "project" || kind === "docs" ? `${Math.round(size * 0.3)}px` : `${Math.round(size * 0.18)}px`;
   return (
     <span
       aria-hidden

@@ -27,7 +27,8 @@ Your existing folders are the source material. One local JSON index powers both 
 | --- | --- |
 | **Search** · `/` and `/search` | A familiar search box, highlighted results, live suggestions, spelling corrections and project knowledge panels. |
 | **Innerpedia** · `/wiki` | Project articles with README overviews, folder trees, technology, Git history and related projects. Browse categories, statistics or a random article. |
-| **Field guide** · `/guide` | An illustrated walkthrough of the crawl, search and privacy rules, plus an interactive recipe for turning a folder into an article. |
+| **Field guide** · `/#guide` | The second half of the home page: an illustrated walkthrough of the crawl, search and privacy rules, an interactive recipe for turning a folder into an article, and a prompt that hands Innernet to an AI assistant. |
+| **History** · `/activity` | Every page you opened, one session per browser tab, kept as plain files on this machine. The header's arrows step back and forward. |
 
 ## The public demo (Vercel)
 
@@ -97,7 +98,7 @@ pnpm dev
 ```
 
 Open **[localhost:3470](http://localhost:3470)**, search for a familiar project, or visit
-**[Innerpedia](http://localhost:3470/wiki)** and the **[field guide](http://localhost:3470/guide)**.
+**[Innerpedia](http://localhost:3470/wiki)** and the **[field guide](http://localhost:3470/#guide)**.
 Both `pnpm dev` and `pnpm start` bind to `127.0.0.1`.
 
 The first dev run or build needs network access to fetch fonts. Afterward, the fonts
@@ -141,6 +142,44 @@ Combine them with free text, such as `chat lang:ts fw:next`. Quote values contai
 spaces, such as `in:"side projects"`. Results can also be filtered using the
 **Projects**, **Repositories**, **Documents** and **Folders** tabs.
 
+## History
+
+Innernet writes down what you open, in plain files on this machine. There is no
+database, no index file and no schema registry: a session is a folder, and each app
+that takes part writes its own JSON Lines file inside it.
+
+```text
+~/.innernet/history/                  set INNERNET_HISTORY_DIR to keep it elsewhere
+  2026-10-03T05-12-07Z_k3f9a2/        one folder per browser tab: its start time (UTC) and a short id
+    innernet.jsonl                    one JSON object per line, appended by Innernet
+    <any-app>.jsonl                   any other app or tool adds its own file
+```
+
+Every line is `{"at":"<ISO time>","app":"<name>","kind":"<verb>", ...}` plus whatever
+fields the app likes. Innernet writes `visit`, `search`, `back` and `forward`:
+
+```json
+{"at":"2026-10-03T05:12:09.512Z","app":"innernet","kind":"visit","url":"/wiki/galileo","title":"galileo"}
+{"at":"2026-10-03T05:12:31.020Z","app":"innernet","kind":"search","q":"agent","url":"/search?q=agent"}
+```
+
+Reading a session means reading every `*.jsonl` in its folder and sorting by `at`.
+App names are lowercase letters, digits, `-` and `_`; lines over 4 KB, lines that are
+not JSON and lines without a valid `at` and `kind` are skipped. To add your own
+activity, append a line to a file named after your app. This joins the newest session:
+
+```bash
+echo '{"at":"'$(date -u +%FT%TZ)'","app":"notes","kind":"edit","file":"todo.md"}' >> "$(ls -d ~/.innernet/history/*/ | tail -1)notes.jsonl"
+```
+
+**[/activity](http://localhost:3470/activity)**, the clock in the header, shows the
+sessions newest first, each opening onto its events merged across apps. The header's
+arrows step back and forward through the pages of the current tab. The browser writes
+through the app's own `/api/activity` route, which accepts only same-origin requests
+on localhost, and browsers driven by automation are not recorded. Delete a session's
+folder to forget it. On the public demo nothing is sent to or stored on the server: the
+same events stay in the visitor's own `localStorage`.
+
 ## Privacy
 
 Innernet is built to read and serve your project context on your machine.
@@ -149,16 +188,21 @@ Innernet is built to read and serve your project context on your machine.
   gitignored, and the crawler skips its own `data/`, dependency folders, generated
   folders and symlinks.
 - **Limited content reads.** The crawler reads READMEs, `CLAUDE.md` or `AGENTS.md`,
-  project manifests and Git metadata. It does not read `.env`, key files or arbitrary
-  source and document contents. The Documents tab classifies folders by file names
-  and types.
+  project manifests and Git metadata, plus a repository's or project's own logo image,
+  found by name (`logo`, `icon`, `mark`, `favicon` and the like, up to 64 KB for SVG
+  and 96 KB for other images) under the same secret-folder and secret-name rules, with
+  symlinks never followed. It does not read `.env`, key files or arbitrary source and
+  document contents. The Documents tab classifies folders by file names and types.
 - **Redaction.** Secret-looking file names are hidden, credentials are stripped from
   Git remotes, and credential-shaped text becomes `[redacted]` during indexing and
   when an older index is loaded.
 - **Local serving.** The server binds to loopback, rejects non-localhost Host headers
   and sets a Content-Security-Policy that keeps the browser on the same origin.
-  Development also allows websockets for hot reload. Suggestions use the app's own
-  `/api/suggest` route.
+  Development also allows websockets for hot reload. The browser calls only two of the
+  app's own routes: `/api/suggest` for suggestions, and `/api/activity` to write the
+  [history](#history), which accepts same-origin requests on localhost only. The public
+  demo sends nothing to `/api/activity` (it answers 404 there) and keeps each visitor's
+  history in their own `localStorage`.
 
 During development, Next.js records request URLs, including search queries, in
 `.next/dev/trace`. That file is gitignored and can be deleted.
@@ -167,7 +211,7 @@ During development, Next.js records request URLs, including search queries, in
 
 Read **[CONTRIBUTING.md](CONTRIBUTING.md)** for the development loop and PR checklist,
 **[DESIGN.md](DESIGN.md)** for visual and writing conventions, and the
-**[field guide](http://localhost:3470/guide)** for an explanation of the app's rules.
+**[field guide](http://localhost:3470/#guide)** for an explanation of the app's rules.
 
 Run the required check before opening a PR:
 
@@ -186,7 +230,9 @@ pnpm -s typecheck
 | [`lib/search.ts`](lib/search.ts) | MiniSearch, operators, ranking, snippets and suggestions. |
 | [`lib/data.ts`](lib/data.ts) | Load the index and resolve articles, stubs, categories and other pages. |
 | [`lib/text.ts`](lib/text.ts) · [`lib/normalize.ts`](lib/normalize.ts) | Clean and redact text; bring older indexes up to current rules. |
-| [`app/`](app) · [`components/`](components) | Search, Innerpedia and the field guide. |
+| [`lib/logo.ts`](lib/logo.ts) | Serve each project's logo from the index at `/api/logo/<hash>`, so pages link to it instead of inlining it. |
+| [`lib/activity.ts`](lib/activity.ts) | Read and append the history: one folder per session, one JSON Lines file per app. |
+| [`app/`](app) · [`components/`](components) | Search, Innerpedia, the field guide and the history. |
 | [`proxy.ts`](proxy.ts) · [`next.config.ts`](next.config.ts) | Localhost checks and browser security headers. |
 | [`scripts/shot.sh`](scripts/shot.sh) | Capture settled app screenshots and report horizontal overflow. |
 

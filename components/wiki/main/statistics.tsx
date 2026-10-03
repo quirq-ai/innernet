@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Sigil, sigilGradient } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
+import { sigilGradient } from "@/components/sigil";
 import { authorTotal } from "@/components/wiki/article/lead";
 import { activity, statistics } from "@/components/wiki/main/insights";
 import { PageTitle, SectionHeading, Title } from "@/components/wiki/main/section";
@@ -90,7 +91,7 @@ export function StatisticsView() {
               <li key={p.slug} className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-line py-2.5 last:border-b-0">
                 <span className="font-mono text-[11.5px] tabular-nums text-muted">{i + 1}</span>
                 <div className="flex min-w-0 items-center gap-3">
-                  <Sigil seed={p.slug} name={p.name} kind={p.kind} muted={!p.isArticle} size={24} />
+                  <PageSigil page={p} size={24} />
                   <div className="min-w-0">
                     <Link href={wikiHref(p.slug)} className="link block truncate text-[14.5px]">
                       <Title page={p} />

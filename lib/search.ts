@@ -2,6 +2,7 @@ import "server-only";
 
 import MiniSearch, { type SearchResult as MiniHit } from "minisearch";
 import { getIndex, getPage } from "./data";
+import { logoSrc } from "./logo";
 import { isListableName, markdownToText, readsAsInstructions, undash } from "./text";
 import type { Page } from "./types";
 
@@ -55,6 +56,8 @@ export interface Suggestion {
   isArticle: boolean;
   path: string; // display path, e.g. "~/Programming/XO/ClaudeWorkspace"
   summary: string | null;
+  logo: string | null; // the logo's address (lib/logo.ts), when the project has one
+  logoSurface: Page["logoSurface"];
 }
 
 interface Doc {
@@ -297,6 +300,8 @@ export function suggest(q: string, limit = 7): Suggestion[] {
       isArticle: page.isArticle,
       path: displayPath(page),
       summary: pageSummary(page),
+      logo: logoSrc(page),
+      logoSurface: page.logoSurface ?? null,
     }));
 }
 

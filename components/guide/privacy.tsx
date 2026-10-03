@@ -19,6 +19,9 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
         One manifest: <C>package.json</C>, <C>pyproject.toml</C>, <C>Cargo.toml</C>, <C>go.mod</C> or <C>requirements.txt</C>.
       </>,
       <>Git metadata from five commands: commits, branch, remote, count, first commit. Authors by name, never by email.</>,
+      <>
+        A project&apos;s own logo, found by its name (<C>logo</C>, <C>icon</C>, <C>mark</C>, <C>favicon</C>), within 64 KB for SVG and 96 KB for an image.
+      </>,
     ],
   },
   {
@@ -26,7 +29,7 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
     mark: "C",
     items: [
       <>Every other file: its size, its dates and its extension, which becomes a language.</>,
-      <>Source code, configuration, Dockerfiles, documents and images.</>,
+      <>Source code, configuration, Dockerfiles, documents, and every image but a logo.</>,
       <>
         Dotfiles such as <C>.env</C>: not even counted, only noticed when one is <C>.git</C>.
       </>,
@@ -55,7 +58,7 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
       <>Any request not addressed to localhost: a 403 before anything is read.</>,
       <>Scripts, styles, images and connections from any other origin.</>,
       <>Being framed by another page. Every page also asks search engines to look away.</>,
-      <>Any write: every route is a read.</>,
+      <>Any write but one: the history of what you open, from this app&apos;s own pages, to a folder in your home.</>,
     ],
   },
 ];
@@ -169,7 +172,8 @@ export function Privacy() {
       <Prose className="mt-8">
         <p>
           In the browser, a Content-Security-Policy holds every page to its own origin; under <C>next dev</C> it also lets the hot-reload websocket through. The fonts are served by the app itself, the pages ask search engines to look
-          away, and apart from moving between pages, the only request a page makes is the search box asking <C>/api/suggest</C> for suggestions as you type.
+          away, and apart from moving between pages a page makes two requests, both to this app: the search box asks <C>/api/suggest</C> for suggestions as you
+          type, and the history posts the page you opened to <C>/api/activity</C>, which refuses anything not sent from this app&apos;s own pages on localhost.
         </p>
       </Prose>
       <Excerpt file="next.config.ts" from="const csp = [" lines={11} mark={["default-src", "frame-ancestors"]} className="mt-6" />

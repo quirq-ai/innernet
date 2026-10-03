@@ -5,12 +5,14 @@ import { DidYouKnow } from "@/components/wiki/main/did-you-know";
 import { FeaturedArticle } from "@/components/wiki/main/featured";
 import { InTheNews } from "@/components/wiki/main/in-the-news";
 import { OnThisDay } from "@/components/wiki/main/on-this-day";
+import { Reveal } from "@/components/wiki/main/reveal";
 import { Welcome } from "@/components/wiki/main/welcome";
 import { getIndex } from "@/lib/data";
 import { INDEX_COMMAND } from "@/lib/mode";
 
-// Innerpedia's front page, a love letter to Wikipedia's: a welcome, then the day's
-// featured article, news, trivia and anniversaries, all computed from the index.
+// Innerpedia's front page, a love letter to Wikipedia's: the globe of every project as
+// the whole first screen, then, as you scroll, the day's featured article, news, trivia
+// and anniversaries, all computed from the index.
 
 export const dynamic = "force-dynamic";
 
@@ -35,23 +37,37 @@ export default function WikiMain() {
 
   return (
     <WikiShell>
-      <main className="flex flex-col gap-12 sm:gap-14">
+      <main className="flex flex-col">
         <Welcome />
-        {/* Two columns on wide screens. On narrow ones the columns dissolve (display:
-            contents) so the boxes read in Wikipedia's order: featured, news, trivia, then
-            the long On this day. */}
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-14">
-          <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-12">
-            <FeaturedArticle delay={60} className="order-1 lg:order-none" />
-            <OnThisDay delay={140} className="order-4 lg:order-none" />
+        <div id="today" className="flex scroll-mt-24 flex-col gap-12 pt-6 sm:gap-14 sm:pt-10">
+          {/* Two columns on wide screens. On narrow ones the columns dissolve (display:
+              contents) so the boxes read in Wikipedia's order: featured, news, trivia, then
+              the long On this day. */}
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-14">
+            <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-12">
+              <Reveal className="order-1 lg:order-none">
+                <FeaturedArticle />
+              </Reveal>
+              <Reveal className="order-4 lg:order-none" delay={60}>
+                <OnThisDay />
+              </Reveal>
+            </div>
+            <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-12">
+              <Reveal className="order-2 lg:order-none" delay={90}>
+                <InTheNews />
+              </Reveal>
+              <Reveal className="order-3 lg:order-none" delay={60}>
+                <DidYouKnow />
+              </Reveal>
+            </div>
           </div>
-          <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-12">
-            <InTheNews delay={100} className="order-2 lg:order-none" />
-            <DidYouKnow delay={180} className="order-3 lg:order-none" />
-          </div>
+          <Reveal>
+            <BrowseByCategory />
+          </Reveal>
+          <Reveal>
+            <OtherAreas />
+          </Reveal>
         </div>
-        <BrowseByCategory delay={220} />
-        <OtherAreas delay={260} />
       </main>
     </WikiShell>
   );

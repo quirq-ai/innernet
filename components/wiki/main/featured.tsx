@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sigil } from "@/components/sigil";
+import { PageSigil } from "@/components/page-sigil";
 import { cap, featured, gloss, undash } from "@/components/wiki/main/insights";
 import { Box, Dotted, PageLink, Title } from "@/components/wiki/main/section";
 import { plural, timeAgo } from "@/lib/format";
@@ -18,7 +18,7 @@ export function FeaturedArticle({ delay, className }: { delay?: number; classNam
     <Box id="featured" title="From today’s featured article" delay={delay} className={className}>
       <article className="flow-root">
         <Link href={href} tabIndex={-1} aria-hidden className="float-left mb-3 mr-5 mt-1 block transition-transform duration-300 hover:-rotate-3">
-          <Sigil seed={page.slug} name={page.name} kind={page.kind} size={84} className="shadow-soft" />
+          <PageSigil page={page} size={84} muted={false} className="shadow-soft" />
         </Link>
         <h3 className="font-display text-[32px] leading-[1.08] tracking-[-0.01em] sm:text-[36px]">
           <Link href={href} className="text-ink transition-colors hover:text-link">
@@ -45,9 +45,16 @@ export function FeaturedArticle({ delay, className }: { delay?: number; classNam
         <p className="mt-5 border-t border-line pt-3 text-[13px] leading-relaxed text-muted">
           <span className="mr-1.5 font-medium text-ink-2">Also notable:</span>
           <Dotted>
-            {others.map((p) => (
-              <PageLink key={p.slug} page={p} />
-            ))}
+            {others.map((p) =>
+              // A folder name with no spaces may be longer than a phone is wide.
+              p.name.length > 28 ? (
+                <Link key={p.slug} href={wikiHref(p.slug)} className="link [overflow-wrap:anywhere]">
+                  <Title page={p} />
+                </Link>
+              ) : (
+                <PageLink key={p.slug} page={p} />
+              ),
+            )}
           </Dotted>
         </p>
       )}

@@ -9,7 +9,7 @@ import { sourceLines } from "./source";
  * heading alone (`<id>-title`), not by everything the opening holds. */
 export function ChapterHead({ chapter, kicker, children }: { chapter: GuideChapter; kicker: string; children: React.ReactNode }) {
   return (
-    <div id={chapter.id} className="scroll-mt-28 pt-24 sm:pt-32 lg:scroll-mt-20">
+    <div id={chapter.id} className="scroll-mt-12 pt-24 sm:pt-32 lg:scroll-mt-0">
       <header data-reveal>
         <div className="fg-smallcaps flex items-center gap-4">
           <span aria-hidden>Chapter {chapter.numeral}</span>
@@ -37,7 +37,7 @@ export function ChapterHead({ chapter, kicker, children }: { chapter: GuideChapt
 /** A numbered section inside a chapter: "II.3  A whole new root". */
 export function SectionHead({ id, mark, title, aside }: { id: string; mark: string; title: string; aside?: React.ReactNode }) {
   return (
-    <div id={id} className="scroll-mt-28 pt-20 lg:scroll-mt-20" data-reveal>
+    <div id={id} className="scroll-mt-12 pt-20 lg:scroll-mt-0" data-reveal>
       <div className="flex items-baseline gap-4 border-b border-line-strong pb-2.5">
         <span className="fg-smallcaps w-12 shrink-0 text-faint">{mark}</span>
         <h3 className="min-w-0 flex-1 font-display text-[30px] leading-[1.12] tracking-[-0.01em] text-ink sm:text-[34px]">{title}</h3>
