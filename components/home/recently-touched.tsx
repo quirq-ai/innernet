@@ -4,6 +4,7 @@ import { timeAgo } from "@/lib/format";
 import { wikiHref } from "@/lib/links";
 import { displayPath } from "@/lib/search";
 import type { Page } from "@/lib/types";
+import { uiText } from "@/lib/ui-config";
 
 // The articles you worked on last. `modified` bubbles up the tree, so a container
 // shares its timestamp with whichever project inside it changed; skip those and keep
@@ -36,9 +37,6 @@ function shortAgo(iso: string, now = Date.now()): string {
   return `${Math.floor(m / 525600)}y`;
 }
 
-// From sm up, how many chips show: 3, then 4 at md, 5 at lg, 6 at xl.
-const WIDE = ["", "", "", "sm:hidden md:list-item", "sm:hidden lg:list-item", "sm:hidden xl:list-item"];
-
 export function RecentlyTouched({ pages, delay = 0 }: { pages: Page[]; delay?: number }) {
   if (!pages.length) return null;
   return (
@@ -46,24 +44,22 @@ export function RecentlyTouched({ pages, delay = 0 }: { pages: Page[]; delay?: n
       <div className="rise flex items-center justify-center gap-4" style={{ animationDelay: `${delay}ms` }}>
         <span aria-hidden className="h-px w-10 bg-line-strong" />
         <h2 id="recent-heading" className="text-[11px] uppercase tracking-[0.12em] text-muted">
-          Recently touched
+          {uiText("home.recentlyTouched")}
         </h2>
         <span aria-hidden className="h-px w-10 bg-line-strong" />
       </div>
-      {/* Phones get one row that scrolls sideways. Wider screens get one centred row of
-          three to six chips by width; names vary in length, so the row is also clipped to
-          a single line and any chip that would wrap onto a second one is simply not seen.
-          The deep bottom padding leaves room for the hover shadow inside the clip. */}
-      <ul className="-mx-4 mt-5 flex gap-2.5 overflow-x-auto px-4 py-1 [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)] [scrollbar-width:none] sm:mx-0 sm:-mb-4 sm:mt-4 sm:max-h-[76px] sm:flex-wrap sm:justify-center sm:gap-y-10 sm:overflow-clip sm:px-0 sm:pb-7 sm:pt-2 sm:[mask-image:none] [&::-webkit-scrollbar]:hidden">
+      {/* Phones get one row that scrolls sideways. Wider screens wrap the configured
+          number of articles into centred rows, with room for each chip's shadow. */}
+      <ul className="-mx-4 mt-5 flex gap-2.5 overflow-x-auto px-4 py-1 [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)] [scrollbar-width:none] sm:mx-0 sm:mt-4 sm:flex-wrap sm:justify-center sm:gap-y-3 sm:overflow-visible sm:px-0 sm:pb-4 sm:pt-2 sm:[mask-image:none] [&::-webkit-scrollbar]:hidden">
         {pages.map((p, i) => (
           <li
             key={p.slug}
-            className={`rise min-w-0 max-w-full shrink-0 ${WIDE[i] ?? "sm:hidden"}`}
+            className="rise min-w-0 max-w-full shrink-0"
             style={{ animationDelay: `${delay + 60 + i * 40}ms` }}
           >
             <Link
               href={wikiHref(p.slug)}
-              title={`${displayPath(p)}/${p.name} · touched ${timeAgo(p.modified)}`}
+              title={uiText("home.recentTitle", { path: `${displayPath(p)}/${p.name}`, time: timeAgo(p.modified) })}
               className="group flex h-10 min-w-0 items-center gap-2.5 rounded-full border border-line bg-surface/70 pl-[7px] pr-4 text-[13.5px] text-ink-2 shadow-[var(--shadow-sm)] backdrop-blur-sm transition-[color,border-color,box-shadow] duration-150 hover:border-line-strong hover:text-ink hover:shadow-soft"
             >
               <Sigil seed={p.slug} name={p.name} kind={p.kind} size={26} />
@@ -73,7 +69,7 @@ export function RecentlyTouched({ pages, delay = 0 }: { pages: Page[]; delay?: n
                 <span aria-hidden className="font-mono text-[11px] tabular-nums text-muted transition-colors group-hover:text-ink-2">
                   {shortAgo(p.modified!)}
                 </span>
-                <span className="sr-only">, touched {timeAgo(p.modified)}</span>
+                <span className="sr-only">, {uiText("home.touched", { time: timeAgo(p.modified) })}</span>
               </span>
             </Link>
           </li>

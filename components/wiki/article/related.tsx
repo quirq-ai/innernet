@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { getPages } from "@/lib/data";
@@ -65,12 +66,12 @@ export function ExternalLinks({ page }: { page: Page }) {
         <span className="min-w-0 [overflow-wrap:anywhere]">
           {onGitHub ? (
             <a href={sourceHref(page.path)} target="_blank" rel="noopener noreferrer" className="link">
-              View {page.name} on GitHub
+              {uiText("wiki.openNamedSource", { name: page.name })}
               <Arrow />
             </a>
           ) : (
             <a href={sourceHref(page.path)} className="link">
-              Open {page.name} in VS Code
+              {uiText("wiki.openNamedEditor", { name: page.name })}
             </a>
           )}
           <span className="text-muted">{onGitHub ? ", at " : ", on this machine at "}</span>

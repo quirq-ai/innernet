@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { num } from "@/lib/format";
@@ -41,7 +42,9 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
       { path: "app/wiki/[slug]/page.tsx", role: "Every Innerpedia page but the Main page, through resolveSlug." },
       { path: "app/api/suggest/route.ts", role: "The one route the browser calls." },
       { path: "app/guide/page.tsx", role: "This guide." },
-      { path: "app/globals.css", role: "The tokens, both themes, the aurora, prose." },
+      { path: "app/globals.css", role: "Token utilities, the aurora and prose." },
+      { path: "innernet.ui.json", role: "Branding, themes, navigation, layout, copy and UI behavior." },
+      { path: "innernet.ui.schema.json", role: "The versioned UI configuration contract." },
     ],
   },
   {
@@ -73,7 +76,7 @@ export function Contribute() {
     <section aria-labelledby="contribute-title">
       <ChapterHead
         chapter={CHAPTERS[3]}
-        kicker="Innernet is small enough to hold in your head: one crawler, one file, one search engine and an encyclopedia drawn from it."
+        kicker={uiText("guide.contribute.branding1")}
       >
         <Prose>
           <p>
@@ -151,7 +154,7 @@ function FileMap() {
                       {it.dir ? `${files} files` : lines ? `${num(lines)} lines` : ""}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[13px] leading-snug text-ink-2">{it.role}</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-ink-2">{it.role.replaceAll("Innerpedia", getUiConfig().brand.encyclopediaName)}</p>
                 </li>
               );
             })}

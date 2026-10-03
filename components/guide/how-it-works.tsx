@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { count, leadSegs } from "@/components/wiki/article/lead";
 import { Segs } from "@/components/wiki/article/parts";
@@ -38,19 +39,14 @@ export function HowItWorks() {
           id="pipeline"
           fig={1}
           title="The pipeline"
-          alt="Folders on disk flow into the indexer, which writes one file, data/index.json. Two readers, search and Innerpedia, read that file and show it to you."
+          alt={uiText("guide.how-it-works.branding1")}
           caption={
             <>
-              The pipeline. Folders are crawled by <C>pnpm index</C> into <C>data/index.json</C>; the server reads that one file twice, as search results and as Innerpedia
-              pages, and you read both.
-            </>
+              The pipeline. Folders are crawled by <C>pnpm index</C> into <C>data/index.json</C>{uiText("guide.how-it-works.branding2")} </>
           }
         />
         <Prose className="mt-12">
-          <p>
-            Innernet is a personal internet. Its web is the folders on this machine; its search engine finds them the way you find pages, and its encyclopedia,
-            Innerpedia, gives every project an article and every other folder a stub. Nothing leaves the machine.
-          </p>
+          <p> {uiText("guide.how-it-works.branding3")} </p>
           <p>
             The whole thing runs on one file. <C>pnpm index</C> walks {walked.length ? <C>{walked.join(", ")}</C> : "the configured roots"}, reads a handful of small
             files in each folder, and writes <C>data/index.json</C> through a temporary file and a rename, so the server never sees half of one. The server checks the
@@ -168,7 +164,7 @@ export function HowItWorks() {
           about using it well.
         </p>
         <p>
-          The second reader is <Link href="/wiki" className="link">Innerpedia</Link>, which writes each record up the way Wikipedia would: a lead in encyclopedia voice,
+          The second reader is <Link href="/wiki" className="link">{uiText("guide.how-it-works.branding4")}</Link>, which writes each record up the way Wikipedia would: a lead in encyclopedia voice,
           an infobox, contents, hatnotes for namesakes, categories at the foot. Every kind of page is served by one route.
         </p>
       </Prose>
@@ -311,9 +307,9 @@ function Specimen() {
           </ul>
         </div>
         <div className="px-4 py-5 sm:px-6">
-          <div className="fg-label mb-3">As an Innerpedia article</div>
+          <div className="fg-label mb-3">{uiText("guide.how-it-works.branding5")}</div>
           <div className="font-display text-[30px] leading-tight text-ink">{page.title}</div>
-          <div className="mt-1 border-t border-line pt-1.5 font-serif text-[12.5px] italic text-muted">From Innerpedia, the encyclopedia of you</div>
+          <div className="mt-1 border-t border-line pt-1.5 font-serif text-[12.5px] italic text-muted">{uiText("guide.how-it-works.branding6")}</div>
           <p className="mt-3 font-serif text-[15.5px] leading-[1.62] text-ink">
             <Segs segs={leadSegs(page)} />
           </p>

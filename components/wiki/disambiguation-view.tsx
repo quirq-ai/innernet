@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { ancestors } from "@/lib/data";
@@ -148,14 +149,15 @@ function GroupHeading({ g, small }: { g: Group; small?: boolean }) {
 }
 
 export function DisambiguationView({ name, primary, pages }: { name: string; primary: Page | null; pages: Page[] }) {
+  const config = getUiConfig();
   const others = pages.filter((p) => p.slug !== primary?.slug);
   const groups = group(others);
-  const nav = groups.length >= 4;
+  const nav = config.wiki.showContents && groups.length >= 4;
   const stacked = others.length > 16;
   const headed = groups.length > 1;
   // Groups are landmarks only while there are few enough to be worth jumping between.
   const labelled = (g: Group) => (headed && groups.length <= 4 ? `${g.id}-h` : undefined);
-  const items: ContentsItem[] = [{ id: "top", label: "(Top)" }, ...groups.map((g) => ({ id: g.id, label: g.label, count: g.items.length }))];
+  const items: ContentsItem[] = [{ id: "top", label: uiText("wiki.top") }, ...groups.map((g) => ({ id: g.id, label: g.label, count: g.items.length }))];
   const d = primary ? descriptor(primary) : "";
 
   // In long lists, small groups pair up in two columns; the rest keep a full row each.
@@ -176,12 +178,12 @@ export function DisambiguationView({ name, primary, pages }: { name: string; pri
   );
 
   return (
-    <main className="xl:grid xl:grid-cols-[200px_minmax(0,1fr)] xl:gap-12">
-      <div className="hidden pt-1 xl:block">{nav && <ContentsNav items={items} />}</div>
+    <main className={config.wiki.showContents ? "xl:grid xl:grid-cols-[200px_minmax(0,1fr)] xl:gap-12" : ""}>
+      {config.wiki.showContents && <div className="hidden pt-1 xl:block">{nav && <ContentsNav items={items} title={uiText("wiki.groups")} />}</div>}
 
-      <article className="mx-auto min-w-0 max-w-[640px] lg:max-w-[944px] xl:mx-0">
+      <article className={`mx-auto min-w-0 max-w-[min(640px,var(--ui-article-width))] lg:max-w-[var(--ui-article-width)] ${config.wiki.showContents ? "xl:mx-0" : ""}`}>
         <div className="max-w-[760px]">
-          <PageHeader title={primary ? `${name} (disambiguation)` : name} />
+          <PageHeader title={primary ? `${name} (${uiText("wiki.disambiguation")})` : name} />
 
           <div className="prose-wiki rise mt-7">
             {primary && (
@@ -204,7 +206,7 @@ export function DisambiguationView({ name, primary, pages }: { name: string; pri
             </p>
           )}
 
-          {nav && <ContentsBox items={items} title="Groups" className="mt-6 xl:hidden" />}
+          {nav && <ContentsBox items={items} title={uiText("wiki.groups")} className="mt-6 xl:hidden" />}
 
           <div className={headed ? "mt-8" : "mt-4"}>
             {runs.map((run, i) =>

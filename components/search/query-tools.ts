@@ -3,6 +3,7 @@ import "server-only";
 import { getPage } from "@/lib/data";
 import { search, type ParsedQuery, type SearchResponse, type Tab } from "@/lib/search";
 import type { Page } from "@/lib/types";
+import { uiText } from "@/lib/ui-config";
 
 // Small server-side helpers for the results page: operator editing, the kind line,
 // breadcrumbs and related searches. Spelling suggestions and the knowledge-panel pick
@@ -13,11 +14,11 @@ export type OpKey = keyof ParsedQuery["filters"];
 const OP_RE = /\b(lang|in|kind|fw|is):("([^"]+)"|\S+)/gi;
 
 export const OP_LABEL: Record<OpKey, string> = {
-  lang: "Language",
-  in: "Inside",
-  kind: "Kind",
-  fw: "Framework",
-  is: "Is",
+  lang: "search.operator.lang",
+  in: "search.operator.in",
+  kind: "search.operator.kind",
+  fw: "search.operator.fw",
+  is: "search.operator.is",
 };
 
 const squash = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -50,29 +51,20 @@ export const opToken = (key: OpKey, value: string) => `${key}:${/\s/.test(value)
 // ------------------------------------------------------------------ kind line
 
 const APP_FRAMEWORKS: Record<string, string> = {
-  "Next.js": "Next.js application",
-  Vite: "Vite application",
-  Expo: "Expo app",
-  "React Native": "React Native app",
-  Flutter: "Flutter app",
-  FastAPI: "FastAPI service",
-  Flask: "Flask service",
-  Express: "Express server",
-  Fumadocs: "Fumadocs site",
-  Remotion: "Remotion project",
-  Tauri: "Tauri app",
-  Electron: "Electron app",
-  Streamlit: "Streamlit app",
-  Hardhat: "Hardhat project",
-};
-
-const NOUN: Record<Page["kind"], string> = {
-  repo: "repository",
-  project: "project",
-  docs: "document collection",
-  assets: "media folder",
-  code: "source folder",
-  folder: "folder",
+  "Next.js": "search.framework.next",
+  Vite: "search.framework.vite",
+  Expo: "search.framework.expo",
+  "React Native": "search.framework.reactNative",
+  Flutter: "search.framework.flutter",
+  FastAPI: "search.framework.fastapi",
+  Flask: "search.framework.flask",
+  Express: "search.framework.express",
+  Fumadocs: "search.framework.fumadocs",
+  Remotion: "search.framework.remotion",
+  Tauri: "search.framework.tauri",
+  Electron: "search.framework.electron",
+  Streamlit: "search.framework.streamlit",
+  Hardhat: "search.framework.hardhat",
 };
 
 const PROSE_LANGS = new Set(["Markdown", "MDX", "JSON", "YAML", "TOML", "HTML", "CSS"]);
@@ -97,15 +89,15 @@ export const appFramework = (p: Page) => p.frameworks.find((f) => APP_FRAMEWORKS
 export function kindLabel(p: Page): string {
   const app = appFramework(p);
   const lang = p.languages.find((l) => !PROSE_LANGS.has(l.name))?.name;
-  const noun = NOUN[p.kind];
-  const what = app ? APP_FRAMEWORKS[app] : lang && p.kind !== "docs" && p.kind !== "assets" ? `${lang} ${noun}` : noun;
-  return what[0].toUpperCase() + what.slice(1);
+  const noun = uiText(`search.kind.${p.kind}`);
+  const what = app ? uiText(APP_FRAMEWORKS[app]) : lang && p.kind !== "docs" && p.kind !== "assets" ? uiText("search.kindLanguage", { language: lang, kind: noun }) : noun;
+  return what;
 }
 
 /** "Next.js application in experiments", "Rust project in makepad", "Folder in XO". */
 export function kindLine(p: Page): string {
   const parent = getPage(p.parent);
-  return parent ? `${kindLabel(p)} in ${parent.name}` : kindLabel(p);
+  return parent ? uiText("search.kindIn", { kind: kindLabel(p), parent: parent.name }) : kindLabel(p);
 }
 
 const crumbParts = (p: Page) => [p.root, ...p.relPath.split(/[\\/]/).filter(Boolean).slice(0, -1)];

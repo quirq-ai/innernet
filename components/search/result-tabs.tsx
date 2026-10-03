@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { searchHref } from "@/lib/links";
 import { num } from "@/lib/format";
-import { TABS, type Tab } from "@/lib/search";
+import type { Tab } from "@/lib/search";
+import { uiText } from "@/lib/ui-config";
+import { getSearchTabs } from "./search-config";
 
 // All · Projects · Repositories · Documents · Folders. Switching tabs keeps the query
 // and starts again at page one.
 
 export function ResultTabs({ q, tab, counts }: { q: string; tab: Tab; counts: Record<Tab, number> }) {
   return (
-    <nav aria-label="Result types" className="-mb-px flex gap-1 overflow-x-auto [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] [scrollbar-width:none] sm:[mask-image:none] [&::-webkit-scrollbar]:hidden">
-      {TABS.map((t, i) => {
+    <nav aria-label={uiText("search.resultTypes")} className="-mb-px flex gap-1 overflow-x-auto [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] [scrollbar-width:none] sm:[mask-image:none] [&::-webkit-scrollbar]:hidden">
+      {getSearchTabs().map((t, i) => {
         const active = t.id === tab;
         const empty = counts[t.id] === 0;
         return (

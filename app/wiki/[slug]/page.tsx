@@ -8,6 +8,7 @@ import { StubView } from "@/components/wiki/stub-view";
 import { WikiShell } from "@/components/wiki/wiki-shell";
 import { randomArticle, resolveSlug } from "@/lib/data";
 import { wikiHref } from "@/lib/links";
+import { getUiConfig, uiText } from "@/lib/ui-config";
 
 // One route for everything under /wiki/: articles, stubs, disambiguation lists,
 // Category: pages and Special: pages, the way Wikipedia does it.
@@ -18,13 +19,15 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const r = resolveSlug((await params).slug);
+  const specialKeys: Record<string, string> = { random: "random", allpages: "allPages", categories: "categories", statistics: "statistics" };
+  const specialKey = r.type === "special" ? specialKeys[r.name.toLowerCase().replace(/[\s_]/g, "")] : undefined;
   const title =
     r.type === "page" ? r.page.title
-    : r.type === "disambiguation" ? `${r.name} (disambiguation)`
-    : r.type === "category" ? `Category: ${r.name}`
-    : r.type === "special" ? `Special: ${r.name}`
-    : "Not found";
-  return { title: `${title} · Innerpedia` };
+    : r.type === "disambiguation" ? `${r.name} (${uiText("wiki.disambiguation")})`
+    : r.type === "category" ? `${uiText("wiki.categoryPrefix")}${r.name}`
+    : r.type === "special" ? `${uiText("wiki.specialPrefix")}${specialKey ? uiText(`wiki.special.${specialKey}`) : r.name}`
+    : uiText("wiki.notFoundTitle");
+  return { title: `${title} · ${getUiConfig().brand.encyclopediaName}` };
 }
 
 export default async function WikiPage({ params }: Props) {

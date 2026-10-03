@@ -5,6 +5,26 @@ import { useEffect, useId, useRef, useState } from "react";
 import { sigilGradient } from "@/components/sigil";
 import { wikiHref } from "@/lib/links";
 import type { Suggestion } from "@/lib/search";
+import type { UiConfig } from "@/lib/ui-config-shared";
+
+export type SearchBoxSettings = Pick<UiConfig["search"], "suggestions" | "debounceMs" | "focusShortcut">;
+export interface SearchBoxLabels {
+  search: string;
+  clear: string;
+  suggestions: string;
+  everything: string;
+  kinds: Record<Suggestion["kind"], string>;
+}
+
+export interface SearchBoxProps {
+  settings: SearchBoxSettings;
+  labels: SearchBoxLabels;
+  defaultValue?: string;
+  size?: "hero" | "compact";
+  autoFocus?: boolean;
+  placeholder?: string;
+  className?: string;
+}
 
 // The one search box, in two sizes. Suggestions come from our own /api/suggest route
 // handler (same origin, server-side search); nothing leaves this machine.
@@ -13,15 +33,11 @@ export function SearchBox({
   defaultValue = "",
   size = "compact",
   autoFocus = false,
-  placeholder = "Search your internet",
+  placeholder,
   className = "",
-}: {
-  defaultValue?: string;
-  size?: "hero" | "compact";
-  autoFocus?: boolean;
-  placeholder?: string;
-  className?: string;
-}) {
+  settings,
+  labels,
+}: SearchBoxProps) {
   const router = useRouter();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,6 +50,7 @@ export function SearchBox({
 
   // "/" focuses the box from anywhere, like most search engines.
   useEffect(() => {
+    if (!settings.focusShortcut) return;
     function onKey(e: KeyboardEvent) {
       const t = e.target as HTMLElement | null;
       if (e.key === "/" && !e.metaKey && !e.ctrlKey && t?.tagName !== "INPUT" && t?.tagName !== "TEXTAREA" && !t?.isContentEditable) {
@@ -44,12 +61,13 @@ export function SearchBox({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [settings.focusShortcut]);
 
   useEffect(() => {
     const q = value.trim();
-    if (!q) {
+    if (!q || !settings.suggestions) {
       setItems([]);
+      setActive(-1);
       return;
     }
     const ctrl = new AbortController();
@@ -63,12 +81,12 @@ export function SearchBox({
       } catch {
         /* aborted or offline */
       }
-    }, 90);
+    }, settings.debounceMs);
     return () => {
       clearTimeout(timer);
       ctrl.abort();
     };
-  }, [value]);
+  }, [value, settings.suggestions, settings.debounceMs]);
 
   // Every way the list closes forgets the highlighted option.
   function close() {
@@ -112,7 +130,7 @@ export function SearchBox({
   }
 
   const hero = size === "hero";
-  const showList = open && items.length > 0;
+  const showList = settings.suggestions && open && items.length > 0;
   const optionId = (i: number) => `${listId}-${i}`;
 
   return (
@@ -144,8 +162,8 @@ export function SearchBox({
           autoFocus={autoFocus}
           autoComplete="off"
           spellCheck={false}
-          placeholder={placeholder}
-          aria-label="Search"
+          placeholder={placeholder ?? labels.search}
+          aria-label={labels.search}
           role="combobox"
           aria-autocomplete="list"
           aria-expanded={showList}
@@ -163,7 +181,7 @@ export function SearchBox({
         {value && (
           <button
             type="button"
-            aria-label="Clear search"
+            aria-label={labels.clear}
             onClick={() => {
               setValue("");
               inputRef.current?.focus();
@@ -175,7 +193,7 @@ export function SearchBox({
             </svg>
           </button>
         )}
-        {!value && hero && (
+        {!value && hero && settings.focusShortcut && (
           <kbd aria-hidden className="mr-3 hidden rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px] text-muted sm:inline">/</kbd>
         )}
       </div>
@@ -184,7 +202,7 @@ export function SearchBox({
         <ul
           id={listId}
           role="listbox"
-          aria-label="Suggestions"
+          aria-label={labels.suggestions}
           className={`absolute inset-x-0 top-full z-50 overflow-hidden border border-t-0 border-line-strong bg-surface pb-2 shadow-lift ${hero ? "rounded-b-[29px]" : "rounded-b-[22px]"}`}
         >
           <li aria-hidden role="presentation" className={`mb-1 h-px bg-line ${hero ? "mx-5" : "mx-4"}`} />
@@ -210,7 +228,7 @@ export function SearchBox({
                 <span className="text-ink">{s.title}</span>
                 <span className="ml-2 font-mono text-[11.5px] text-muted">{s.path}</span>
               </span>
-              <span className="shrink-0 text-[11.5px] uppercase tracking-[0.08em] text-muted">{s.isArticle ? s.kind : "folder"}</span>
+              <span className="shrink-0 text-[11.5px] uppercase tracking-[0.08em] text-muted">{labels.kinds[s.isArticle ? s.kind : "folder"]}</span>
             </li>
           ))}
           <li
@@ -228,7 +246,7 @@ export function SearchBox({
               <circle cx="11" cy="11" r="6.5" />
               <path d="m20 20-4.2-4.2" />
             </svg>
-            Search everything for “{value.trim()}”
+            {labels.everything.replace(/\{query\}/g, () => value.trim())}
           </li>
         </ul>
       )}

@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import { indexTime, onThisDay, undash } from "@/components/wiki/main/insights";
 import { Box, joinNodes, Lead } from "@/components/wiki/main/section";
 import { longDate, plural } from "@/lib/format";
@@ -12,7 +13,7 @@ export function OnThisDay({ delay, className }: { delay?: number; className?: st
   const thisYear = new Date(t).getFullYear();
 
   return (
-    <Box id="otd" title={`On this day · ${today}`} delay={delay} className={className}>
+    <Box id="otd" title={`${uiText("wiki.onThisDay")} · ${today}`} delay={delay} className={className}>
       {otd.type === "commits" && (
         <>
           <ol className="space-y-5">

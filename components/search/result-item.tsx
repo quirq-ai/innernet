@@ -5,6 +5,7 @@ import { num, timeAgo } from "@/lib/format";
 import { langColor } from "@/lib/lang-colors";
 import { wikiHref } from "@/lib/links";
 import type { SearchHit } from "@/lib/search";
+import { uiText } from "@/lib/ui-config";
 import { appFramework, crumbs, kindLabel, primaryLanguage, tailCrumbs } from "./query-tools";
 import { Snippet } from "./snippet";
 
@@ -59,8 +60,8 @@ export function ResultItem({
     .filter((f) => f !== named)
     .slice(0, 2)
     .forEach((f, i) => facts.push({ node: f, wide: i > 0 }));
-  if (p.git) facts.push({ node: <span className="tabular-nums">{p.git.commitCount === 1 ? "1 commit" : `${num(p.git.commitCount)} commits`}</span> });
-  if (p.modified) facts.push({ node: `updated ${timeAgo(p.modified)}` });
+  if (p.git) facts.push({ node: <span className="tabular-nums">{uiText(p.git.commitCount === 1 ? "search.commit" : "search.commits", { count: num(p.git.commitCount) })}</span> });
+  if (p.modified) facts.push({ node: uiText("search.updated", { time: timeAgo(p.modified) }) });
 
   return (
     <li className="rise" style={{ animationDelay: `${index * 40}ms` }}>
@@ -98,7 +99,7 @@ export function ResultItem({
               {!p.isArticle && (
                 <li className={SEP}>
                   <span className="inline-flex h-[19px] items-center rounded-full border border-notice-line bg-notice px-2 pb-px font-serif text-[13px] italic leading-none text-ink-2">
-                    stub
+                    {uiText("search.stub")}
                   </span>
                 </li>
               )}
@@ -112,7 +113,7 @@ export function ResultItem({
         )}
 
         {children.length > 0 && (
-          <nav aria-label={`Inside ${p.title}`} className="mt-3 flex flex-wrap gap-1.5">
+          <nav aria-label={uiText("search.inside", { title: p.title })} className="mt-3 flex flex-wrap gap-1.5">
             {children.map((c) => (
               <Link
                 key={c.slug}

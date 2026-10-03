@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { count } from "@/components/wiki/article/lead";
@@ -132,7 +133,7 @@ export function AddSite() {
     <section aria-labelledby="add-a-site-title">
       <ChapterHead
         chapter={CHAPTERS[1]}
-        kicker="A site on your internet is a folder. Give one a README, a manifest, a history or a note for the agents, and Innerpedia writes it an article."
+        kicker={uiText("guide.add-site.branding1")}
       >
         <Prose>
           <p>
@@ -142,16 +143,15 @@ export function AddSite() {
         </Prose>
       </ChapterHead>
 
+      {getUiConfig().guide.showRecipe && <>
       <SectionHead id="folder-recipe" mark="II.1" title="A folder recipe" aside="Try it" />
       <Prose className="mt-8">
-        <p>
-          Choose what the folder holds, and the figure answers with the indexer&apos;s own rules: its kind, whether it earns an article, the lead Innerpedia would
-          write, where its summary comes from, which rows the infobox shows, which sections appear, how it is filed and how search sees it.
-        </p>
+        <p> {uiText("guide.add-site.branding2")} </p>
       </Prose>
       <Figure fig={5} title="A folder recipe" className="mt-10" caption={<>A folder recipe. The same rules as the indexer, run in your browser on a folder that does not exist.</>}>
-        <FolderRecipe {...recipeProps()} />
+        <FolderRecipe {...recipeProps()} labels={{ articleNotice: uiText("guide.recipeArticleNotice"), stubNotice: uiText("guide.recipeStubNotice"), deepNotice: uiText("guide.recipeDeepNotice", { maxDepth: recipeProps().maxDepth }) }} />
       </Figure>
+      </>}
 
       <SectionHead id="five-steps" mark="II.2" title="The five steps" aside="Folder to article" />
       <Plate
@@ -159,7 +159,7 @@ export function AddSite() {
         fig={6}
         title="Adding a site"
         className="mt-10"
-        alt="Five steps from left to right: a folder, a README, a manifest, a git history and pnpm index, ending in a new Innerpedia article."
+        alt={uiText("guide.add-site.branding3")}
         caption={<>Adding a site. A folder, a README, a manifest, a history, and one run of the indexer: five steps from an empty folder to an article.</>}
       />
       <ol className="mt-12 space-y-10">
@@ -226,8 +226,7 @@ export function AddSite() {
       <Prose className="mt-12">
         <p>
           A folder&apos;s address is its name, with spaces turned into underscores: <C>/wiki/innernet</C>. Names are compared without regard to case, and when several
-          folders share one{!missing && <> (as {num(facts.shared)} names do here)</>}, Innerpedia tells them apart the way Wikipedia does.
-        </p>
+          folders share one{!missing && <> (as {num(facts.shared)} names do here)</>}{uiText("guide.add-site.branding4")} </p>
         <p>
           If one of them is clearly the main one, it is the <em>primary topic</em> and keeps the bare name: a root, or else the shallowest article, provided no other
           article sits at its depth and every other namesake lies deeper{!missing && <> ({num(facts.primaries)} names have one)</>}. Each of the rest takes the name of
@@ -368,7 +367,7 @@ function MostWanted() {
   if (!articles.length && !folders.length) {
     return (
       <Prose className="mt-8">
-        <p>Every folder here has a README. Innerpedia has nothing to ask for.</p>
+        <p>{uiText("guide.add-site.branding5")}</p>
       </Prose>
     );
   }
@@ -402,10 +401,7 @@ function MostWanted() {
         <span aria-hidden className="font-display text-[40px] leading-none text-ink-2">
           ¶
         </span>
-        <p className="font-serif text-[17px] italic leading-snug text-ink-2">
-          You can help Innerpedia. These are the largest pages still written from the folder alone. A README of twenty-five words gives each a summary and an
-          Overview, turns a stub into an article
-          {lacking > 0 && (
+        <p className="font-serif text-[17px] italic leading-snug text-ink-2"> {uiText("guide.add-site.branding6")} {lacking > 0 && (
             <>
               , and takes an article out of{" "}
               <Link href={categoryHref("Articles lacking a README")} className="link not-italic">

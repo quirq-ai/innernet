@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { searchHref } from "@/lib/links";
 import type { ParsedQuery, Tab } from "@/lib/search";
+import { uiText } from "@/lib/ui-config";
 import { OP_LABEL, withoutOperator, withoutOperators, type OpKey } from "./query-tools";
 
 // Operators in the query (lang:rust, in:experiments...) shown as removable chips.
@@ -13,13 +14,13 @@ export function OperatorChips({ query, tab }: { query: ParsedQuery; tab: Tab }) 
   const href = (q: string) => (q ? searchHref(q, { t: tab === "all" ? undefined : tab }) : "/");
 
   return (
-    <ul aria-label="Search operators" className="flex flex-wrap items-center gap-2">
+    <ul aria-label={uiText("search.operatorsLabel")} className="flex flex-wrap items-center gap-2">
       {ops.map(([key, value]) => (
         <li key={key} className="max-w-full">
           <Link
             href={href(withoutOperator(query.raw, key))}
-            aria-label={`Remove ${key}:${value}`}
-            title={`Remove the ${OP_LABEL[key].toLowerCase()} filter, ${key}:${value}`}
+            aria-label={uiText("search.removeOperator", { operator: `${key}:${value}` })}
+            title={uiText("search.removeFilter", { label: uiText(OP_LABEL[key]).toLowerCase(), operator: `${key}:${value}` })}
             className="group inline-flex h-8 max-w-full items-center gap-2 rounded-full border border-line-strong bg-surface pl-3 pr-1.5 shadow-[var(--shadow-sm)] transition-colors hover:border-line-strong hover:bg-bg-sunk"
           >
             <span className="min-w-0 truncate font-mono text-[12.5px]">
@@ -37,7 +38,7 @@ export function OperatorChips({ query, tab }: { query: ParsedQuery; tab: Tab }) 
       {ops.length > 1 && (
         <li>
           <Link href={href(withoutOperators(query.raw))} className="inline-flex h-8 items-center px-1.5 text-[12.5px] text-muted hover:text-ink">
-            Clear filters
+            {uiText("search.clearFilters")}
           </Link>
         </li>
       )}

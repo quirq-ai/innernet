@@ -8,7 +8,7 @@ good printed book.
 
 **Mood:** a private library in morning light. Warm paper, black ink, one blue for links,
 generous margins, nothing shouting. Delight comes from craft and from small jokes that
-reward attention (stubs asking for a README, "Innnnnernet" pagination), never from
+reward attention (stubs asking for a README, the "I'm feeling curious" link), never from
 decoration for its own sake.
 
 ## Principles
@@ -31,10 +31,12 @@ decoration for its own sake.
 6. **Calm motion.** Only `rise` (fade + 6px lift) on first paint, staggered by ~40ms in
    lists, and the slow aurora drift. Everything respects `prefers-reduced-motion`.
 
-## Tokens (app/globals.css)
+## Tokens (innernet.ui.json and app/globals.css)
 
-Use the Tailwind utilities generated from the tokens; never hard-code hex values in
-components.
+Both palettes, shadows and font roles come from the validated UI JSON configuration.
+The root layout emits their variables and CSS maps them to Tailwind utilities. Use those
+utilities; never hard-code hex values in components. Instance choices can change the
+default palette, type roles, density, widths and effects without editing CSS.
 
 | Role | Utility | Notes |
 | --- | --- | --- |
@@ -70,13 +72,12 @@ Dark mode is automatic (`prefers-color-scheme`) with a manual override
 
 ## Shared pieces (already built, reuse them)
 
-- `components/quirq-credit.tsx` `<BrandCredit>`: "Powered by quirq" in small muted
-  type, with quirq in the display serif. A plain link goes to quirq's GitHub profile.
-  Home centres the credit below its footer row; other pages keep it at the end of the
-  footer, right-aligned on desktop and centred on phones. Keep attribution in the
-  small print and use local type and colour tokens. Always spell the brand `quirq`
-  in lowercase, including accessible labels, metadata and documentation. Use the
-  approved quirq logo for attribution and preserve its artwork and proportions.
+- `components/quirq-credit.tsx` `<BrandCredit>`: quiet attribution from the UI JSON,
+  shown only when enabled and a logo is supplied. Local assets preserve their aspect
+  ratio. Always spell `quirq` in lowercase in accessible labels, metadata and docs.
+  Use the approved quirq logo. An absent asset hides the credit, with no invented logo
+  or text-only replacement. Home centres attribution below its footer; other pages
+  keep it at the end, right-aligned on desktop and centred on phones.
 - `components/top-bar.tsx` `<TopBar q variant="search"|"wiki">`: sticky header with
   wordmark, compact `<SearchBox>`, link across, theme toggle.
 - `components/search-box.tsx` `<SearchBox size="hero"|"compact">`: combobox with live
@@ -144,9 +145,9 @@ Dark mode is automatic (`prefers-color-scheme`) with a manual override
   present, show them as removable chips above the meta line.
 - No results: a kind message, "Did you mean *x*?" when `didYouMean`, and three
   suggestions (check spelling, try fewer words, browse Innerpedia).
-- Pagination at the foot: the wordmark stretched to the page count, "I n n n e r n e t"
-  style: one `n` per page, current page's `n` in ink, others link-blue, with
-  Previous / Next. Cap at 10 visible pages.
+- Pagination at the foot: the configured wordmark or logo above numeric page links,
+  with Previous / Next. Cap at 10 visible pages. Custom identities use the same layout
+  and logos keep their proportions.
 
 ### Article `/wiki/[slug]` (page with `isArticle`)
 
@@ -244,3 +245,12 @@ middots.
 Semantic landmarks (`header`, `main`, `nav`, `aside`, `footer`), every icon button has a
 label, focus rings visible (`:focus-visible` is styled globally), colour is never the
 only signal, text contrast passes AA in both themes.
+
+## Instance customization
+
+`innernet.ui.json` defines the default identity and interface, validated against
+`innernet.ui.schema.json`. Partial files selected with `INNERNET_UI_CONFIG` use
+`innernet.ui.override.schema.json`; object keys merge and arrays replace. The
+[UI README](docs/ui/README.md#customization) documents settings and the atlas preset.
+The schema supports existing components and routes, not executable templates or
+arbitrary HTML/CSS. Theme choices and reduced-motion preferences stay reader controls.

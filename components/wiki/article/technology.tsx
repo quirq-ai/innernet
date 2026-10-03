@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { getIndex } from "@/lib/data";
 import { num, plural } from "@/lib/format";
@@ -85,12 +86,12 @@ export function Technology({ page }: { page: Page }) {
   return (
     <>
       {page.languages.length > 0 && (
-        <Sub label="Languages" aside={`share of ${plural(page.languages.reduce((s, l) => s + l.files, 0), "file")}`}>
+        <Sub label={uiText("wiki.label.languages")} aside={`share of ${plural(page.languages.reduce((s, l) => s + l.files, 0), "file")}`}>
           <LanguageBar page={page} />
         </Sub>
       )}
       {page.frameworks.length > 0 && (
-        <Sub label="Frameworks and libraries">
+        <Sub label={uiText("wiki.label.frameworksAndLibraries")}>
           <ul className="flex flex-wrap gap-2">
             {page.frameworks.map((f) => (
               <li key={f}>
@@ -107,13 +108,13 @@ export function Technology({ page }: { page: Page }) {
         </Sub>
       )}
       {m && m.scripts.length > 0 && (
-        <Sub label="Scripts" aside={<span className="font-mono">{m.file}</span>}>
+        <Sub label={uiText("wiki.label.scripts")} aside={<span className="font-mono">{m.file}</span>}>
           <Chips items={m.scripts.slice(0, 16)} mono />
         </Sub>
       )}
       {deps.length > 0 && (
         <Sub
-          label="Dependencies"
+          label={uiText("wiki.label.dependencies")}
           aside={
             <span className="inline-flex items-center gap-1.5">
               {m!.dependencies.length > 0 && <span>{num(m!.dependencies.length)} runtime</span>}

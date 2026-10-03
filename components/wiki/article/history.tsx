@@ -1,3 +1,4 @@
+import { uiText } from "@/lib/ui-config";
 import { monthYear, num, plural, shortMonth } from "@/lib/format";
 import type { GitInfo } from "@/lib/types";
 import { authorTotal, count } from "./lead";
@@ -135,23 +136,23 @@ export function History({ git }: { git: GitInfo }) {
   return (
     <>
       <div className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4">
-        <Figure value={num(git.commitCount)} label={git.commitCount === 1 ? "Commit" : "Commits"} />
-        {authors.n > 0 && <Figure value={`${num(authors.n)}${authors.atLeast ? "+" : ""}`} label={authors.n === 1 ? "Author" : "Authors"} />}
-        <Figure value={shortDate(git.firstCommit)} label="First commit" />
-        <Figure value={shortDate(git.lastCommit)} label="Latest commit" />
+        <Figure value={num(git.commitCount)} label={git.commitCount === 1 ? uiText("wiki.label.commit") : uiText("wiki.label.commits")} />
+        {authors.n > 0 && <Figure value={`${num(authors.n)}${authors.atLeast ? "+" : ""}`} label={authors.n === 1 ? uiText("wiki.label.author") : uiText("wiki.label.authors")} />}
+        <Figure value={shortDate(git.firstCommit)} label={uiText("wiki.label.firstCommit")} />
+        <Figure value={shortDate(git.lastCommit)} label={uiText("wiki.label.latestCommit")} />
       </div>
       {active >= 2 && (
-        <Sub label="Activity" className="mt-10">
+        <Sub label={uiText("wiki.label.activity")} className="mt-10">
           <Sparkline git={git} />
         </Sub>
       )}
       {git.authors.length > 1 && (
-        <Sub label="Authors" aside={authors.n > git.authors.length || authors.atLeast ? `the ${count(git.authors.length)} most active` : undefined} className="mt-10">
+        <Sub label={uiText("wiki.label.authors")} aside={authors.n > git.authors.length || authors.atLeast ? `the ${count(git.authors.length)} most active` : undefined} className="mt-10">
           <Authors git={git} />
         </Sub>
       )}
       {git.recent.length > 0 && (
-        <Sub label="Recent commits" aside={git.branch ? <span>on <span className="font-mono">{git.branch}</span></span> : undefined} className="mt-10">
+        <Sub label={uiText("wiki.label.recentCommits")} aside={git.branch ? <span>on <span className="font-mono">{git.branch}</span></span> : undefined} className="mt-10">
           <Timeline git={git} />
         </Sub>
       )}

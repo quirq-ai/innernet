@@ -1,3 +1,4 @@
+import { getUiConfig, uiText } from "@/lib/ui-config";
 import Link from "next/link";
 import { Sigil } from "@/components/sigil";
 import { facts, type Fact } from "@/components/wiki/main/insights";
@@ -17,7 +18,7 @@ export function DidYouKnow({ delay, className }: { delay?: number; className?: s
   const pictured = list.map(subjectOf).find((p): p is Page => !!p);
 
   return (
-    <Box id="dyk" title="Did you know…" delay={delay} className={className}>
+    <Box id="dyk" title={uiText("wiki.didYouKnow")} delay={delay} className={className}>
       <div className="flow-root">
         {pictured && (
           <figure className="float-right mb-3 ml-5 mt-1 w-[76px] text-center">
@@ -59,7 +60,7 @@ function sentence(f: Fact, root: string): React.ReactNode {
     case "oldest":
       return (
         <>
-          <Lead page={f.page} />, begun in {monthYear(f.page.created)}, is the oldest project on Innerpedia
+          <Lead page={f.page} />, begun in {monthYear(f.page.created)}, is the oldest project on {getUiConfig().brand.encyclopediaName}
         </>
       );
     case "commits":
@@ -88,7 +89,7 @@ function sentence(f: Fact, root: string): React.ReactNode {
       const home = getPage(f.page.partOf) ?? getPage(f.page.parent);
       return (
         <>
-          Innerpedia reads {word(f.depth)} folders deep, as far down as <Lead page={f.page}>{f.page.name}</Lead>
+          {getUiConfig().brand.encyclopediaName} reads {word(f.depth)} folders deep, as far down as <Lead page={f.page}>{f.page.name}</Lead>
           {home ? <> in {home.name}</> : null}, one of {num(f.atDepth)} folders at that depth
         </>
       );

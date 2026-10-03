@@ -1,0 +1,2654 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://innernet.local/innernet.ui.schema.json",
+  "title": "Innernet UI configuration",
+  "description": "Version 1 settings for local branding, presentation and interface behaviour.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "version",
+    "brand",
+    "theme",
+    "layout",
+    "navigation",
+    "home",
+    "search",
+    "wiki",
+    "guide",
+    "copy"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "^(?:\\.{1,2}/)*innernet\\.ui\\.(?:override\\.)?schema\\.json$"
+    },
+    "version": {
+      "const": 1
+    },
+    "brand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "encyclopediaName",
+        "tagline",
+        "description",
+        "language",
+        "creator",
+        "logo",
+        "encyclopediaLogo",
+        "icon",
+        "appleIcon",
+        "italicPrefix",
+        "encyclopediaItalicPrefix",
+        "attribution",
+        "headerLogo",
+        "showPublisherLink",
+        "sourceLink"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+          "minLength": 1
+        },
+        "encyclopediaName": {
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+          "minLength": 1
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500,
+          "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+        },
+        "creator": {
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+        },
+        "logo": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "src",
+                "alt",
+                "width",
+                "height"
+              ],
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "pattern": "^/(?!/)(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\\.(?:svg|png|jpg|jpeg|webp|ico|avif)$",
+                  "maxLength": 240
+                },
+                "alt": {
+                  "type": "string",
+                  "maxLength": 120,
+                  "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2048
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2048
+                }
+              }
+            }
+          ]
+        },
+        "encyclopediaLogo": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "src",
+                "alt",
+                "width",
+                "height"
+              ],
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "pattern": "^/(?!/)(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\\.(?:svg|png|jpg|jpeg|webp|ico|avif)$",
+                  "maxLength": 240
+                },
+                "alt": {
+                  "type": "string",
+                  "maxLength": 120,
+                  "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2048
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2048
+                }
+              }
+            }
+          ]
+        },
+        "icon": {
+          "type": "string",
+          "pattern": "^/(?!/)(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\\.(?:svg|png|jpg|jpeg|webp|ico|avif)$",
+          "maxLength": 240
+        },
+        "appleIcon": {
+          "type": "string",
+          "pattern": "^/(?!/)(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\\.(?:svg|png|jpg|jpeg|webp|ico|avif)$",
+          "maxLength": 240
+        },
+        "italicPrefix": {
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+        },
+        "encyclopediaItalicPrefix": {
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+        },
+        "attribution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "label",
+            "name",
+            "href",
+            "logo"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 80,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "href": {
+              "type": "string",
+              "format": "ui-link",
+              "maxLength": 500
+            },
+            "logo": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "src",
+                    "alt",
+                    "width",
+                    "height"
+                  ],
+                  "properties": {
+                    "src": {
+                      "type": "string",
+                      "pattern": "^/(?!/)(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\\.(?:svg|png|jpg|jpeg|webp|ico|avif)$",
+                      "maxLength": 240
+                    },
+                    "alt": {
+                      "type": "string",
+                      "maxLength": 120,
+                      "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+                    },
+                    "width": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2048
+                    },
+                    "height": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2048
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "pattern": "^[Qq][Uu][Ii][Rr][Qq]$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "name": {
+                    "const": "quirq"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "headerLogo": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "src",
+                "alt",
+                "width",
+                "height"
+              ],
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "pattern": "^/(?!/)(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\\.(?:svg|png|jpg|jpeg|webp|ico|avif)$",
+                  "maxLength": 240
+                },
+                "alt": {
+                  "type": "string",
+                  "maxLength": 120,
+                  "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2048
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 2048
+                }
+              }
+            }
+          ]
+        },
+        "showPublisherLink": {
+          "type": "boolean"
+        },
+        "sourceLink": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "label",
+            "href"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "href": {
+              "type": "string",
+              "format": "ui-link",
+              "maxLength": 500
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "pattern": "^[Qq][Uu][Ii][Rr][Qq]$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "then": {
+            "properties": {
+              "name": {
+                "const": "quirq"
+              },
+              "logo": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "logo"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "encyclopediaName": {
+                "pattern": "^[Qq][Uu][Ii][Rr][Qq]$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "encyclopediaName"
+            ]
+          },
+          "then": {
+            "properties": {
+              "encyclopediaName": {
+                "const": "quirq"
+              },
+              "encyclopediaLogo": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "encyclopediaLogo"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "creator": {
+                "pattern": "^[Qq][Uu][Ii][Rr][Qq]$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "creator"
+            ]
+          },
+          "then": {
+            "properties": {
+              "creator": {
+                "const": "quirq"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultMode",
+        "allowToggle",
+        "light",
+        "dark",
+        "fonts",
+        "effects"
+      ],
+      "properties": {
+        "defaultMode": {
+          "enum": [
+            "system",
+            "light",
+            "dark"
+          ]
+        },
+        "allowToggle": {
+          "type": "boolean"
+        },
+        "light": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bg",
+            "bg-sunk",
+            "surface",
+            "ink",
+            "ink-2",
+            "muted",
+            "faint",
+            "line",
+            "line-strong",
+            "link",
+            "link-hover",
+            "visited",
+            "mark-bg",
+            "mark-ink",
+            "notice-bg",
+            "notice-line",
+            "good",
+            "ring",
+            "aurora-1",
+            "aurora-2",
+            "aurora-3",
+            "aurora-opacity",
+            "shadow-sm",
+            "shadow",
+            "shadow-lg"
+          ],
+          "properties": {
+            "bg": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "bg-sunk": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "surface": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "ink": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "ink-2": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "muted": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "faint": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "line": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "line-strong": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "link": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "link-hover": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "visited": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "mark-bg": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "mark-ink": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "notice-bg": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "notice-line": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "good": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "ring": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "aurora-1": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "aurora-2": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "aurora-3": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "aurora-opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "shadow-sm": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "blur",
+                  "spread",
+                  "color"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "blur": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "spread": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "color": {
+                    "type": "string",
+                    "format": "ui-color",
+                    "maxLength": 100
+                  }
+                }
+              }
+            },
+            "shadow": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "blur",
+                  "spread",
+                  "color"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "blur": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "spread": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "color": {
+                    "type": "string",
+                    "format": "ui-color",
+                    "maxLength": 100
+                  }
+                }
+              }
+            },
+            "shadow-lg": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "blur",
+                  "spread",
+                  "color"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "blur": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "spread": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "color": {
+                    "type": "string",
+                    "format": "ui-color",
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "dark": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bg",
+            "bg-sunk",
+            "surface",
+            "ink",
+            "ink-2",
+            "muted",
+            "faint",
+            "line",
+            "line-strong",
+            "link",
+            "link-hover",
+            "visited",
+            "mark-bg",
+            "mark-ink",
+            "notice-bg",
+            "notice-line",
+            "good",
+            "ring",
+            "aurora-1",
+            "aurora-2",
+            "aurora-3",
+            "aurora-opacity",
+            "shadow-sm",
+            "shadow",
+            "shadow-lg"
+          ],
+          "properties": {
+            "bg": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "bg-sunk": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "surface": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "ink": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "ink-2": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "muted": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "faint": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "line": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "line-strong": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "link": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "link-hover": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "visited": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "mark-bg": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "mark-ink": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "notice-bg": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "notice-line": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "good": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "ring": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "aurora-1": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "aurora-2": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "aurora-3": {
+              "type": "string",
+              "format": "ui-color",
+              "maxLength": 100
+            },
+            "aurora-opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "shadow-sm": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "blur",
+                  "spread",
+                  "color"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "blur": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "spread": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "color": {
+                    "type": "string",
+                    "format": "ui-color",
+                    "maxLength": 100
+                  }
+                }
+              }
+            },
+            "shadow": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "blur",
+                  "spread",
+                  "color"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "blur": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "spread": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "color": {
+                    "type": "string",
+                    "format": "ui-color",
+                    "maxLength": 100
+                  }
+                }
+              }
+            },
+            "shadow-lg": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "blur",
+                  "spread",
+                  "color"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "blur": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 200
+                  },
+                  "spread": {
+                    "type": "number",
+                    "minimum": -100,
+                    "maximum": 100
+                  },
+                  "color": {
+                    "type": "string",
+                    "format": "ui-color",
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fonts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "display",
+            "serif",
+            "sans",
+            "mono"
+          ],
+          "properties": {
+            "display": {
+              "enum": [
+                "instrument",
+                "newsreader",
+                "inter",
+                "jetbrains",
+                "system-serif",
+                "system-sans",
+                "system-mono"
+              ]
+            },
+            "serif": {
+              "enum": [
+                "instrument",
+                "newsreader",
+                "inter",
+                "jetbrains",
+                "system-serif",
+                "system-sans",
+                "system-mono"
+              ]
+            },
+            "sans": {
+              "enum": [
+                "instrument",
+                "newsreader",
+                "inter",
+                "jetbrains",
+                "system-serif",
+                "system-sans",
+                "system-mono"
+              ]
+            },
+            "mono": {
+              "enum": [
+                "instrument",
+                "newsreader",
+                "inter",
+                "jetbrains",
+                "system-serif",
+                "system-sans",
+                "system-mono"
+              ]
+            }
+          }
+        },
+        "effects": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "aurora",
+            "grain",
+            "motion"
+          ],
+          "properties": {
+            "aurora": {
+              "type": "boolean"
+            },
+            "grain": {
+              "type": "boolean"
+            },
+            "motion": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxWidth",
+        "searchWidth",
+        "articleWidth",
+        "density"
+      ],
+      "properties": {
+        "maxWidth": {
+          "type": "integer",
+          "minimum": 640,
+          "maximum": 2400
+        },
+        "searchWidth": {
+          "type": "integer",
+          "minimum": 280,
+          "maximum": 1600
+        },
+        "articleWidth": {
+          "type": "integer",
+          "minimum": 280,
+          "maximum": 1800
+        },
+        "density": {
+          "enum": [
+            "comfortable",
+            "compact"
+          ]
+        }
+      }
+    },
+    "navigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "home",
+        "search",
+        "wiki",
+        "guide",
+        "labels",
+        "headerSearch",
+        "headerWiki"
+      ],
+      "properties": {
+        "home": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "search",
+              "wiki",
+              "guide",
+              "random",
+              "allPages",
+              "categories",
+              "statistics",
+              "top"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "search": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "search",
+              "wiki",
+              "guide",
+              "random",
+              "allPages",
+              "categories",
+              "statistics",
+              "top"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "wiki": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "search",
+              "wiki",
+              "guide",
+              "random",
+              "allPages",
+              "categories",
+              "statistics",
+              "top"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "guide": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "search",
+              "wiki",
+              "guide",
+              "random",
+              "allPages",
+              "categories",
+              "statistics",
+              "top"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "search",
+            "wiki",
+            "guide",
+            "random",
+            "allPages",
+            "categories",
+            "statistics",
+            "top"
+          ],
+          "properties": {
+            "search": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "wiki": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "guide": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "random": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "allPages": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "categories": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "statistics": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            },
+            "top": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+              "minLength": 1
+            }
+          }
+        },
+        "headerSearch": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "search",
+              "wiki",
+              "guide",
+              "random",
+              "allPages",
+              "categories",
+              "statistics",
+              "top"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "headerWiki": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "search",
+              "wiki",
+              "guide",
+              "random",
+              "allPages",
+              "categories",
+              "statistics",
+              "top"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "maxItems": 8
+        }
+      }
+    },
+    "home": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "showCounts",
+        "showExamples",
+        "exampleQueries",
+        "showRecent",
+        "recentLimit",
+        "showCurious",
+        "autoFocus"
+      ],
+      "properties": {
+        "showCounts": {
+          "type": "boolean"
+        },
+        "showExamples": {
+          "type": "boolean"
+        },
+        "exampleQueries": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$",
+            "minLength": 1
+          }
+        },
+        "showRecent": {
+          "type": "boolean"
+        },
+        "recentLimit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "showCurious": {
+          "type": "boolean"
+        },
+        "autoFocus": {
+          "type": "boolean"
+        }
+      }
+    },
+    "search": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "suggestions",
+        "suggestionLimit",
+        "debounceMs",
+        "focusShortcut",
+        "perPage",
+        "showKnowledgePanel",
+        "tabs"
+      ],
+      "properties": {
+        "suggestions": {
+          "type": "boolean"
+        },
+        "suggestionLimit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "debounceMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "focusShortcut": {
+          "type": "boolean"
+        },
+        "perPage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "showKnowledgePanel": {
+          "type": "boolean"
+        },
+        "tabs": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "all",
+              "articles",
+              "repos",
+              "docs",
+              "folders"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 5,
+          "contains": {
+            "const": "all"
+          }
+        }
+      }
+    },
+    "wiki": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "showContents",
+        "showInfobox",
+        "articleSections",
+        "mainSections"
+      ],
+      "properties": {
+        "showContents": {
+          "type": "boolean"
+        },
+        "showInfobox": {
+          "type": "boolean"
+        },
+        "articleSections": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "overview",
+              "structure",
+              "technology",
+              "history",
+              "see-also",
+              "external-links"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "maxItems": 6
+        },
+        "mainSections": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "welcome",
+              "featured",
+              "news",
+              "did-you-know",
+              "on-this-day",
+              "browse",
+              "areas"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "maxItems": 7
+        }
+      }
+    },
+    "guide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "showRecipe"
+      ],
+      "properties": {
+        "showRecipe": {
+          "type": "boolean"
+        }
+      }
+    },
+    "copy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "skipContent",
+        "siteNavigation",
+        "moreNavigation",
+        "homeLink",
+        "wikiHomeLink",
+        "searchPlaceholder",
+        "wikiSearchPlaceholder",
+        "nothingIndexed",
+        "indexedFrom",
+        "refreshWith",
+        "buildWith",
+        "themeSystem",
+        "themeLight",
+        "themeDark",
+        "missingPageTitle",
+        "missingPageDescription",
+        "missingPageSearch",
+        "missingPageBrowse",
+        "guideTitle",
+        "guideDescription",
+        "continueWiki",
+        "guideCustomizationTitle",
+        "guideCustomizationBody",
+        "colophonFonts",
+        "search.tab.all",
+        "search.tab.articles",
+        "search.tab.repos",
+        "search.tab.docs",
+        "search.tab.folders",
+        "search.searchInside",
+        "search.openEditor",
+        "wiki.mainTitle",
+        "wiki.fromEncyclopedia",
+        "wiki.missingTitle",
+        "wiki.missingDescription",
+        "wiki.welcomeTitle",
+        "wiki.encyclopediaTagline",
+        "wiki.readMore",
+        "wiki.featured",
+        "wiki.news",
+        "wiki.didYouKnow",
+        "wiki.onThisDay",
+        "wiki.browse",
+        "wiki.areas",
+        "wiki.contents",
+        "wiki.top",
+        "wiki.article.overview",
+        "wiki.article.structure",
+        "wiki.article.technology",
+        "wiki.article.history",
+        "wiki.article.see-also",
+        "wiki.article.external-links",
+        "wiki.openEditor",
+        "wiki.searchInside",
+        "wiki.noReadme",
+        "wiki.stubNotice",
+        "wiki.seeAlso",
+        "wiki.externalLinks",
+        "wiki.special.random",
+        "wiki.special.allPages",
+        "wiki.special.categories",
+        "wiki.special.statistics",
+        "wiki.unknownSpecialTitle",
+        "wiki.unknownSpecialDescription",
+        "wiki.notFoundTitle",
+        "wiki.notFoundDescription",
+        "wiki.addReadme",
+        "wiki.folders",
+        "wiki.files",
+        "wiki.groups",
+        "wiki.categoryPrefix",
+        "wiki.specialPrefix",
+        "wiki.disambiguation",
+        "wiki.availableSpecialPages",
+        "wiki.backMain",
+        "wiki.collections",
+        "wiki.languages",
+        "wiki.portals",
+        "wiki.location",
+        "wiki.partOf",
+        "wiki.categoriesLabel",
+        "wiki.stubContents",
+        "wiki.alsoNotable",
+        "wiki.ongoing",
+        "wiki.goneQuiet",
+        "home.title",
+        "home.waitingTagline",
+        "home.folders",
+        "home.articles",
+        "home.repositories",
+        "home.searchPlaceholder",
+        "home.searchButton",
+        "home.curiousButton",
+        "home.try",
+        "home.recentlyTouched",
+        "home.touched",
+        "home.recentTitle",
+        "home.missingTitle",
+        "home.missingDescription",
+        "home.missingRoots",
+        "search.title",
+        "search.placeholder",
+        "search.wikiPlaceholder",
+        "search.label",
+        "search.clear",
+        "search.suggestionsLabel",
+        "search.everything",
+        "search.folder",
+        "search.resultTypes",
+        "search.resultsLabel",
+        "search.resultsFor",
+        "search.inTab",
+        "search.result",
+        "search.results",
+        "search.aboutResults",
+        "search.resultsPage",
+        "search.resultsSummary",
+        "search.didYouMean",
+        "search.questionMark",
+        "search.noResultsTitle",
+        "search.withFilters",
+        "search.filters",
+        "search.noResultsDescription",
+        "search.spellingTip",
+        "search.fewerWordsTip",
+        "search.browseTip",
+        "search.browseDescription",
+        "search.recentHeading",
+        "search.emptyTabTitle",
+        "search.emptyTabSingleTitle",
+        "search.emptyTabDescription",
+        "search.tabsWithResults",
+        "search.type.articles.singular",
+        "search.type.articles.plural",
+        "search.type.repos.singular",
+        "search.type.repos.plural",
+        "search.type.docs.singular",
+        "search.type.docs.plural",
+        "search.type.folders.singular",
+        "search.type.folders.plural",
+        "search.previous",
+        "search.next",
+        "search.pages",
+        "search.pageLabel",
+        "search.relatedSearches",
+        "search.relatedCount",
+        "search.openArticle",
+        "search.panelAbout",
+        "search.fact.language",
+        "search.fact.frameworks",
+        "search.fact.created",
+        "search.fact.lastTouched",
+        "search.fact.touched",
+        "search.fact.files",
+        "search.fact.size",
+        "search.fact.commits",
+        "search.fact.location",
+        "search.thenLanguage",
+        "search.seeAlso",
+        "search.commit",
+        "search.commits",
+        "search.updated",
+        "search.stub",
+        "search.inside",
+        "search.operatorsLabel",
+        "search.removeOperator",
+        "search.removeFilter",
+        "search.clearFilters",
+        "search.operator.lang",
+        "search.operator.in",
+        "search.operator.kind",
+        "search.operator.fw",
+        "search.operator.is",
+        "search.kind.repo",
+        "search.kind.project",
+        "search.kind.docs",
+        "search.kind.assets",
+        "search.kind.code",
+        "search.kind.folder",
+        "search.kindIn",
+        "wiki.special.randomDescription",
+        "wiki.special.allPagesDescription",
+        "wiki.special.categoriesDescription",
+        "wiki.special.statisticsDescription",
+        "wiki.label.type",
+        "wiki.label.location",
+        "wiki.label.frameworks",
+        "wiki.label.package",
+        "wiki.label.name",
+        "wiki.label.manifest",
+        "wiki.label.version",
+        "wiki.label.activity",
+        "wiki.label.created",
+        "wiki.label.lastTouched",
+        "wiki.label.contents",
+        "wiki.label.files",
+        "wiki.label.size",
+        "wiki.label.git",
+        "wiki.label.commits",
+        "wiki.label.branch",
+        "wiki.label.repository",
+        "wiki.label.languages",
+        "wiki.label.frameworksAndLibraries",
+        "wiki.label.scripts",
+        "wiki.label.dependencies",
+        "wiki.label.firstCommit",
+        "wiki.label.latestCommit",
+        "wiki.label.authors",
+        "wiki.label.recentCommits",
+        "wiki.label.folders",
+        "wiki.label.showFewer",
+        "wiki.label.articles",
+        "wiki.label.stubs",
+        "wiki.label.repositories",
+        "wiki.label.onDisk",
+        "wiki.label.categories",
+        "wiki.label.leadingLanguageOfEachArticle",
+        "wiki.label.foldersAndArticlesByKind",
+        "wiki.label.kind",
+        "wiki.label.articlesByTheYearTheyWereBegun",
+        "wiki.label.collections",
+        "wiki.label.kinds",
+        "wiki.label.eras",
+        "wiki.label.partsOfProjects",
+        "wiki.label.maintenance",
+        "wiki.label.jumpToLetter",
+        "wiki.label.language",
+        "wiki.infoboxTitle",
+        "wiki.label.commit",
+        "wiki.label.author",
+        "wiki.breadcrumb",
+        "wiki.showFewer",
+        "wiki.openNamedEditor",
+        "wiki.label.biggestFolders",
+        "wiki.label.busiestRepositories",
+        "wiki.label.kindsOfFolder",
+        "wiki.label.writtenIn",
+        "wiki.label.oftenFoundWith",
+        "wiki.label.subcategories",
+        "wiki.categoryPagesTitle",
+        "wiki.label.projectsByYearBegun",
+        "wiki.label.begunIn",
+        "wiki.filesAcrossRoots",
+        "wiki.allCategories",
+        "wiki.moreItems",
+        "guide.add-site.branding1",
+        "guide.add-site.branding2",
+        "guide.add-site.branding3",
+        "guide.add-site.branding4",
+        "guide.add-site.branding5",
+        "guide.add-site.branding6",
+        "guide.contribute.branding1",
+        "guide.how-it-works.branding1",
+        "guide.how-it-works.branding2",
+        "guide.how-it-works.branding3",
+        "guide.how-it-works.branding4",
+        "guide.how-it-works.branding5",
+        "guide.how-it-works.branding6",
+        "guide.plate.branding1",
+        "guide.privacy.branding1",
+        "guide.privacy.branding2",
+        "guide.recipeArticleNotice",
+        "guide.recipeStubNotice",
+        "guide.recipeDeepNotice",
+        "search.kindLanguage",
+        "search.framework.next",
+        "search.framework.vite",
+        "search.framework.expo",
+        "search.framework.reactNative",
+        "search.framework.flutter",
+        "search.framework.fastapi",
+        "search.framework.flask",
+        "search.framework.express",
+        "search.framework.fumadocs",
+        "search.framework.remotion",
+        "search.framework.tauri",
+        "search.framework.electron",
+        "search.framework.streamlit",
+        "search.framework.hardhat",
+        "demo.homeTitle",
+        "demo.homeDescription",
+        "demo.waitingTagline",
+        "demo.tagline",
+        "demo.indexedFrom",
+        "demo.missingDescription",
+        "demo.missingRoots",
+        "demo.bannerLabel",
+        "demo.badge",
+        "demo.publicRepos",
+        "demo.publicReposShort",
+        "demo.runOwn",
+        "demo.runOwnShort",
+        "demo.guideDescription",
+        "wiki.openSource",
+        "wiki.openNamedSource",
+        "brand.linksLabel",
+        "guide.privacyDiagramAlt",
+        "guide.privacyDiagramCaption"
+      ],
+      "properties": {
+        "skipContent": {
+          "$ref": "#/definitions/copyText"
+        },
+        "siteNavigation": {
+          "$ref": "#/definitions/copyText"
+        },
+        "moreNavigation": {
+          "$ref": "#/definitions/copyText"
+        },
+        "homeLink": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wikiHomeLink": {
+          "$ref": "#/definitions/copyText"
+        },
+        "searchPlaceholder": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wikiSearchPlaceholder": {
+          "$ref": "#/definitions/copyText"
+        },
+        "nothingIndexed": {
+          "$ref": "#/definitions/copyText"
+        },
+        "indexedFrom": {
+          "$ref": "#/definitions/copyText"
+        },
+        "refreshWith": {
+          "$ref": "#/definitions/copyText"
+        },
+        "buildWith": {
+          "$ref": "#/definitions/copyText"
+        },
+        "themeSystem": {
+          "$ref": "#/definitions/copyText"
+        },
+        "themeLight": {
+          "$ref": "#/definitions/copyText"
+        },
+        "themeDark": {
+          "$ref": "#/definitions/copyText"
+        },
+        "missingPageTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "missingPageDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "missingPageSearch": {
+          "$ref": "#/definitions/copyText"
+        },
+        "missingPageBrowse": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guideTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guideDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "continueWiki": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guideCustomizationTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guideCustomizationBody": {
+          "$ref": "#/definitions/copyText"
+        },
+        "colophonFonts": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.tab.all": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.tab.articles": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.tab.repos": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.tab.docs": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.tab.folders": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.searchInside": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.openEditor": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.mainTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.fromEncyclopedia": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.missingTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.missingDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.welcomeTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.encyclopediaTagline": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.readMore": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.featured": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.news": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.didYouKnow": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.onThisDay": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.browse": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.areas": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.contents": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.top": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.article.overview": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.article.structure": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.article.technology": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.article.history": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.article.see-also": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.article.external-links": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.openEditor": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.searchInside": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.noReadme": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.stubNotice": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.seeAlso": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.externalLinks": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.special.random": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.special.allPages": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.special.categories": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.special.statistics": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.unknownSpecialTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.unknownSpecialDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.notFoundTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.notFoundDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.addReadme": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.folders": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.files": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.groups": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.categoryPrefix": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.specialPrefix": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.disambiguation": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.availableSpecialPages": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.backMain": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.collections": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.languages": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.portals": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.location": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.partOf": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.categoriesLabel": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.stubContents": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.alsoNotable": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.ongoing": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.goneQuiet": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.title": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.waitingTagline": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.folders": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.articles": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.repositories": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.searchPlaceholder": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.searchButton": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.curiousButton": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.try": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.recentlyTouched": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.touched": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.recentTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.missingTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.missingDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.missingRoots": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.title": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.placeholder": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.wikiPlaceholder": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.label": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.clear": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.suggestionsLabel": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.everything": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.folder": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.resultTypes": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.resultsLabel": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.resultsFor": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.inTab": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.result": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.results": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.aboutResults": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.resultsPage": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.resultsSummary": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.didYouMean": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.questionMark": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.noResultsTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.withFilters": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.filters": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.noResultsDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.spellingTip": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fewerWordsTip": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.browseTip": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.browseDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.recentHeading": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.emptyTabTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.emptyTabSingleTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.emptyTabDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.tabsWithResults": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.type.articles.singular": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.type.articles.plural": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.type.repos.singular": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.type.repos.plural": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.type.docs.singular": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.type.docs.plural": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.type.folders.singular": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.type.folders.plural": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.previous": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.next": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.pages": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.pageLabel": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.relatedSearches": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.relatedCount": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.openArticle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.panelAbout": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.language": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.frameworks": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.created": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.lastTouched": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.touched": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.files": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.size": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.commits": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.fact.location": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.thenLanguage": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.seeAlso": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.commit": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.commits": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.updated": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.stub": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.inside": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.operatorsLabel": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.removeOperator": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.removeFilter": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.clearFilters": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.operator.lang": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.operator.in": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.operator.kind": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.operator.fw": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.operator.is": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.kind.repo": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.kind.project": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.kind.docs": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.kind.assets": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.kind.code": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.kind.folder": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.kindIn": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.special.randomDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.special.allPagesDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.special.categoriesDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.special.statisticsDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.type": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.location": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.frameworks": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.package": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.name": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.manifest": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.version": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.activity": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.created": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.lastTouched": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.contents": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.files": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.size": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.git": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.commits": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.branch": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.repository": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.languages": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.frameworksAndLibraries": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.scripts": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.dependencies": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.firstCommit": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.latestCommit": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.authors": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.recentCommits": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.folders": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.showFewer": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.articles": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.stubs": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.repositories": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.onDisk": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.categories": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.leadingLanguageOfEachArticle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.foldersAndArticlesByKind": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.kind": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.articlesByTheYearTheyWereBegun": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.collections": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.kinds": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.eras": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.partsOfProjects": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.maintenance": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.jumpToLetter": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.language": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.infoboxTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.commit": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.author": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.breadcrumb": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.showFewer": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.openNamedEditor": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.biggestFolders": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.busiestRepositories": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.kindsOfFolder": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.writtenIn": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.oftenFoundWith": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.subcategories": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.categoryPagesTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.projectsByYearBegun": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.label.begunIn": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.filesAcrossRoots": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.allCategories": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.moreItems": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.add-site.branding1": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.add-site.branding2": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.add-site.branding3": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.add-site.branding4": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.add-site.branding5": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.add-site.branding6": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.contribute.branding1": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.how-it-works.branding1": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.how-it-works.branding2": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.how-it-works.branding3": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.how-it-works.branding4": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.how-it-works.branding5": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.how-it-works.branding6": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.plate.branding1": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.privacy.branding1": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.privacy.branding2": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.recipeArticleNotice": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.recipeStubNotice": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.recipeDeepNotice": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.kindLanguage": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.next": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.vite": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.expo": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.reactNative": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.flutter": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.fastapi": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.flask": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.express": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.fumadocs": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.remotion": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.tauri": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.electron": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.streamlit": {
+          "$ref": "#/definitions/copyText"
+        },
+        "search.framework.hardhat": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.homeTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.homeDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.waitingTagline": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.tagline": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.indexedFrom": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.missingDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.missingRoots": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.bannerLabel": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.badge": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.publicRepos": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.publicReposShort": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.runOwn": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.runOwnShort": {
+          "$ref": "#/definitions/copyText"
+        },
+        "demo.guideDescription": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.openSource": {
+          "$ref": "#/definitions/copyText"
+        },
+        "wiki.openNamedSource": {
+          "$ref": "#/definitions/copyText"
+        },
+        "brand.linksLabel": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.privacyDiagramAlt": {
+          "$ref": "#/definitions/copyText"
+        },
+        "guide.privacyDiagramCaption": {
+          "$ref": "#/definitions/copyText"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "copyText": {
+      "type": "string",
+      "maxLength": 2000,
+      "pattern": "^[^<>\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f]*$"
+    }
+  }
+}
