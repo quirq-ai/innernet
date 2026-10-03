@@ -116,6 +116,9 @@ const nextConfig: NextConfig = {
       "data/github.json",
       "data/github-*.json",
       "data/sources.json",
+      // Secrets and the Vercel link never ride along, whatever a route's trace reaches.
+      ".env*",
+      ".vercel/**",
       "data/*.tmp",
       "data/demo/*.tmp",
       "public/guide/*.mp4",
