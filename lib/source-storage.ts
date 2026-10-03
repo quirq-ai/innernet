@@ -8,12 +8,12 @@ import { HISTORY_DIR, sessionIds } from "./activity";
 import { resolveDbDir } from "./db/pglite";
 import { PROJECT_ROOT } from "./project-root";
 import { remoteActivityFields, type RemoteConfig } from "./remote-config";
-import { homeLabel, remoteDatabase, remoteLabel, storageTarget } from "./storage";
+import { homeLabel, remoteConnected, remoteDatabase, remoteLabel } from "./storage";
 import { localSourceConfig, LOCAL_INDEX_FILE, readRemoteConfig, readSourceSelection, remoteIndexFile, REMOTE_CACHE_DIR, SOURCE_CONFIG_FILE } from "./sources";
 
 // What Sources shows: the input (local folders, GitHub repositories), everything that
 // input generates, one short row each with a relative path, its size and when it last
-// changed, and the storage the copy of it goes to.
+// changed, and the databases its copy is kept in.
 
 export interface GeneratedItem {
   id: string;
@@ -90,8 +90,9 @@ function measure(abs: string, budget = 40_000): { exists: boolean; bytes: number
 const iso = (ms: number) => (ms > 0 ? new Date(ms).toISOString() : null);
 const plural = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
 
-function locations(session: string): Location[] {
-  if (!SESSION_RE.test(session)) throw new Error("Bad session id.");
+/** The named locations. The tab's own history file only when the tab's session is known. */
+function locations(session: string | null): Location[] {
+  if (session !== null && !SESSION_RE.test(session)) throw new Error("Bad session id.");
   let remote: RemoteConfig | null = null;
   try {
     remote = readRemoteConfig();
@@ -102,7 +103,7 @@ function locations(session: string): Location[] {
   const out: Location[] = [
     { id: "local-index", abs: LOCAL_INDEX_FILE, kind: "file", editable: false },
     { id: "history", abs: HISTORY_DIR, kind: "directory", editable: false },
-    { id: "session", abs: path.join(HISTORY_DIR, session, "innernet.jsonl"), kind: "file", editable: true },
+    ...(session ? [{ id: "session", abs: path.join(HISTORY_DIR, session, "innernet.jsonl"), kind: "file" as const, editable: true }] : []),
     { id: "database", abs: resolveDbDir(), kind: "directory", editable: false },
     { id: "remote-cache", abs: REMOTE_CACHE_DIR, kind: "directory", editable: false },
     { id: "config", abs: SOURCE_CONFIG_FILE, kind: "file", editable: true },
@@ -111,9 +112,9 @@ function locations(session: string): Location[] {
   return out;
 }
 
-/** Everything the input generates, in the order it is made. */
-export function generatedData(session: string): GeneratedItem[] {
-  const target = storageTarget();
+/** Everything the input generates, in the order it is made. Without a session, the tab's
+ * own history file is left out (the page draws that row in the browser, which knows it). */
+export function generatedData(session: string | null): GeneratedItem[] {
   const items: GeneratedItem[] = [];
   for (const loc of locations(session)) {
     if (loc.id === "config") continue; // input, shown with the folders it names
@@ -141,7 +142,7 @@ export function generatedData(session: string): GeneratedItem[] {
         break;
       case "database":
         label = "Local database";
-        detail = target === "local" ? "in use" : "not in use";
+        detail = "a copy of the index and history";
         break;
       case "remote-cache":
         label = "GitHub clones";
@@ -176,8 +177,9 @@ export function generatedData(session: string): GeneratedItem[] {
   return items;
 }
 
-/** The Input and Storage sections, and the generated data between them. */
-export function sourceInfo(session: string) {
+/** The Input and Storage sections, and the generated data between them. Without a
+ * session (the page renders on the server), the tab's own history file is left out. */
+export function sourceInfo(session: string | null) {
   let remote: RemoteConfig | null = null;
   let remoteError: string | undefined;
   try {
@@ -187,8 +189,13 @@ export function sourceInfo(session: string) {
   }
   const snapshot = remote ? remoteIndexFile(remote) : null;
   let generatedAt: string | null = null;
+  let pages: number | null = null;
   try {
-    if (snapshot) generatedAt = JSON.parse(fs.readFileSync(snapshot, "utf8")).meta.generatedAt ?? null;
+    if (snapshot) {
+      const meta = JSON.parse(fs.readFileSync(snapshot, "utf8")).meta;
+      generatedAt = meta.generatedAt ?? null;
+      pages = typeof meta.counts?.pages === "number" ? meta.counts.pages : null;
+    }
   } catch {
     /* not synced yet */
   }
@@ -208,14 +215,14 @@ export function sourceInfo(session: string) {
       legacyAccount: remote?.legacyAccount ?? null,
       snapshot: snapshot ? shownPath(snapshot) : null,
       generatedAt,
+      pages,
       needsSync: !!snapshot && !generatedAt,
       ...(remoteError ? { error: remoteError } : {}),
     },
     generated: generatedData(session),
     storage: {
-      target: storageTarget(),
       local: { path: shownPath(resolveDbDir()) },
-      remote: db ? { label: remoteLabel(db), ready: true } : { label: "Not set up", ready: false },
+      remote: { configured: !!db, connected: !!db && remoteConnected(), label: db ? remoteLabel(db) : "Not set up" },
     },
   };
 }
@@ -225,6 +232,7 @@ export const remoteSummary = (remote: RemoteConfig) => remoteActivityFields(remo
 
 /** Only named app locations may be opened, never a caller-supplied path or command. */
 export async function openStorageLocation(session: string, target: string, action: "reveal" | "edit"): Promise<void> {
+  if (!SESSION_RE.test(session)) throw new Error("Bad session id.");
   const item = locations(session).find((entry) => entry.id === target);
   if (!item) throw new Error("Unknown storage location.");
   const exists = fs.existsSync(item.abs);

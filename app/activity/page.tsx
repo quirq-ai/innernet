@@ -11,6 +11,7 @@ import { HISTORY_DIR, historyLabel } from "@/lib/activity";
 import { demoKeepsHistory } from "@/lib/db";
 import { RETENTION_DAYS } from "@/lib/db/demo-history";
 import { historySessions, lastStore, type HistoryListing } from "@/lib/db/ingest";
+import { pullSoon } from "@/lib/db/remote-sync";
 import { dbStatus } from "@/lib/db/status";
 import { num } from "@/lib/format";
 import { wikiHref } from "@/lib/links";
@@ -47,6 +48,8 @@ const AURORA_MASK = "radial-gradient(ellipse min(620px, 100vw) 300px at 18% 0%, 
 
 export default async function ActivityPage() {
   const listing: HistoryListing = DEMO ? { sessions: [], older: 0, source: "files" } : await historySessions();
+  // With a remote database connected, your other machines' history comes down soon after.
+  if (!DEMO) pullSoon();
   const { sessions, older } = listing;
   const status = await dbStatus();
   const server = demoKeepsHistory();

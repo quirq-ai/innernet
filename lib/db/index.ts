@@ -1,9 +1,8 @@
 import "server-only";
 
 import { DEMO } from "../mode";
-import { remoteDatabase, remoteLabel, storageTarget } from "../storage";
 import { errorText, sayOnce } from "./log";
-import { openNeon, openRemote } from "./neon";
+import { openNeon } from "./neon";
 import { dbDirLabel, openPglite, resolveDbDir } from "./pglite";
 import { bootstrap } from "./schema";
 import type { Db, DbState } from "./types";
@@ -12,9 +11,9 @@ export type { Db, DbKind, DbState, DbStateName, LockHolder, Row, Statement } fro
 
 // Innernet's database, one per process, whichever it is:
 //
-//   local  PGlite in a folder on this machine (lib/db/pglite.ts). Nothing leaves it.
-//   remote Your own Neon database, when Sources switches storage to it (lib/storage.ts).
-//          The same copy PGlite would keep: this machine's index and history.
+//   local  PGlite in a folder on this machine (lib/db/pglite.ts), always. A remote
+//          database you connect on Sources is kept in step with it separately
+//          (lib/db/remote-sync.ts); it never takes this one's place.
 //   demo   Neon through DATABASE_URL (lib/db/neon.ts). The server reads the demo index
 //          from it (written only by `pnpm db:store --demo`) and keeps the visitors'
 //          history in it for 30 days (lib/db/demo-history.ts).
@@ -62,9 +61,6 @@ function unavailable(): DbState | null {
   if (process.env.INNERNET_DB?.trim().toLowerCase() === "off") {
     return { state: "off", kind: null, label: "files only", note: "INNERNET_DB=off: Innernet reads and writes its files alone." };
   }
-  if (storageTarget() === "remote" && !remoteDatabase()) {
-    return { state: "off", kind: null, label: "files only", note: "Storage is set to remote, but no remote database is set up, so Innernet uses its files alone." };
-  }
   return null;
 }
 
@@ -99,15 +95,13 @@ export function getDb(): Promise<Db | null> {
 }
 
 async function open(): Promise<Db | null> {
-  const remote = !DEMO && storageTarget() === "remote" ? remoteDatabase() : null;
-  const kind = DEMO ? "neon" : remote ? "remote" : "pglite";
-  const dir = kind === "pglite" ? resolveDbDir() : "";
-  const label = DEMO ? "Neon Postgres" : remote ? remoteLabel(remote) : dbDirLabel(dir);
+  const kind = DEMO ? "neon" : "pglite";
+  const dir = DEMO ? "" : resolveDbDir();
+  const label = DEMO ? "Neon Postgres" : dbDirLabel(dir);
   slot.state = { state: "opening", kind, label, note: `Opening the database in ${label}.` };
   let db: Db | null = null;
   try {
     if (DEMO) db = await openNeon();
-    else if (remote) db = await openRemote(remote, label);
     else {
       const opened = await openPglite(dir, slot.owner);
       if (!opened.ok) {
@@ -132,11 +126,7 @@ async function open(): Promise<Db | null> {
       state: "ready",
       kind,
       label,
-      note: DEMO
-        ? "The demo reads its index from Neon whenever Neon holds a newer one."
-        : remote
-          ? `Innernet keeps a copy of its data in ${label}, your remote database.`
-          : `Innernet keeps a copy of its data in ${label}, on this machine.`,
+      note: DEMO ? "The demo reads its index from Neon whenever Neon holds a newer one." : `Innernet keeps a copy of its data in ${label}, on this machine.`,
     };
     return db;
   } catch (err) {
@@ -156,10 +146,3 @@ export async function closeDb(): Promise<void> {
   await db?.close();
 }
 
-/** After the storage setting changes: let go of the database in use (PGlite gives up its
- * folder), so the next getDb() opens the one now chosen, at once. */
-export async function reopenDb(): Promise<void> {
-  await slot.opening?.catch(() => null);
-  slot.failedAt = 0;
-  await closeDb();
-}

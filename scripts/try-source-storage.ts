@@ -17,7 +17,7 @@ async function main() {
   const history = path.join(project, "history");
   const session = "2026-10-03T10-20-30Z_test12";
   const missingSession = "2026-10-03T10-20-30Z_absent";
-  const envKeys = ["INNERNET_PROJECT_ROOT", "INNERNET_HISTORY_DIR", "INNERNET_DB", "INNERNET_DB_DIR", "INNERNET_HOME", "INNERNET_STORAGE", "INNERNET_REMOTE_DATABASE_URL", "INNERNET_ROOTS", "INNERNET_MAX_DEPTH"];
+  const envKeys = ["INNERNET_PROJECT_ROOT", "INNERNET_HISTORY_DIR", "INNERNET_DB", "INNERNET_DB_DIR", "INNERNET_HOME", "INNERNET_REMOTE", "INNERNET_REMOTE_DATABASE_URL", "INNERNET_ROOTS", "INNERNET_MAX_DEPTH"];
   const previousEnv = new Map(envKeys.map((key) => [key, process.env[key]]));
   const originalSpawn = childProcess.spawn;
   const calls: SpawnCall[] = [];
@@ -30,7 +30,7 @@ async function main() {
     process.env.INNERNET_DB = "off";
     process.env.INNERNET_DB_DIR = path.join(project, "database");
     process.env.INNERNET_HOME = path.join(project, "home");
-    for (const key of ["INNERNET_STORAGE", "INNERNET_REMOTE_DATABASE_URL", "INNERNET_ROOTS", "INNERNET_MAX_DEPTH"]) delete process.env[key];
+    for (const key of ["INNERNET_REMOTE", "INNERNET_REMOTE_DATABASE_URL", "INNERNET_ROOTS", "INNERNET_MAX_DEPTH"]) delete process.env[key];
     fs.mkdirSync(path.join(project, "data", "demo"), { recursive: true });
     fs.mkdirSync(path.join(history, session), { recursive: true });
     const configFile = path.join(project, "innernet.config.json");
@@ -83,14 +83,13 @@ async function main() {
     assert.equal(row("browser")?.kind, "browser");
     assert.equal(row("config"), undefined, "the folder settings are input, not generated data");
     assert.equal(initial.local.config, "innernet.config.json");
-    assert.equal(initial.storage.target, "local", "storage starts on this machine");
-    assert.equal(initial.storage.remote.ready, false, "no remote database until one is set up");
+    assert.deepEqual(initial.storage.remote, { configured: false, connected: false, label: "Not set up" }, "no remote database until one is set up");
 
     // A remote database set up in INNERNET_HOME is offered by name, never by its URL.
     fs.mkdirSync(path.join(project, "home"), { recursive: true });
     fs.writeFileSync(path.join(project, "home", "remote.json"), JSON.stringify({ url: "postgresql://user:secret@ep-test-pooler.c-1.us-east-1.aws.neon.tech/db?sslmode=require", provider: "neon", name: "fixture-db" }));
     const withRemote = sourceInfo(session);
-    assert.deepEqual(withRemote.storage.remote, { label: "fixture-db on Neon, us-east-1", ready: true });
+    assert.deepEqual(withRemote.storage.remote, { configured: true, connected: false, label: "fixture-db on Neon, us-east-1" }, "set up, but not connected until you connect it");
     assert.ok(!JSON.stringify(withRemote).includes("secret"), "the remote database's credentials never reach the page");
 
     fs.writeFileSync(configFile, "{ malformed");

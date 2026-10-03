@@ -185,7 +185,7 @@ export function Privacy() {
           In the browser, a Content-Security-Policy holds every page to its own origin; under <C>next dev</C> it also lets the hot-reload websocket through. The fonts are served by the app itself, the pages ask search engines to look
           away, and browser requests stay on this app: the search box asks <C>/api/suggest</C> for suggestions as you type, the history posts the page you opened to{" "}
           <C>/api/activity</C>, and the local Sources page uses <C>/api/sources</C> to inspect or save choices, <C>/api/sources/sync</C> to refresh them,{" "}
-          <C>/api/sources/open</C> to open a named location, and <C>/api/storage</C> to test or switch the storage. All require this app&apos;s own origin on
+          <C>/api/sources/open</C> to open a named location, and <C>/api/storage</C> to connect or sync the remote database. All require this app&apos;s own origin on
           localhost. The server downloads the public repositories you list, anonymously, when Remote is synced; a sync uploads nothing. The public demo accepts
           its own visitors&apos; history only when it keeps a database; the next section says what it keeps. Sources is unavailable on the demo.
         </p>
@@ -214,10 +214,10 @@ export function Privacy() {
         </p>
         <p>
           Sources lists everything the input generates, each with its path relative to the app or your home folder; this tab&apos;s row opens{" "}
-          <C>innernet.jsonl</C> for editing, then reload History. Choosing Remote input changes the content you browse; it moves nothing. The copy leaves this
-          machine only if you switch Storage to remote, your own Neon database, which asks you to confirm first: from then on the local index (folder paths,
-          README text, agent instructions) and the history are copied there, until you switch back. Its URL stays in <C>~/.innernet/remote.json</C>, and the
-          demo&apos;s database is refused as a target.
+          <C>innernet.jsonl</C> for editing, then reload History. Choosing GitHub repositories changes the content you browse; it moves nothing. The copy leaves
+          this machine only if you connect a remote database, your own Neon, which asks you to confirm first: from then on the local index (folder paths, README
+          text, agent instructions) and the history are kept in step with it, and your other machines&apos; history comes down, until you disconnect. Its URL
+          stays in <C>~/.innernet/remote.json</C>, and the demo&apos;s database is refused as a remote.
         </p>
         <p>
           The public demo is different, and it is the one place anything you do is written to a server. When it has a database (Neon Postgres, in US East), it keeps

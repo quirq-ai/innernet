@@ -3,7 +3,8 @@
 // over the DevTools protocol, because its --screenshot flag fires mid-animation.
 // CHROME_BIN overrides the browser; SHOT_SCALE=2 captures at 2x pixel density;
 // SHOT_BASE points it at another server (default http://localhost:3470); SHOT_SCROLL
-// scrolls the window first, to a number of pixels or to an element (`#guide`).
+// scrolls the window first, to a number of pixels or to an element (`#guide`); SHOT_EVAL
+// runs a snippet in the settled page first (a click, to show a state).
 //
 //   node scripts/shot.mjs <url-path> <out.png> [width] [height] [light|dark]
 //
@@ -125,6 +126,13 @@ const settle = async (ms) => {
   await sleep(100);
 };
 await settle(5000);
+// SHOT_EVAL: a snippet run in the page once it has settled (clicking a button to show
+// a state, say), then the page is let settle again.
+if (process.env.SHOT_EVAL) {
+  await evaluate(`(async () => { ${process.env.SHOT_EVAL} })()`);
+  await sleep(300);
+  await settle(4000);
+}
 // The top of the page, unless asked otherwise, even if focus scrolled the window.
 if (!scrollTo) await evaluate(`window.scrollTo({ top: 0, behavior: "instant" })`);
 if (scrollTo) {

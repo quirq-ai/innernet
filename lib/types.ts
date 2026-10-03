@@ -139,6 +139,9 @@ export interface IndexMeta {
   roots: { label: string; path: string }[];
   maxDepth: number;
   deeperCounted?: boolean; // true when folders past maxDepth are tallied into `deeper`
+  /** Set on an index brought down from a connected remote database (lib/db/remote-sync.ts):
+   * this machine follows the remote's newer ones, and never sends it back up. */
+  fromRemote?: boolean;
   counts: { pages: number; articles: number; repos: number; stubs: number; categories: number; agents?: number };
   durationMs: number;
   /** Present on a GitHub index (the demo's data/demo/index.json, or a Sources snapshot in

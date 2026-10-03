@@ -6,8 +6,9 @@
 // ($1::jsonb) and comes back parsed. Times come back as numbers only when the SQL says so
 // (see `epochMs` in lib/db/schema.ts), because the two drivers disagree on Date objects.
 
-/** "pglite": this machine's database. "remote": your own database (Neon), when Sources
- * switches storage to it. "neon": the public demo's, which this machine's data never enters. */
+/** "pglite": this machine's database. "remote": your own database (Neon), connected on
+ * Sources and kept in step with it. "neon": the public demo's, which this machine's data
+ * never enters. */
 export type DbKind = "pglite" | "remote" | "neon";
 
 export type Row = Record<string, unknown>;
@@ -35,7 +36,7 @@ export type DbStateName =
   | "idle" // not asked for yet
   | "opening"
   | "ready"
-  | "off" // INNERNET_DB=off, no DATABASE_URL on the demo, or remote storage with no remote database set up
+  | "off" // INNERNET_DB=off, or no DATABASE_URL on the demo
   | "building" // `next build`: pages are never stored or loaded while building
   | "locked" // another process has this machine's database open
   | "failed"; // it would not open, or a query failed while opening

@@ -9,6 +9,7 @@ import type { SiteIndex } from "../types";
 import { dbEnabled, getDb } from "./index";
 import { loadIndex, storedIndexInfo, storeIndex } from "./index-store";
 import { errorText, say, sayOnce } from "./log";
+import { syncSoon } from "./remote-sync";
 
 // How the server keeps the index and the database in step, without ever making a page
 // wait for the database. getIndex() (lib/data.ts) stays synchronous and asks this
@@ -119,6 +120,8 @@ async function drain(): Promise<void> {
           const t = Date.now();
           const r = await storeIndex(db, job.index);
           say(`stored the index in ${db.label}: ${job.index.pages.length} pages, ${r.written} written, ${r.deleted} removed, ${Date.now() - t} ms`);
+          // A connected remote database takes the new index a moment later.
+          syncSoon();
         }
         S.held = job;
       } catch (err) {

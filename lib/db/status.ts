@@ -2,7 +2,6 @@ import "server-only";
 
 import { getIndex } from "../data";
 import { DEMO, INDEX_PATH } from "../mode";
-import { storageTarget } from "../storage";
 import { activityCounts, type ActivityCounts } from "./activity";
 import { RETENTION_DAYS } from "./demo-history";
 import { dbState, getDb } from "./index";
@@ -13,11 +12,11 @@ import { syncSnapshot } from "./sync";
 import type { DbKind, DbStateName, LockHolder } from "./types";
 
 // What the database holds and where, in one call, for the history page (/activity),
-// Sources and anything else that wants to say so. Never throws. On this machine it asks
-// the database in use: PGlite, in the process, or the remote one Sources switched to
-// (over the network). On the demo it reports what the last background check of Neon
-// saw, so rendering a page never queries Neon. (The demo's visitor history is read by
-// the visitor's own browser, through /api/activity.)
+// Sources and anything else that wants to say so. Never throws and never waits on the
+// network: on this machine it asks PGlite, which is in the process (the remote database,
+// when connected, reports through lib/db/remote-sync.ts); on the demo it reports what the
+// last background check of Neon saw, so rendering a page never queries Neon. (The demo's
+// visitor history is read by the visitor's own browser, through /api/activity.)
 
 export interface DbStatus {
   mode: "local" | "demo";
@@ -74,7 +73,7 @@ export async function dbStatus(): Promise<DbStatus> {
 
   const db = await getDb();
   const st = dbState();
-  const kind = st.kind ?? (st.state === "off" ? null : storageTarget() === "remote" ? "remote" : "pglite");
+  const kind = st.kind ?? (st.state === "off" ? null : "pglite");
   const base: DbStatus = {
     mode: "local",
     kind,

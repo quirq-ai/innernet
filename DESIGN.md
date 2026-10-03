@@ -48,8 +48,9 @@ decoration for its own sake.
    the browser ties animation to scrolling); and the Innerpedia globe's slow turn.
    Everything respects `prefers-reduced-motion`: under it nothing moves on its own.
 7. **Private by default.** What Innernet knows about this machine stays on it: the index,
-   the history and their copy in PGlite (`~/.innernet/db`) never reach a server. The demo
-   is the one exception, and it says so wherever history is mentioned (the banner, the
+   the history and their copy in PGlite (`~/.innernet/db`) never reach a server, unless
+   you connect your own remote database on Sources, which asks first and names what
+   leaves. The demo is the other exception, and it says so wherever history is mentioned (the banner, the
    history page, the guide, the README), at every width: visitors' pages and searches are
    kept 30 days, anonymously, under a hash of each tab's id, with no IP address or cookie,
    and a button clears them.
@@ -114,26 +115,32 @@ Dark mode is automatic (`prefers-color-scheme`) with a manual override
   screens (the Guide to its icon, GitHub off phones), to a search box in `<TopBar>` and
   to the Innerpedia link on home. Every header also has exactly one `<ThemeToggle>`,
   beside it.
-- Sources navigates to `/sources`, a normal page in three sections, in the order data
-  flows: **Input**, **Generated data**, **Storage**.
-  - Input: independent Local and Remote cards. Local lists its roots (from home, `~`) and
-    depth, with Edit folders opening `innernet.config.json`. Remote is a textarea of
-    public GitHub repository links from any account, one per line, up to 50; no
-    whole-account mode. Save (needs at least one source, and a repository for Remote)
-    and Sync now, with one short status line beside them.
-  - Generated data: one row per item (local index, GitHub snapshot, history, this tab's
-    file, local database, GitHub clones, this browser): label and a few words, the path
-    relative to the app or home, size and last change, icon buttons to copy the path,
-    open the folder or edit. No paragraphs, no absolute paths.
-  - Storage: two cards, This machine (PGlite, `~/.innernet/db`) and Remote (the database
-    in `~/.innernet/remote.json`, by name only), the one in use marked. Switching to
-    remote opens an inline confirmation (never a modal) saying what leaves the machine;
-    switching back needs none. A status line gives pages, history lines and when last
-    stored.
-- Saves, syncs and storage switches appear in the current tab's history. Controls stay
-  disabled while an operation runs; a sync or source change during a sync returns 409.
-  The demo hides Sources and refuses its routes. The page scrolls as a document at every
-  width, with no modal, focus trap or internally scrolling container.
+- Sources navigates to `/sources`, the setup page. It is set like the History page, its
+  sibling: the aurora at the top left, a small-caps eyebrow ("Your setup"), the display
+  title, a serif lead that says in one sentence what Innernet reads, makes and keeps, and
+  three figures (folders indexed, repositories, sessions of history). Then three sections
+  with the field guide's heads (a roman numeral, the display title, a word at the right),
+  in the order data flows, drawn with type and hairlines, never cards:
+  - **I. Input**: two rows, each a small switch, a title and a line of mono: the folders
+    on this machine (Edit folders opens `innernet.config.json`), and the GitHub
+    repositories, a list of `owner/name` links with a remove button that shows on hover,
+    and one field to add more (`owner/name` or a link). Every change saves at once. Sync
+    now, the one outline button in ink, rebuilds what is switched on, with one line of
+    status beside it.
+  - **II. Generated data**: one row per file or folder (local index, GitHub snapshot,
+    history and this tab's file, GitHub clones): the name, the path relative to the app
+    or home in mono, size and age right-aligned, and copy, open and edit tools that show
+    on hover (always on touch). One line of small print names what the browser keeps.
+  - **III. Storage**: two rows with a status dot: This machine (always in use: what it
+    holds, its size, when last stored) and Remote (the database in
+    `~/.innernet/remote.json`, by name only). Connect opens an inline notice, never a
+    modal, naming what leaves the machine; connected, the row says when it last synced
+    and what it holds, with Sync now and Disconnect.
+  - The margin holds small notes: where the settings live, the terminal commands, and
+    what leaves this machine.
+- Changes, syncs and connections appear in the current tab's history. Controls stay
+  disabled while an operation runs. The demo hides Sources and refuses its routes. The
+  page scrolls as a document at every width, with no modal or internally scrolling box.
 - `components/search-box.tsx` `<SearchBox size="hero"|"compact">`: combobox with live
   suggestions, `/` to focus, Enter to search, arrow keys to pick a page.
 - `components/sigil.tsx` `<Sigil seed={slug} name kind muted={!isArticle} size logo logoSurface>`;

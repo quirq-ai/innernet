@@ -4,19 +4,17 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-// Where Innernet keeps the copy of what it generates (the local index and the history):
-// this machine's database (PGlite in ~/.innernet/db) or your own remote one (Neon). The
-// files stay the record either way; the database is the copy that serves an index whose
-// file went missing, and that `pnpm db:load` writes back.
+// The remote database Innernet can connect to, beside this machine's own (PGlite in
+// ~/.innernet/db, always in use). Connected, the two are kept in step both ways (see
+// lib/db/remote-sync.ts): what this machine makes goes up, and history from your other
+// machines comes down into the history folders, which stay the record.
 //
 // Both settings live in ~/.innernet, beside the history and the database, outside the
 // project, so neither git nor a deploy ever carries them:
-//   storage.json  { "target": "local" | "remote" }       which one is in use
+//   storage.json  { "connected": true }                  whether the remote is connected
 //   remote.json   { "url": "postgres://...", ... }       the remote database (a secret)
-// INNERNET_STORAGE and INNERNET_REMOTE_DATABASE_URL override them; INNERNET_HOME moves
-// the folder. The public demo never reads any of this.
-
-export type StorageTarget = "local" | "remote";
+// INNERNET_REMOTE (on or off) and INNERNET_REMOTE_DATABASE_URL override them;
+// INNERNET_HOME moves the folder. The public demo never reads any of this.
 
 export interface RemoteDatabase {
   url: string;
@@ -32,17 +30,16 @@ export const REMOTE_FILE = path.join(STATE_DIR, "remote.json");
 
 const POSTGRES_URL = /^postgres(?:ql)?:\/\/[^\s]+$/;
 
-/** The storage in use. Local unless the settings or INNERNET_STORAGE say remote. */
-export function storageTarget(): StorageTarget {
-  const forced = process.env.INNERNET_STORAGE?.trim().toLowerCase();
-  if (forced === "local" || forced === "remote") return forced;
+/** Whether the remote database is connected: the settings say so, or INNERNET_REMOTE. */
+export function remoteConnected(): boolean {
+  const forced = process.env.INNERNET_REMOTE?.trim().toLowerCase();
+  if (forced === "on" || forced === "off") return forced === "on";
   try {
-    const saved = JSON.parse(fs.readFileSync(STORAGE_FILE, "utf8")) as { target?: unknown };
-    if (saved?.target === "remote") return "remote";
+    const saved = JSON.parse(fs.readFileSync(STORAGE_FILE, "utf8")) as { connected?: unknown };
+    return saved?.connected === true;
   } catch {
-    /* none saved: local */
+    return false;
   }
-  return "local";
 }
 
 const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -77,11 +74,11 @@ export function remoteLabel(remote: RemoteDatabase | null): string {
   return remote.name ? `${remote.name} on ${where}` : `your ${where} database`;
 }
 
-/** Save the storage in use: ~/.innernet/storage.json, folder 700, file 600, written whole. */
-export function writeStorageTarget(target: StorageTarget): void {
+/** Save whether the remote is connected: ~/.innernet/storage.json, folder 700, file 600, written whole. */
+export function writeRemoteConnected(connected: boolean): void {
   fs.mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
   const tmp = `${STORAGE_FILE}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify({ target }, null, 2) + "\n", { mode: 0o600 });
+  fs.writeFileSync(tmp, JSON.stringify({ connected }, null, 2) + "\n", { mode: 0o600 });
   fs.renameSync(tmp, STORAGE_FILE);
 }
 

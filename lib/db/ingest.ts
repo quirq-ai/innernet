@@ -10,7 +10,9 @@ import { activityRow, insertActivity, type ActivityRow } from "./activity";
 import { getDb } from "./index";
 import { storedIndexInfo, storeIndex } from "./index-store";
 import { errorText, say, sayOnce } from "./log";
+import { remoteConnected } from "../storage";
 import { jsonParam, noteChurn } from "./schema";
+import { rememberForgotten } from "./tombstones";
 import type { Db, Row, Statement } from "./types";
 
 // This machine's history in its database, kept in step with the folders.
@@ -242,7 +244,10 @@ export function ingestHistory(db: Db, options: { dir?: string; only?: string[] }
 
 async function ingest(db: Db, dir: string, only?: string[]): Promise<IngestResult> {
   // Belt and braces: this machine's history is only ever stored in this machine's database.
-  if (db.kind !== "pglite" && db.kind !== "remote") throw new Error("this machine's history is stored only in its own databases, never the demo's");
+  // A remote database is kept in step by lib/db/remote-sync.ts, which only ever adds to
+  // it: this mirror, which forgets what a folder no longer holds, would forget your other
+  // machines' history there.
+  if (db.kind !== "pglite") throw new Error("this machine's history is mirrored only into this machine's database");
   const disk = scan(dir, only);
   const full = !only;
   const result: IngestResult = { sessions: disk.sessions.size, files: disk.files.length, read: 0, added: 0, forgotten: 0, kept: 0, skipped: 0 };
@@ -399,10 +404,12 @@ async function ingest(db: Db, dir: string, only?: string[]): Promise<IngestResul
 
   const groups = [forget, ...files].filter((g) => g.statements.length);
   if (!groups.length) return result;
+  const forgottenNow: string[] = [];
   const tally = (g: Group, rows: Row[][]) =>
     rows.forEach((r, i) => {
       const c = g.counts[i];
       if (c) result[c] += r.length;
+      if (c === "forgotten") for (const x of r) forgottenNow.push(String(x.uid));
     });
 
   try {
@@ -437,6 +444,9 @@ async function ingest(db: Db, dir: string, only?: string[]): Promise<IngestResul
       }
     }
   }
+  // With a remote database connected, what was forgotten here is forgotten there too, and
+  // never brought back down (lib/db/tombstones.ts).
+  if (forgottenNow.length && remoteConnected()) await rememberForgotten(db, forgottenNow).catch(() => undefined);
   // Rows deleted and marks rewritten leave old row versions behind (see noteChurn).
   await noteChurn(db, "activity", result.forgotten);
   await noteChurn(db, "kv", reads.filter((r) => r.mark).length + kvDrop.length + kvWrites.length);
@@ -546,7 +556,7 @@ export interface StoreSummary {
  */
 export async function storeLocal(db: Db, index: SiteIndex | null): Promise<StoreSummary> {
   // This machine's index and history go to this machine's database and nowhere else.
-  if (db.kind !== "pglite" && db.kind !== "remote") throw new Error("this machine's index and history are stored only in its own databases, never the demo's");
+  if (db.kind !== "pglite") throw new Error("this machine's index and history are stored only in this machine's database; a remote one is kept in step by its sync");
   let indexPart: StoreSummary["index"] = { state: "none", pages: 0, written: 0, deleted: 0, generatedAt: null, replacing: null, ms: 0 };
   if (index) {
     const stored = await storedIndexInfo(db);

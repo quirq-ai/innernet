@@ -41,7 +41,7 @@ lint, test or format tooling; these are the checks.
 | The indexer | `INNERNET_ROOTS=~/some/small/dir INNERNET_OUT=/tmp/innernet-test.json pnpm index` | a test index, with your real one left alone |
 | The database | `INNERNET_DB_DIR=/tmp/innernet-db pnpm db:store`, then `pnpm db:status` with the same folder | the index and history stored in a scratch copy, the real one left alone |
 | The history | with the dev server stopped, `INNERNET_HISTORY_DIR=/tmp/h INNERNET_DB_DIR=/tmp/hdb pnpm dev`; open a few pages, append a line to `/tmp/h/<session>/notes.jsonl` and reload `/activity` | the line shows, once, however often the page is read; the real history left alone |
-| Sources | visit `/sources`; check Local, Remote and both; add repository links from two accounts, save, reload, sync; read Generated data; test and switch Storage with a scratch `INNERNET_HOME` | choices persist, each repository list has its own snapshot, generated paths are relative, a switch to remote asks to confirm and copies the index and history, and the page scrolls as a document |
+| Sources | visit `/sources`; check Local, Remote and both; add repository links from two accounts, save, reload, sync; read Generated data; connect, sync and disconnect the remote with a scratch `INNERNET_HOME` | choices persist, each repository list has its own snapshot, generated paths are relative, a switch to remote asks to confirm and copies the index and history, and the page scrolls as a document |
 | Copy | `rg -n "[\x{2013}\x{2014}]" -g '!node_modules' -g '!.next' -g '!data' .` | no matches |
 
 A few things worth knowing about these tools:
@@ -53,7 +53,8 @@ A few things worth knowing about these tools:
   `prefers-color-scheme`). A narrow width gives the narrow layout but not a phone user
   agent. Pass a tall height to see a whole page, or `SHOT_SCROLL=#guide` (an element or
   a number of pixels) to capture the window scrolled there, as the home page's hand-off
-  to the field guide needs.
+  to the field guide needs. `SHOT_EVAL` runs a snippet in the settled page first, such as
+  a click that opens Sources' connect notice.
 - The server cannot show an index written with `INNERNET_OUT`. Inspect that file with
   `node`, or point `INNERNET_ROOTS` at a small folder and let it write the real one when
   you are happy to rebuild. Terminal scripts can search it, though: `lib/data.ts` reads
@@ -94,16 +95,18 @@ page's two views of this browser. The search box asks `/api/suggest`, the record
 each page visited to `/api/activity`. Sources posts to `/api/sources` to inspect or
 save Local/Remote choices and the repository list, `/api/sources/sync` to rebuild the
 saved selection, `/api/sources/open` to reveal or edit named locations, and
-`/api/storage` to read, test or switch the storage. All include the current session ID
+`/api/storage` to read, test, connect, sync or disconnect the remote database. All include the current session ID
 and require the same origin on localhost. Local sync runs the `pnpm index` crawler into
 `data/index.json`; Remote runs the anonymous public GitHub crawler with
 `INNERNET_REMOTE_CACHE=.github-cache`, `INNERNET_GITHUB_REPOSITORIES` (a JSON list of
 `owner/name`) and an `INNERNET_REMOTE_OUT` of `data/github-<hash>.json`, one per list.
 A list never serves another list's snapshot, and the bundled demo index never stands in
-locally. Both selected means an in-memory combination of the indexes. The storage
-(`lib/storage.ts`) is this machine's PGlite unless switched to the remote database in
-`~/.innernet/remote.json`; it holds the original local index and the history, never the
-demo's data, and the demo's database is refused as a target.
+locally. Both selected means an in-memory combination of the indexes. This machine's
+PGlite is always the database in use; a remote one connected on Sources (`lib/storage.ts`,
+`~/.innernet/remote.json`) is kept in step with it both ways by `lib/db/remote-sync.ts`,
+which only adds to the remote and deletes there only what was deleted here
+(`lib/db/tombstones.ts`). `scripts/try-remote-sync.ts` runs two machines and a remote as
+PGlite folders, with no network. The demo's database is refused as a remote.
 
 Saving choices records a `sources` event; sync records `sync` events with `started`,
 `completed` or `failed` status. Concurrent syncs and source changes during a sync return

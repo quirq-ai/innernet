@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { LastStore } from "@/lib/db/ingest";
 import type { DbStatus } from "@/lib/db/status";
 import { bytes, num, plural, timeAgo } from "@/lib/format";
@@ -102,16 +101,7 @@ export function DatabaseCard({
       <Head word={st.word} on={st.on} />
       <p className="mt-3 font-mono text-[13px] text-ink">{status.kind ? status.label : "Files only"}</p>
       <p className={`mt-1 ${fine}`}>
-        {ready && status.kind === "remote" ? (
-          <>
-            Your remote database, chosen on{" "}
-            <Link href="/sources#storage" className="link">
-              Sources
-            </Link>
-            : the copy of the local index and history is kept there, and the
-            files stay here.
-          </>
-        ) : ready ? (
+        {ready ? (
           <>PGlite, a Postgres running inside this server on a folder of plain files. Nothing listens on a port, and nothing leaves this machine.</>
         ) : (
           status.note

@@ -49,7 +49,7 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
       { path: "app/api/suggest/route.ts", role: "Suggestions for the search box, as you type." },
       { path: "app/api/activity/route.ts", role: "Writes the history: to this machine's folders, or on a demo with a database, to Neon for 30 days. Same origin only." },
       { path: "app/api/sources", role: "Local source inspection, selection, sync and named locations. Same origin only.", dir: true },
-      { path: "app/api/storage/route.ts", role: "Tests the remote database and switches the storage, copying the index and history. Same origin only." },
+      { path: "app/api/storage/route.ts", role: "Connects, syncs, tests and disconnects the remote database (lib/db/remote-sync.ts). Same origin only." },
       { path: "app/api/db/store/route.ts", role: "Store now, from the history page: the index and the history into this machine's database." },
       { path: "app/globals.css", role: "The tokens, both themes, the aurora, prose." },
     ],
@@ -354,7 +354,8 @@ function Loop() {
       </ol>
       <Fine className="mt-6">
         <C>try-search</C> needs <C>--conditions=react-server</C> because the search core imports <C>server-only</C>. <C>shot.sh</C> talks to port 3470 unless{" "}
-        <C>SHOT_BASE</C> says otherwise; its last arguments are the height and the theme, and <C>SHOT_SCROLL</C> captures the window scrolled to an element.
+        <C>SHOT_BASE</C> says otherwise; its last arguments are the height and the theme, <C>SHOT_SCROLL</C> captures the window scrolled to an element, and{" "}
+        <C>SHOT_EVAL</C> runs a snippet (a click) in the page first.
       </Fine>
     </>
   );
@@ -368,8 +369,8 @@ const CONVENTIONS: { title: string; text: React.ReactNode }[] = [
         Pages are Server Components. The browser asks only this app: the search box asks <C>/api/suggest</C>, the history posts each page to{" "}
         <C>/api/activity</C> (on a demo with a database, its history page also reads and clears the visitor&apos;s own sessions there), and the local Sources page
         uses <C>/api/sources</C>, <C>/api/sources/sync</C>, <C>/api/sources/open</C> and <C>/api/storage</C>. These routes inspect or save choices, refresh the
-        selected sources, open named locations on this machine, and test or switch the storage. Remote sync downloads only the public repositories listed; the
-        index and history leave this machine only when the storage is switched to remote. A new client component needs a reason only the browser can satisfy.
+        selected sources, open named locations on this machine, and connect or sync the remote database. Remote sync downloads only the public repositories listed;
+        the index and history leave this machine only while a remote database is connected. A new client component needs a reason only the browser can satisfy.
       </>
     ),
   },
