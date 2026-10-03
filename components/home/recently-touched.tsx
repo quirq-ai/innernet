@@ -40,7 +40,7 @@ function shortAgo(iso: string, now = Date.now()): string {
 export function RecentlyTouched({ pages, delay = 0 }: { pages: Page[]; delay?: number }) {
   if (!pages.length) return null;
   return (
-    <section aria-labelledby="recent-heading" className="mx-auto w-full max-w-[1120px] px-4">
+    <section aria-labelledby="recent-heading" className="ui-home-recent mx-auto w-full max-w-[1120px] px-4">
       <div className="rise flex items-center justify-center gap-4" style={{ animationDelay: `${delay}ms` }}>
         <span aria-hidden className="h-px w-10 bg-line-strong" />
         <h2 id="recent-heading" className="text-[11px] uppercase tracking-[0.12em] text-muted">
@@ -50,11 +50,11 @@ export function RecentlyTouched({ pages, delay = 0 }: { pages: Page[]; delay?: n
       </div>
       {/* Phones get one row that scrolls sideways. Wider screens wrap the configured
           number of articles into centred rows, with room for each chip's shadow. */}
-      <ul className="-mx-4 mt-5 flex gap-2.5 overflow-x-auto px-4 py-1 [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)] [scrollbar-width:none] sm:mx-0 sm:mt-4 sm:flex-wrap sm:justify-center sm:gap-y-3 sm:overflow-visible sm:px-0 sm:pb-4 sm:pt-2 sm:[mask-image:none] [&::-webkit-scrollbar]:hidden">
+      <ul className="ui-recent-list -mx-4 mt-5 flex gap-2.5 overflow-x-auto px-4 py-1 [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)] [scrollbar-width:none] sm:mx-0 sm:mt-4 sm:flex-wrap sm:justify-center sm:gap-y-3 sm:overflow-visible sm:px-0 sm:pb-4 sm:pt-2 sm:[mask-image:none] [&::-webkit-scrollbar]:hidden">
         {pages.map((p, i) => (
           <li
             key={p.slug}
-            className="rise min-w-0 max-w-full shrink-0"
+            className="ui-recent-item rise min-w-0 max-w-full shrink-0"
             style={{ animationDelay: `${delay + 60 + i * 40}ms` }}
           >
             <Link

@@ -5,6 +5,10 @@ import { DEMO } from "@/lib/mode";
 import { getUiConfig } from "@/lib/ui-config";
 import { uiStyleSheet } from "@/lib/ui-theme";
 import "./globals.css";
+import "./themes/layouts.css";
+import "./themes/editorial.css";
+import "./themes/cyberpunk.css";
+import "./themes/playful.css";
 
 const instrument = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-instrument" });
 const newsreader = Newsreader({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-newsreader", axes: ["opsz"] });
@@ -45,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-ui-grain={theme.effects.grain ? "on" : "off"}
       data-ui-motion={theme.effects.motion ? "on" : "off"}
       data-ui-density={config.layout.density}
+      data-ui-style={theme.style}
       className={`${instrument.variable} ${newsreader.variable} ${inter.variable} ${mono.variable}`}
       style={DEMO ? ({ "--demo-bar": DEMO_BAR } as React.CSSProperties) : undefined}>
       <head>

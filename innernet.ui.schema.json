@@ -417,6 +417,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "style",
         "defaultMode",
         "allowToggle",
         "light",
@@ -1054,6 +1055,15 @@
               "type": "boolean"
             }
           }
+        },
+        "style": {
+          "enum": [
+            "classic",
+            "editorial",
+            "cyberpunk",
+            "playful"
+          ],
+          "description": "A supported visual style for shared controls and page chrome."
         }
       }
     },
@@ -1281,6 +1291,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "layout",
         "showCounts",
         "showExamples",
         "exampleQueries",
@@ -1320,6 +1331,15 @@
         },
         "autoFocus": {
           "type": "boolean"
+        },
+        "layout": {
+          "enum": [
+            "centered",
+            "editorial",
+            "console",
+            "bento"
+          ],
+          "description": "Home composition. Independent of theme.style and palettes."
         }
       }
     },
@@ -1744,7 +1764,10 @@
         "wiki.openNamedSource",
         "brand.linksLabel",
         "guide.privacyDiagramAlt",
-        "guide.privacyDiagramCaption"
+        "guide.privacyDiagramCaption",
+        "home.eyebrow",
+        "home.sideTitle",
+        "home.sideDescription"
       ],
       "properties": {
         "skipContent": {
@@ -2639,6 +2662,15 @@
           "$ref": "#/definitions/copyText"
         },
         "guide.privacyDiagramCaption": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.eyebrow": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.sideTitle": {
+          "$ref": "#/definitions/copyText"
+        },
+        "home.sideDescription": {
           "$ref": "#/definitions/copyText"
         }
       }

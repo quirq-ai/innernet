@@ -40,6 +40,7 @@
     }
   },
   "theme": {
+    "style": "classic",
     "defaultMode": "system",
     "allowToggle": true,
     "light": {
@@ -236,6 +237,7 @@
     ]
   },
   "home": {
+    "layout": "centered",
     "showCounts": true,
     "showExamples": true,
     "exampleQueries": [
@@ -586,6 +588,9 @@
     "wiki.openNamedSource": "View {name} on GitHub",
     "brand.linksLabel": "Guide and links",
     "guide.privacyDiagramAlt": "A diagram of the local privacy boundary. Your folders feed the crawler, its index feeds search and {wiki}, all inside a loop labelled your machine. Only a deliberate outbound link crosses it. No telemetry or hosted service.",
-    "guide.privacyDiagramCaption": "Everything {app} makes stays inside this boundary. The only way out is a link you choose to open."
+    "guide.privacyDiagramCaption": "Everything {app} makes stays inside this boundary. The only way out is a link you choose to open.",
+    "home.eyebrow": "Your personal project index",
+    "home.sideTitle": "Explore your index",
+    "home.sideDescription": "Find a project, follow its story, or browse the collection."
   }
 }

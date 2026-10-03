@@ -1,6 +1,8 @@
 // Plain configuration types and formatters, safe to import in browser components.
 export interface BrandLogo { src: string; alt: string; width: number; height: number }
 export type UiMode = "system" | "light" | "dark";
+export type UiStyle = "classic" | "editorial" | "cyberpunk" | "playful";
+export type UiHomeLayout = "centered" | "editorial" | "console" | "bento";
 export type UiFont = "instrument" | "newsreader" | "inter" | "jetbrains" | "system-serif" | "system-sans" | "system-mono";
 export type UiTabId = "all" | "articles" | "repos" | "docs" | "folders";
 export type UiNavId = "search" | "wiki" | "guide" | "random" | "allPages" | "categories" | "statistics" | "top";
@@ -24,14 +26,14 @@ export interface UiConfig {
     attribution: { enabled: boolean; label: string; name: string; href: string; logo: BrandLogo | null };
   };
   theme: {
-    defaultMode: UiMode; allowToggle: boolean; light: UiPalette; dark: UiPalette;
+    style: UiStyle; defaultMode: UiMode; allowToggle: boolean; light: UiPalette; dark: UiPalette;
     fonts: { display: UiFont; serif: UiFont; sans: UiFont; mono: UiFont };
     effects: { aurora: boolean; grain: boolean; motion: boolean };
   };
   layout: { maxWidth: number; searchWidth: number; articleWidth: number; density: "comfortable" | "compact" };
   navigation: Record<UiNavGroup, UiNavId[]> & { labels: Record<UiNavId, string> };
   home: {
-    showCounts: boolean; showExamples: boolean; exampleQueries: string[]; showRecent: boolean;
+    layout: UiHomeLayout; showCounts: boolean; showExamples: boolean; exampleQueries: string[]; showRecent: boolean;
     recentLimit: number; showCurious: boolean; autoFocus: boolean;
   };
   search: {

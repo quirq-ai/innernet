@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <title>bloom flower</title>
-  <rect width="64" height="64" rx="18" fill="#3a1f46"/>
+  <rect width="64" height="64" rx="18" fill="#174fcc"/>
   <g transform="translate(32 32)">
-    <ellipse cy="-12" rx="8.5" ry="10.5" fill="#f29bb1"/>
-    <ellipse cy="-12" rx="8.5" ry="10.5" transform="rotate(72)" fill="#bba9f4"/>
-    <ellipse cy="-12" rx="8.5" ry="10.5" transform="rotate(144)" fill="#ffbea0"/>
-    <ellipse cy="-12" rx="8.5" ry="10.5" transform="rotate(216)" fill="#e6a0cd"/>
-    <ellipse cy="-12" rx="8.5" ry="10.5" transform="rotate(288)" fill="#e8c1ef"/>
-    <circle r="8" fill="#ffe4b5"/>
-    <circle r="3" fill="#b8735b"/>
+    <ellipse cy="-12" rx="8.5" ry="10.5" fill="#aeeedb"/>
+    <ellipse cy="-12" rx="8.5" ry="10.5" transform="rotate(72)" fill="#b9d6ff"/>
+    <ellipse cy="-12" rx="8.5" ry="10.5" transform="rotate(144)" fill="#79dbca"/>
+    <ellipse cy="-12" rx="8.5" ry="10.5" transform="rotate(216)" fill="#e2fff5"/>
+    <ellipse cy="-12" rx="8.5" ry="10.5" transform="rotate(288)" fill="#9eecd5"/>
+    <circle r="8" fill="#fff16a"/>
+    <circle r="3" fill="#172832"/>
   </g>
 </svg>

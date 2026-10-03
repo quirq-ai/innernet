@@ -178,6 +178,17 @@ async function main() {
     assert.equal(attr(tag, "data-theme"), config.theme.defaultMode === "system" ? null : config.theme.defaultMode);
     for (const effect of ["aurora", "grain", "motion"] as const) assert.equal(attr(tag, `data-ui-${effect}`), config.theme.effects[effect] ? "on" : "off");
     assert.equal(attr(tag, "data-ui-density"), config.layout.density);
+    assert.equal(attr(tag, "data-ui-style"), config.theme.style);
+  });
+  check("home composition and exploration copy follow configuration", () => {
+    const wrapper = home.html.match(/<div\b[^>]*data-home-layout[^>]*>/)?.[0] ?? "";
+    assert.equal(attr(wrapper, "data-home-layout"), config.home.layout);
+    assert.equal(home.html.includes('id="home-explore-heading"'), config.home.layout !== "centered");
+    if (config.home.layout !== "centered") {
+      assert.ok(text(home.html).includes(plain(uiText("home.eyebrow", {}, config))));
+      assert.ok(text(home.html).includes(plain(uiText("home.sideTitle", {}, config))));
+      assert.ok(text(home.html).includes(plain(uiText("home.sideDescription", {}, config))));
+    }
   });
   check("home handles the current index state and feature choices", () => {
     if (loaded.missing) {
@@ -187,7 +198,7 @@ async function main() {
       assert.ok(home.html.includes('role="combobox"'));
       const curious = links(home.html).some((link) => link.href === wikiHref("Special:Random") && link.label === uiText("home.curiousButton", {}, config));
       // Restrict the test to the hero because the footer may independently link Random.
-      const section = home.html.match(/<main\b[^>]*>[\s\S]*?<\/section>/)?.[0] ?? "";
+      const section = home.html.match(/<section\b[^>]*data-home-hero[^>]*>[\s\S]*?<\/section>/)?.[0] ?? "";
       assert.equal(links(section).some((link) => link.href === wikiHref("Special:Random")), config.home.showCurious);
       if (config.home.showCurious) assert.ok(curious);
       assert.equal(links(section).some((link) => link.href === wikiHref("Special:Statistics")), config.home.showCounts);

@@ -108,10 +108,22 @@ check("theme values serialize into local CSS tokens", () => {
   assert.equal(vars["--shadow-sm"], "0px 1px 2px 0px rgb(28 27 24 / 0.05)");
   assert.ok(vars["--ui-font-display"].startsWith("var(--font-instrument)"));
 });
+check("visual styles and home compositions can be combined independently", () => {
+  for (const style of ["classic", "editorial", "cyberpunk", "playful"]) {
+    for (const layout of ["centered", "editorial", "console", "bento"]) {
+      const config = resolveUiConfig({ theme: { style }, home: { layout } });
+      assert.equal(config.theme.style, style);
+      assert.equal(config.home.layout, layout);
+      assert.deepEqual(config.search, defaults.search);
+    }
+  }
+});
 for (const [name, value, field] of [
   ["unknown root field", { branding: {} }, "/branding"],
   ["unknown nested field", { search: { typo: true } }, "/search/typo"],
   ["unknown copy field", { copy: { missing: "x" } }, "/copy/missing"],
+  ["unknown visual style", { theme: { style: "arbitrary-css" } }, "/theme/style"],
+  ["unknown home layout", { home: { layout: "arbitrary-html" } }, "/home/layout"],
   ["unsafe CSS declaration", { theme: { light: { bg: "red; background:url(https://example.com)" } } }, "/theme/light/bg"],
   ["unsafe image URL", { brand: { logo: { src: "https://example.com/logo.svg", alt: "Logo", width: 20, height: 20 } } }, "/brand/logo"],
   ["asset path traversal", { brand: { icon: "/../logo.svg" } }, "/brand/icon"],

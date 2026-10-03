@@ -143,7 +143,7 @@ export function SearchBox({
       className={`relative w-full ${className}`}
     >
       <div
-        className={`group relative flex items-center border bg-surface transition-[box-shadow,border-color] duration-200 ${
+        className={`ui-search-shell group relative flex items-center border bg-surface transition-[box-shadow,border-color] duration-200 ${
           hero ? "h-[58px] rounded-[29px] pl-5 pr-2" : "h-11 rounded-[22px] pl-4 pr-1.5"
         } ${
           showList
@@ -203,7 +203,7 @@ export function SearchBox({
           id={listId}
           role="listbox"
           aria-label={labels.suggestions}
-          className={`absolute inset-x-0 top-full z-50 overflow-hidden border border-t-0 border-line-strong bg-surface pb-2 shadow-lift ${hero ? "rounded-b-[29px]" : "rounded-b-[22px]"}`}
+          className={`ui-search-suggestions absolute inset-x-0 top-full z-50 overflow-hidden border border-t-0 border-line-strong bg-surface pb-2 shadow-lift ${hero ? "rounded-b-[29px]" : "rounded-b-[22px]"}`}
         >
           <li aria-hidden role="presentation" className={`mb-1 h-px bg-line ${hero ? "mx-5" : "mx-4"}`} />
           {items.map((s, i) => (

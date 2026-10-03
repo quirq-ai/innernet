@@ -37,18 +37,19 @@ export default function Home() {
   const { home } = config;
   const { index, articles, missing } = getIndex();
   const { counts } = index.meta;
+  const centered = home.layout === "centered";
   const recent = missing || !home.showRecent ? [] : recentlyTouched(articles, home.recentLimit);
   const headerLinks = getNavigation("home");
 
   return (
-    <div className="relative isolate flex min-h-[calc(100dvh-var(--demo-bar,0px))] flex-col overflow-x-clip">
+    <div data-home-layout={home.layout} className="ui-home relative isolate flex min-h-[calc(100dvh-var(--demo-bar,0px))] flex-col overflow-x-clip">
       <div className="aurora" aria-hidden style={auroraStyle}>
         <span />
         <span />
         <span />
       </div>
 
-      <header className="relative z-10 mx-auto flex w-full max-w-[var(--ui-max-width)] items-center justify-between gap-3 px-4 pt-5 sm:px-6">
+      <header className="ui-home-header relative z-10 mx-auto flex w-full max-w-[var(--ui-max-width)] items-center justify-between gap-3 px-4 pt-5 sm:px-6">
         <div className="shrink-0"><BrandHome size={30} /></div>
         <div className="flex min-w-0 items-center gap-1 text-[13.5px]">
           <nav aria-label={uiText("siteNavigation", {}, config)} className="hidden max-w-[40vw] items-center overflow-x-auto whitespace-nowrap sm:flex">
@@ -58,19 +59,20 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="relative flex flex-1 flex-col">
-        <section className="flex flex-1 flex-col items-center justify-center px-4 pb-[8vh] pt-[14vh] sm:pt-[12vh]">
-          <h1 className="rise max-w-full text-center font-display text-[64px] leading-[0.95] tracking-[-0.02em] text-ink [overflow-wrap:anywhere] sm:text-[96px]">
+      <main className={`ui-home-main relative flex-1 ${centered ? "flex flex-col" : ""}`}>
+        <section data-home-hero className={`ui-home-hero ${centered ? "flex flex-1 flex-col items-center justify-center px-4 pb-[8vh] pt-[14vh] sm:pt-[12vh]" : ""}`}>
+          {!centered && <p className="ui-home-eyebrow">{uiText("home.eyebrow", {}, config)}</p>}
+          <h1 className={`ui-home-title rise max-w-full font-display leading-[0.95] tracking-[-0.02em] text-ink [overflow-wrap:anywhere] ${centered ? "text-center text-[64px] sm:text-[96px]" : ""}`}>
             <Wordmark href={null} size={null} />
           </h1>
 
-          <p className="rise mt-4 max-w-full text-center text-[15px] text-muted [overflow-wrap:anywhere] sm:mt-5" style={{ animationDelay: "60ms" }}>
+          <p className={`ui-home-tagline rise max-w-full text-muted [overflow-wrap:anywhere] ${centered ? "mt-4 text-center text-[15px] sm:mt-5" : ""}`} style={{ animationDelay: "60ms" }}>
             {missing ? (
               uiText(DEMO ? "demo.waitingTagline" : "home.waitingTagline", { tagline: config.brand.tagline, org: DEMO_ORG }, config)
             ) : (
               <>
                 <span className="block sm:inline">{DEMO ? uiText("demo.tagline", { org: DEMO_ORG }, config) : config.brand.tagline}</span>
-                {home.showCounts && (
+                {home.showCounts && centered && (
                   <>
                     <Count n={counts.pages} label={uiText("home.folders", undefined, config)} href={wikiHref("Special:Statistics")} first />
                     <Count n={counts.articles} label={uiText("home.articles", undefined, config)} href={wikiHref("Special:AllPages")} />
@@ -81,7 +83,7 @@ export default function Home() {
             )}
           </p>
 
-          <div className="mt-9 flex w-full flex-col items-center sm:mt-10">
+          <div className={`ui-home-search w-full ${centered ? "mt-9 flex flex-col items-center sm:mt-10" : ""}`}>
             {missing ? (
               <MissingIndex />
             ) : (
@@ -93,14 +95,35 @@ export default function Home() {
                   showCurious={home.showCurious}
                 />
                 {home.showExamples && (
-                  <div className="rise mt-6" style={{ animationDelay: "240ms" }}>
+                  <div className="ui-home-examples rise mt-6" style={{ animationDelay: "240ms" }}>
                     <ExampleQueries />
                   </div>
                 )}
               </>
             )}
           </div>
+          {!centered && !missing && home.showCounts && (
+            <div className="ui-home-stats">
+              <Stat n={counts.pages} label={uiText("home.folders", {}, config)} href={wikiHref("Special:Statistics")} />
+              <Stat n={counts.articles} label={uiText("home.articles", {}, config)} href={wikiHref("Special:AllPages")} />
+              <Stat n={counts.repos} label={uiText("home.repositories", {}, config)} href={searchHref("kind:repo")} />
+            </div>
+          )}
         </section>
+
+        {!centered && (
+          <aside className="ui-home-side" aria-labelledby="home-explore-heading">
+            <h2 id="home-explore-heading" className="ui-home-side-title">{uiText("home.sideTitle", {}, config)}</h2>
+            <p className="ui-home-side-copy">{uiText("home.sideDescription", {}, config)}</p>
+            <nav className="ui-home-destinations" aria-label={uiText("siteNavigation", {}, config)}>
+              {headerLinks.map((link) => (
+                <Link key={link.href} href={link.href} prefetch={link.prefetch}>
+                  <span>{link.label}</span><span aria-hidden>↗</span>
+                </Link>
+              ))}
+            </nav>
+          </aside>
+        )}
 
         <RecentlyTouched pages={recent} delay={300} />
       </main>
@@ -108,6 +131,10 @@ export default function Home() {
       <HomeFooter meta={index.meta} missing={missing} />
     </div>
   );
+}
+
+function Stat({ n, label, href }: { n: number; label: string; href: string }) {
+  return <Link href={href}><span className="ui-home-stat-value">{num(n)}</span><span className="ui-home-stat-label">{label}</span></Link>;
 }
 
 /**

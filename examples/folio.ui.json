@@ -28,6 +28,7 @@
     }
   },
   "theme": {
+    "style": "editorial",
     "defaultMode": "light",
     "allowToggle": true,
     "light": {
@@ -137,6 +138,7 @@
     }
   },
   "home": {
+    "layout": "editorial",
     "showCounts": true,
     "showExamples": true,
     "exampleQueries": ["is:article", "kind:docs", "kind:repo"],
@@ -164,6 +166,9 @@
     "showRecipe": true
   },
   "copy": {
+    "home.eyebrow": "An archive of work and ideas",
+    "home.sideTitle": "The reading index",
+    "home.sideDescription": "Follow a shelf, open a page, or begin with a name. Every folder has a place in the archive.",
     "searchPlaceholder": "Find a project, note or folder",
     "wikiSearchPlaceholder": "Search the library",
     "home.searchPlaceholder": "Find a project, note or folder",

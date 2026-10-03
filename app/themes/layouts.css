@@ -1,0 +1,62 @@
+/* Supported compositions stay useful when combined with any visual style. */
+.ui-home:not([data-home-layout="centered"]) .ui-home-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  align-content: center;
+  gap: 48px;
+  width: 100%;
+  max-width: var(--ui-max-width);
+  margin: 0 auto;
+  padding: 72px 24px 32px;
+}
+.ui-home:not([data-home-layout="centered"]) .ui-home-hero,
+.ui-home-side { min-width: 0; }
+.ui-home-eyebrow { font: 12px var(--ui-font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.ui-home:not([data-home-layout="centered"]) .ui-home-title { font-size: clamp(64px, 9vw, 140px); margin: 24px 0; }
+.ui-home:not([data-home-layout="centered"]) .ui-home-tagline { font-size: 18px; }
+.ui-home:not([data-home-layout="centered"]) .ui-home-search { margin-top: 32px; }
+.ui-home-side { padding: 32px; background: var(--bg-sunk); }
+.ui-home-side-title { font: 32px/1.15 var(--ui-font-display); }
+.ui-home-side-copy { margin-top: 16px; color: var(--muted); }
+.ui-home-destinations { margin-top: 32px; display: grid; }
+.ui-home-destinations a { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid var(--line-strong); color: var(--link); }
+.ui-home-destinations a:hover { color: var(--link-hover); }
+.ui-home-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 40px; }
+.ui-home-stats a { min-width: 0; display: flex; flex-direction: column; }
+.ui-home-stat-value { font: 36px/1.1 var(--ui-font-display); color: var(--ink); }
+.ui-home-stat-label { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.ui-home:not([data-home-layout="centered"]) .ui-home-recent { grid-column: 1 / -1; padding: 0; }
+
+/* Composition selectors are independent of the chosen control style. */
+.ui-home[data-home-layout="editorial"] .ui-home-main {
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, .75fr);
+  align-content: start;
+  align-items: start;
+}
+.ui-home[data-home-layout="editorial"] .ui-home-side { border-left: 1px solid var(--line-strong); }
+.ui-home[data-home-layout="editorial"] .ui-recent-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; mask-image: none; }
+.ui-home[data-home-layout="console"] .ui-home-main { grid-template-columns: minmax(230px, .75fr) minmax(0, 1.75fr); align-items: center; }
+.ui-home[data-home-layout="console"] .ui-home-hero { grid-column: 2; grid-row: 1; }
+.ui-home[data-home-layout="console"] .ui-home-side { grid-column: 1; grid-row: 1; }
+.ui-home[data-home-layout="bento"] .ui-home-main { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: stretch; }
+.ui-home[data-home-layout="bento"] .ui-home-hero { grid-column: span 2; padding: 32px; background: var(--surface); }
+.ui-home[data-home-layout="bento"] .ui-home-side { grid-column: span 1; }
+.ui-home[data-home-layout="bento"] .ui-recent-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; mask-image: none; }
+
+@media (max-width: 1000px) {
+  .ui-home[data-home-layout="console"] .ui-home-main { grid-template-columns: minmax(0, 1fr); }
+  .ui-home[data-home-layout="console"] :is(.ui-home-hero, .ui-home-side) { grid-column: auto; grid-row: auto; }
+}
+@media (max-width: 800px) {
+  .ui-home:not([data-home-layout="centered"]) .ui-home-main { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 40px 20px 24px; }
+  .ui-home:not([data-home-layout="centered"]) .ui-home-title { font-size: clamp(64px, 18vw, 100px); }
+  .ui-home-side { padding: 24px; }
+  .ui-home[data-home-layout="editorial"] .ui-recent-list { grid-template-columns: minmax(0, 1fr); }
+  .ui-home[data-home-layout="bento"] :is(.ui-home-hero, .ui-home-side) { grid-column: auto; }
+  .ui-home[data-home-layout="bento"] .ui-recent-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Long custom guide labels must leave room for the shared search on phones. */
+@media (max-width: 600px) {
+  html:not([data-ui-style="classic"]) .ui-topbar .ui-brand-guide { min-width: 40px; min-height: 40px; padding: 8px; justify-content: center; }
+  html:not([data-ui-style="classic"]) .ui-topbar .ui-brand-guide-label { display: none; }
+}

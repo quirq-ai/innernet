@@ -4,8 +4,8 @@
   "brand": {
     "name": "bloom",
     "encyclopediaName": "bloom garden",
-    "tagline": "A little room for big ideas",
-    "description": "Find a project, follow a connection, and rediscover what is growing in your folders.",
+    "tagline": "Big ideas. Happy little discoveries.",
+    "description": "A playful workspace for finding projects, connecting ideas, and picking up where inspiration left off.",
     "creator": "bloom",
     "logo": null,
     "encyclopediaLogo": null,
@@ -30,135 +30,107 @@
     }
   },
   "theme": {
-    "defaultMode": "system",
+    "defaultMode": "light",
     "allowToggle": true,
     "light": {
-      "bg": "#fff7fb",
-      "bg-sunk": "#f5eaf3",
-      "surface": "#fffdfb",
-      "ink": "#3b2346",
-      "ink-2": "#654764",
-      "muted": "#806478",
-      "faint": "#ac96b0",
-      "line": "rgb(82 43 90 / 0.1)",
-      "line-strong": "rgb(82 43 90 / 0.2)",
-      "link": "#8852b2",
-      "link-hover": "#653587",
-      "visited": "#ac3e73",
-      "mark-bg": "#ffe2ba",
-      "mark-ink": "#5c3444",
-      "notice-bg": "#fff0e4",
-      "notice-line": "#efcba8",
-      "good": "#3c7756",
-      "ring": "#a14d89",
-      "aurora-1": "#f8bdd1",
-      "aurora-2": "#d7c7fb",
-      "aurora-3": "#ffd1af",
-      "aurora-opacity": 0.72,
+      "bg": "#d7f7ee",
+      "bg-sunk": "#b8eddc",
+      "surface": "#f8fffc",
+      "ink": "#172832",
+      "ink-2": "#344c59",
+      "muted": "#466474",
+      "faint": "#627f8b",
+      "line": "#172832",
+      "line-strong": "#172832",
+      "link": "#174fcc",
+      "link-hover": "#123890",
+      "visited": "#6240ab",
+      "mark-bg": "#fff16a",
+      "mark-ink": "#172832",
+      "notice-bg": "#fff6ad",
+      "notice-line": "#172832",
+      "good": "#17683e",
+      "ring": "#174fcc",
+      "aurora-1": "#87e6cf",
+      "aurora-2": "#aecaff",
+      "aurora-3": "#fff16a",
+      "aurora-opacity": 0.78,
       "shadow-sm": [
         {
-          "x": 0,
-          "y": 2,
-          "blur": 4,
+          "x": 3,
+          "y": 3,
+          "blur": 0,
           "spread": 0,
-          "color": "rgb(94 44 102 / 0.06)"
+          "color": "#172832"
         }
       ],
       "shadow": [
         {
-          "x": 0,
-          "y": 2,
-          "blur": 5,
+          "x": 5,
+          "y": 5,
+          "blur": 0,
           "spread": 0,
-          "color": "rgb(94 44 102 / 0.04)"
-        },
-        {
-          "x": 0,
-          "y": 12,
-          "blur": 32,
-          "spread": -12,
-          "color": "rgb(126 65 132 / 0.18)"
+          "color": "#172832"
         }
       ],
       "shadow-lg": [
         {
-          "x": 0,
-          "y": 3,
-          "blur": 8,
+          "x": 8,
+          "y": 8,
+          "blur": 0,
           "spread": 0,
-          "color": "rgb(94 44 102 / 0.06)"
-        },
-        {
-          "x": 0,
-          "y": 30,
-          "blur": 64,
-          "spread": -24,
-          "color": "rgb(126 65 132 / 0.26)"
+          "color": "#172832"
         }
       ]
     },
     "dark": {
-      "bg": "#211727",
-      "bg-sunk": "#2b1d32",
-      "surface": "#34223d",
-      "ink": "#fff0f8",
-      "ink-2": "#e4cde2",
-      "muted": "#bba2bf",
-      "faint": "#806587",
-      "line": "rgb(242 206 238 / 0.11)",
-      "line-strong": "rgb(242 206 238 / 0.23)",
-      "link": "#d8b3ff",
-      "link-hover": "#ecd3ff",
-      "visited": "#f2a8cf",
-      "mark-bg": "#624234",
-      "mark-ink": "#ffe4be",
-      "notice-bg": "#382638",
-      "notice-line": "#725365",
-      "good": "#a7d5b1",
-      "ring": "#efacd7",
-      "aurora-1": "#74355d",
-      "aurora-2": "#583c81",
-      "aurora-3": "#7a4438",
-      "aurora-opacity": 0.5,
+      "bg": "#111e2a",
+      "bg-sunk": "#172c38",
+      "surface": "#213b49",
+      "ink": "#e3fff5",
+      "ink-2": "#badfd2",
+      "muted": "#9fbbba",
+      "faint": "#73928f",
+      "line": "#75bca5",
+      "line-strong": "#d4ffe6",
+      "link": "#8fb7ff",
+      "link-hover": "#cadcff",
+      "visited": "#d4adff",
+      "mark-bg": "#f7e768",
+      "mark-ink": "#172832",
+      "notice-bg": "#34382e",
+      "notice-line": "#f7e768",
+      "good": "#83e0ad",
+      "ring": "#8fb7ff",
+      "aurora-1": "#236b5a",
+      "aurora-2": "#254991",
+      "aurora-3": "#787228",
+      "aurora-opacity": 0.6,
       "shadow-sm": [
         {
-          "x": 0,
-          "y": 2,
-          "blur": 4,
+          "x": 3,
+          "y": 3,
+          "blur": 0,
           "spread": 0,
-          "color": "rgb(15 6 20 / 0.4)"
+          "color": "#05101d"
         }
       ],
       "shadow": [
         {
-          "x": 0,
-          "y": 2,
-          "blur": 5,
+          "x": 5,
+          "y": 5,
+          "blur": 0,
           "spread": 0,
-          "color": "rgb(15 6 20 / 0.35)"
-        },
-        {
-          "x": 0,
-          "y": 12,
-          "blur": 32,
-          "spread": -12,
-          "color": "rgb(15 6 20 / 0.7)"
+          "color": "#05101d"
         }
       ],
       "shadow-lg": [
         {
-          "x": 0,
-          "y": 3,
-          "blur": 8,
+          "x": 8,
+          "y": 8,
+          "blur": 0,
           "spread": 0,
-          "color": "rgb(15 6 20 / 0.4)"
-        },
-        {
-          "x": 0,
-          "y": 30,
-          "blur": 64,
-          "spread": -24,
-          "color": "rgb(15 6 20 / 0.88)"
+          "color": "#05101d"
         }
       ]
     },
@@ -172,11 +144,12 @@
       "aurora": true,
       "grain": false,
       "motion": true
-    }
+    },
+    "style": "playful"
   },
   "layout": {
-    "maxWidth": 1280,
-    "searchWidth": 680,
+    "maxWidth": 1260,
+    "searchWidth": 700,
     "articleWidth": 960,
     "density": "comfortable"
   },
@@ -216,14 +189,14 @@
       "guide"
     ],
     "labels": {
-      "search": "Find an idea",
-      "wiki": "Explore the garden",
-      "guide": "How bloom grows",
-      "random": "Take a wander",
-      "allPages": "Every project",
-      "categories": "Follow a trail",
-      "statistics": "Garden notes",
-      "top": "Back to the sunlight"
+      "search": "Find your next idea",
+      "wiki": "Project playground",
+      "guide": "Get growing",
+      "random": "Surprise me",
+      "allPages": "All the good stuff",
+      "categories": "Pick a path",
+      "statistics": "By the numbers",
+      "top": "Back to the top"
     }
   },
   "home": {
@@ -238,7 +211,8 @@
     "showRecent": true,
     "recentLimit": 6,
     "showCurious": true,
-    "autoFocus": false
+    "autoFocus": false,
+    "layout": "bento"
   },
   "search": {
     "suggestions": true,
@@ -280,22 +254,22 @@
     "showRecipe": true
   },
   "copy": {
-    "siteNavigation": "Garden paths",
-    "moreNavigation": "Keep exploring",
+    "siteNavigation": "Pick your next stop",
+    "moreNavigation": "More good stuff",
     "searchPlaceholder": "What would you like to find?",
     "wikiSearchPlaceholder": "Search the garden",
-    "home.searchPlaceholder": "Find a project, a note, a new connection…",
-    "home.searchButton": "Find an idea",
-    "home.curiousButton": "Take a wander",
-    "home.try": "Follow a trail",
-    "home.recentlyTouched": "Fresh growth",
-    "home.touched": "last tended {time}",
-    "home.recentTitle": "{path} · last tended {time}",
-    "home.missingTitle": "Your garden is ready to grow",
-    "home.missingDescription": "{app} is waiting to discover your folders. Run this in the project folder, then return to explore.",
-    "search.placeholder": "Find a project, a note, a new connection…",
-    "search.wikiPlaceholder": "Search the garden",
-    "search.label": "Find something",
+    "home.searchPlaceholder": "What are we making next?",
+    "home.searchButton": "Let’s find it",
+    "home.curiousButton": "Surprise me",
+    "home.try": "Try a little curiosity",
+    "home.recentlyTouched": "Pick up where you left off",
+    "home.touched": "updated {time}",
+    "home.recentTitle": "{path} · updated {time}",
+    "home.missingTitle": "Ready for your next big idea",
+    "home.missingDescription": "{app} is ready to explore. Run this in the project folder to bring your projects into the playground.",
+    "search.placeholder": "What are we making next?",
+    "search.wikiPlaceholder": "Search the playground",
+    "search.label": "Find your next idea",
     "search.tab.all": "Everything",
     "search.tab.articles": "Projects",
     "search.tab.docs": "Notes",
@@ -303,17 +277,17 @@
     "search.tab.folders": "Folders",
     "search.noResultsTitle": "No discoveries for {query}{filters} yet.",
     "search.noResultsDescription": "Try another path",
-    "search.recentHeading": "Or see what is growing",
+    "search.recentHeading": "Or pick up something good",
     "wiki.mainTitle": "{wiki} · A place for every project",
     "wiki.fromEncyclopedia": "From {wiki}, where projects tell their stories",
-    "wiki.welcomeTitle": "Welcome to {wiki}",
-    "wiki.encyclopediaTagline": "A place for every project to flourish",
-    "wiki.featured": "A project to discover",
-    "wiki.didYouKnow": "Little discoveries",
-    "wiki.news": "New growth",
+    "wiki.welcomeTitle": "Ideas grow here.",
+    "wiki.encyclopediaTagline": "Welcome to {wiki}",
+    "wiki.featured": "Your next rabbit hole",
+    "wiki.didYouKnow": "Wait, did you know?",
+    "wiki.news": "Fresh off the workbench",
     "wiki.onThisDay": "From the garden journal",
-    "wiki.browse": "Find your next trail",
-    "wiki.areas": "More paths through {wiki}",
+    "wiki.browse": "Pick a path",
+    "wiki.areas": "Keep the curiosity going",
     "wiki.readMore": "Step inside",
     "wiki.article.overview": "The story so far",
     "wiki.article.see-also": "Nearby discoveries",
@@ -327,6 +301,9 @@
     "continueWiki": "Explore {wiki}",
     "missingPageTitle": "An undiscovered corner",
     "missingPageSearch": "Find another path",
-    "missingPageBrowse": "Explore every project"
+    "missingPageBrowse": "Explore every project",
+    "home.eyebrow": "Your ideas, all in one place",
+    "home.sideTitle": "Pick a path. Find a spark.",
+    "home.sideDescription": "A project you forgot. A connection you missed. There is always something good waiting to be found."
   }
 }

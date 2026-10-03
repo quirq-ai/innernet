@@ -11,6 +11,14 @@ generous margins, nothing shouting. Delight comes from craft and from small joke
 reward attention (stubs asking for a README, the "I'm feeling curious" link), never from
 decoration for its own sake.
 
+This is the default `classic` style and `centered` home composition. The
+[template collection](examples/README.md) also supports an editorial archive, a neon
+cyberpunk console and a playful mint-and-cobalt workspace. `theme.style` selects shared
+control shapes and chrome; `home.layout` selects the home composition. These styles
+may use stronger accents, borders and cards while keeping the same engine, accessible
+controls, real index data and local privacy boundary. All palettes and copy remain in
+JSON; supported style rules live in `app/themes/`.
+
 ## Principles
 
 1. **Type does the work.** Hierarchy comes from the four typefaces and scale, not from

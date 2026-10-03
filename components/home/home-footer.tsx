@@ -11,7 +11,7 @@ export function HomeFooter({ meta, missing }: { meta: IndexMeta; missing: boolea
   const config = getUiConfig();
   const roots = DEMO ? `github.com/${DEMO_ORG}` : meta.roots.map((r) => r.label).join(", ");
   return (
-    <footer className="relative px-4 pb-5 pt-10 text-[12.5px] text-muted sm:px-6">
+    <footer className="ui-home-footer relative px-4 pb-5 pt-10 text-[12.5px] text-muted sm:px-6">
       <div className="mx-auto flex max-w-[var(--ui-max-width)] flex-col items-center gap-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-6">
         <nav aria-label={uiText("moreNavigation", {}, config)} className="flex flex-wrap items-center justify-center gap-1 lg:-ml-3 lg:justify-self-start">
           {getNavigation("home").map((link) => <Link key={link.href} href={link.href} prefetch={link.prefetch} className="rounded-full px-3 py-1.5 text-ink-2 transition-colors hover:bg-bg-sunk hover:text-ink">{link.label}</Link>)}

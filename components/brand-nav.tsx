@@ -23,12 +23,12 @@ export function BrandLinks({ className = "", guide = true }: { className?: strin
   return (
     <nav aria-label={uiText("brand.linksLabel", {}, config)} className={`flex items-center gap-1 ${className}`}>
       {guide && (
-        <Link href="/guide" className="flex items-center gap-1.5 rounded-full border border-line-strong px-3 py-1.5 text-[13px] text-ink-2 transition-colors hover:border-ink hover:text-ink">
+        <Link href="/guide" aria-label={formatUiTemplate(config.navigation.labels.guide, config)} className="ui-brand-guide flex items-center gap-1.5 rounded-full border border-line-strong px-3 py-1.5 text-[13px] text-ink-2 transition-colors hover:border-ink hover:text-ink">
           <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 5.5c3-1.4 6-1.4 9 0v14c-3-1.4-6-1.4-9 0Z" />
             <path d="M12 5.5c3-1.4 6-1.4 9 0v14c-3-1.4-6-1.4-9 0" />
           </svg>
-          {formatUiTemplate(config.navigation.labels.guide, config)}
+          <span className="ui-brand-guide-label">{formatUiTemplate(config.navigation.labels.guide, config)}</span>
         </Link>
       )}
       {publisher && (

@@ -68,7 +68,7 @@ export function KnowledgePanel({ page }: { page: Page }) {
   ].filter((x): x is { k: string; v: string } => !!x);
 
   return (
-    <aside aria-label={uiText("search.panelAbout", { title: page.title })} className="rise relative overflow-hidden rounded-[22px] border border-line bg-surface shadow-soft">
+    <aside aria-label={uiText("search.panelAbout", { title: page.title })} className="ui-panel rise relative overflow-hidden rounded-[22px] border border-line bg-surface shadow-soft">
       {/* A wash of the sigil's own colours, fading into the card. */}
       <div
         aria-hidden

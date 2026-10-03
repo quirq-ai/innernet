@@ -153,7 +153,7 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
   const shown = groups.map((gr) => ({ ...gr, rows: gr.rows.filter((r): r is Row => !!r) })).filter((gr) => gr.rows.length);
 
   return (
-    <aside aria-label={uiText("wiki.infoboxTitle", { name })} className={`overflow-hidden rounded-2xl border border-line bg-surface shadow-soft ${className}`}>
+    <aside aria-label={uiText("wiki.infoboxTitle", { name })} className={`ui-panel overflow-hidden rounded-2xl border border-line bg-surface shadow-soft ${className}`}>
       <div className={`relative isolate grid place-items-center overflow-hidden px-6 text-center ${compact ? "pb-4 pt-6" : "pb-5 pt-8"}`}>
         <div aria-hidden className="absolute inset-0 -z-10 scale-110 opacity-[0.22] blur-2xl" style={{ background: sigilGradient(page.slug, !page.isArticle) }} />
         <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-2/3 bg-linear-to-b from-transparent to-surface" />

@@ -11,7 +11,7 @@ export function TopBar({ q = "", variant = "search" }: { q?: string; variant?: "
   const config = getUiConfig();
   const links = getNavigation(variant === "wiki" ? "headerWiki" : "headerSearch");
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
+    <header className="ui-topbar sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
       <a href="#content" className="sr-only rounded-full bg-surface text-[13.5px] text-ink shadow-lift focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:px-4 focus:py-2">
         {uiText("skipContent", {}, config)}
       </a>

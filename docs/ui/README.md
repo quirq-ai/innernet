@@ -126,9 +126,10 @@ This changes the names, colours, fonts, density, search settings and encyclopedi
 while using the same index. It replaces the header artwork and browser icons with the
 atlas compass, changes creator metadata, and removes the default publisher link,
 source link and footer credit, so the configured product identity can stand on its own.
-The [template collection](../../examples/README.md) also includes **folio**, a warm
-reading room, **relay**, a focused developer console, and **bloom**, a colorful creative
-garden. Every template includes both palettes and local artwork and uses this same
+The [template collection](../../examples/README.md) also includes **folio**, an editorial
+archive, **relay**, a neon cyberpunk console, and **bloom**, a mint-and-cobalt workspace.
+These change home composition, control shapes, typography and decoration. Every
+template includes both palettes and local artwork and uses this same
 configuration contract.
 
 Copy a template into your own JSON file and point the
@@ -179,14 +180,22 @@ machine will not be available to deployed server functions.
 | Section | Shape and supported settings |
 | --- | --- |
 | `brand` | Names, tagline, description, document `language`, `creator`, wordmark italic prefixes, product and encyclopedia logos, `headerLogo`, browser `icon`, `appleIcon`, `showPublisherLink`, `sourceLink` and an `attribution` object. |
-| `theme` | `defaultMode`: `system`, `light` or `dark`; `allowToggle`; `light` and `dark` palettes; `fonts` for `display`, `serif`, `sans` and `mono`; `effects` booleans for `aurora`, `grain` and `motion`. |
+| `theme` | `style`: `classic`, `editorial`, `cyberpunk` or `playful`; `defaultMode`: `system`, `light` or `dark`; `allowToggle`; `light` and `dark` palettes; `fonts` for `display`, `serif`, `sans` and `mono`; `effects` booleans for `aurora`, `grain` and `motion`. |
 | `layout` | `maxWidth`, `searchWidth` and `articleWidth` in pixels; `density`: `comfortable` or `compact`. Content widths cannot exceed `maxWidth`. |
 | `navigation` | Ordered footer arrays for `home`, `search`, `wiki` and `guide`; header arrays `headerSearch` and `headerWiki`; and a `labels` object keyed by navigation ID. |
-| `home` | `showCounts`, `showExamples`, `showRecent`, `showCurious`, `autoFocus`, `recentLimit` and an `exampleQueries` array. |
+| `home` | `layout`: `centered`, `editorial`, `console` or `bento`; `showCounts`, `showExamples`, `showRecent`, `showCurious`, `autoFocus`, `recentLimit` and an `exampleQueries` array. |
 | `search` | `suggestions`, `suggestionLimit`, `debounceMs`, `focusShortcut`, `perPage`, `showKnowledgePanel` and an ordered `tabs` array. |
 | `wiki` | `showContents`, `showInfobox`, and ordered `mainSections` and `articleSections` arrays. Article sections with no indexed content remain absent. |
 | `guide` | `showRecipe` controls the interactive folder recipe. |
 | `copy` | Plain strings keyed by the existing copy IDs in the default JSON, including headings, buttons, accessible labels, notices and metadata titles. |
+
+`theme.style` controls shared search boxes, panels and navigation chrome. `home.layout`
+controls the home composition: centered search, editorial cover, console or bento.
+Combine these independently with your own palettes and fonts. The additional home
+labels use `home.eyebrow`, `home.sideTitle` and `home.sideDescription` in `copy`.
+Counts and recent projects always come from the selected index. Supported styles are
+implemented in [`app/themes/`](../../app/themes); JSON selects them without accepting
+arbitrary CSS or HTML.
 
 Navigation IDs are `search`, `wiki`, `guide`, `random`, `allPages`, `categories`,
 `statistics` and `top`. Footer arrays belong to their named page groups; `headerSearch`

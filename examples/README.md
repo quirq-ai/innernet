@@ -2,14 +2,15 @@
 
 Choose a starting point for your personal internet. Each template is a partial JSON
 override with its own identity, local header artwork, browser icons and light/dark
-palettes. Templates use the same engine and index.
+palettes. They also choose a home composition and shared control style. Templates use
+the same engine and index.
 
 | Template | Vibe | Typography | Starting theme |
 | --- | --- | --- | --- |
 | [atlas](atlas.ui.json) | Quiet green project atlas, compact and practical. | System sans | System |
-| [folio](folio.ui.json) | Warm reading room with paper tones and burgundy accents. | Instrument Serif and Newsreader | Light |
-| [relay](relay.ui.json) | Focused developer console with navy and cyan. | JetBrains Mono and Inter | Dark |
-| [bloom](bloom.ui.json) | Creative garden with rose, lavender and peach. | Inter and Newsreader | System |
+| [folio](folio.ui.json) | Editorial archive: oversized serif cover, reading index, paper and oxblood, square ruled controls. | Instrument Serif and Newsreader | Light |
+| [relay](relay.ui.json) | Cyberpunk console: neon cyan and magenta, grid, angular HUD panels and technical type. | JetBrains Mono and Inter | Dark |
+| [bloom](bloom.ui.json) | Playful workspace: mint and cobalt bento cards, yellow accents, chunky outlines and offset shadows. | Inter and Newsreader | Light |
 
 ## Previews
 
@@ -18,7 +19,13 @@ relay in dark mode, and bloom in light mode. Each also supports the other theme.
 
 | folio | relay | bloom |
 | --- | --- | --- |
-| ![folio reading room in parchment and burgundy](../docs/ui/templates/folio.png) | ![relay developer console in navy and cyan](../docs/ui/templates/relay.png) | ![bloom creative garden in rose, lavender and peach](../docs/ui/templates/bloom.png) |
+| ![folio editorial archive with a large serif cover and reading index](../docs/ui/templates/folio.png) | ![relay neon cyberpunk console with angular HUD panels](../docs/ui/templates/relay.png) | ![bloom mint and cobalt workspace with outlined bento cards](../docs/ui/templates/bloom.png) |
+
+| Template | Other desktop theme | Phone: light | Phone: dark |
+| --- | --- | --- | --- |
+| folio | [Dark](../docs/ui/templates/folio-dark.png) | [Preview](../docs/ui/templates/folio-mobile-light.png) | [Preview](../docs/ui/templates/folio-mobile-dark.png) |
+| relay | [Light](../docs/ui/templates/relay-light.png) | [Preview](../docs/ui/templates/relay-mobile-light.png) | [Preview](../docs/ui/templates/relay-mobile-dark.png) |
+| bloom | [Dark](../docs/ui/templates/bloom-dark.png) | [Preview](../docs/ui/templates/bloom-mobile-light.png) | [Preview](../docs/ui/templates/bloom-mobile-dark.png) |
 
 ## Use a template
 
@@ -41,6 +48,11 @@ Copy a template and edit its JSON to make it yours. Objects merge with the defau
 arrays replace them, so you can change navigation order and page sections. Keep the
 `$schema` path relative to your new file. Put replacement artwork in `public/` and
 point the logo and icon fields at its local URL.
+
+Change `theme.style` (`classic`, `editorial`, `cyberpunk`, `playful`) and `home.layout`
+(`centered`, `editorial`, `console`, `bento`) independently. The presets pair them for
+their intended character; you can mix a composition with different palettes or control
+styles. All choices are schema-validated. The default innernet layout stays centered.
 
 Saved JSON changes appear on the next full page load. Restart the server when
 switching the `INNERNET_UI_CONFIG` path. There is no need to rebuild your folder index.

@@ -1,0 +1,442 @@
+/* The console is angular, gridded and built around a query panel and route rail.
+   Every paint value comes from the selected JSON palettes. */
+html[data-ui-style="cyberpunk"] body {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--link) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--aurora-2) 5%, transparent) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+html[data-ui-style="cyberpunk"] :is(button, kbd, .ui-topbar a, .ui-home-header a) {
+  border-radius: 2px;
+}
+
+html[data-ui-style="cyberpunk"] .ui-topbar {
+  border-bottom-color: color-mix(in oklab, var(--link) 35%, var(--line));
+  background-color: color-mix(in oklab, var(--bg) 95%, transparent);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--aurora-2) 14%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] .ui-search-shell {
+  border-radius: 0;
+  border-color: color-mix(in oklab, var(--link) 40%, var(--line-strong));
+  background-color: var(--bg-sunk);
+  box-shadow: 3px 3px 0 color-mix(in oklab, var(--aurora-2) 22%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] .ui-search-shell:focus-within {
+  border-color: var(--link);
+  box-shadow: 3px 3px 0 color-mix(in oklab, var(--aurora-2) 50%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] .ui-search-shell input {
+  font-family: var(--ui-font-mono);
+  font-size: 14px;
+  letter-spacing: -0.025em;
+}
+
+html[data-ui-style="cyberpunk"] .ui-search-suggestions {
+  border-radius: 0;
+  border-color: color-mix(in oklab, var(--link) 40%, var(--line-strong));
+  background-color: var(--bg-sunk);
+  box-shadow: 3px 3px 0 color-mix(in oklab, var(--aurora-2) 22%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] .ui-search-shell:has(input[aria-expanded="true"]) {
+  border-bottom-color: var(--line);
+  box-shadow: none;
+}
+
+html[data-ui-style="cyberpunk"] .ui-panel {
+  border: 1px solid var(--line-strong);
+  border-top: 2px solid var(--aurora-2);
+  border-radius: 0;
+  background-color: var(--surface);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--link) 10%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--line-strong);
+  background-color: color-mix(in oklab, var(--bg) 85%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-header nav {
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-main {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.75fr) minmax(0, 1.75fr);
+  align-items: center;
+  align-content: center;
+  gap: 32px;
+  width: 100%;
+  max-width: var(--ui-max-width);
+  margin: 0 auto;
+  padding: 64px 32px 72px;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-hero {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 0;
+  padding: 38px;
+  border: 1px solid color-mix(in oklab, var(--link) 32%, var(--line-strong));
+  border-top: 3px solid var(--link);
+  background-color: color-mix(in oklab, var(--surface) 92%, transparent);
+  text-align: left;
+  box-shadow: 8px 8px 0 color-mix(in oklab, var(--aurora-2) 10%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-hero::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -1px;
+  width: 72px;
+  height: 3px;
+  background-color: var(--aurora-2);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 24px;
+  color: var(--link);
+  font-family: var(--ui-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  background-color: var(--link);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--link) 45%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(56px, 7vw, 100px);
+  font-weight: 600;
+  letter-spacing: -0.075em;
+  line-height: 1;
+  text-align: left;
+  text-shadow: 3px 2px 0 color-mix(in oklab, var(--aurora-2) 50%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-title > span {
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-tagline {
+  max-width: 44ch;
+  margin: 22px 0 0;
+  color: var(--ink-2);
+  font-family: var(--ui-font-mono);
+  font-size: 14px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-search {
+  align-items: stretch;
+  margin-top: 34px;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-actions {
+  justify-content: flex-start;
+  margin-top: 18px;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-action {
+  min-height: 40px;
+  padding: 0 20px;
+  border: 1px solid var(--link);
+  border-radius: 0;
+  background-color: var(--link);
+  color: var(--bg);
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 color-mix(in oklab, var(--aurora-2) 65%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-action:hover {
+  background-color: var(--link-hover);
+  color: var(--bg);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-examples {
+  align-self: stretch;
+  margin-top: 28px;
+  font-family: var(--ui-font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-examples > p {
+  justify-content: flex-start;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-examples a {
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  background-color: var(--bg-sunk);
+  color: var(--ink-2);
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+  text-transform: none;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin-top: 34px;
+  padding-top: 24px;
+  border-top: 1px dashed var(--line-strong);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-stats a {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background-color: var(--bg-sunk);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-stat-value {
+  color: var(--link);
+  font-family: var(--ui-font-mono);
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-stat-label {
+  margin-top: 0;
+  color: var(--muted);
+  font-family: var(--ui-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-side {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  padding: 28px;
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--aurora-2);
+  background-color: color-mix(in oklab, var(--bg-sunk) 92%, transparent);
+  box-shadow: 5px 5px 0 color-mix(in oklab, var(--link) 8%, transparent);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-side-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--ui-font-mono);
+  font-size: 19px;
+  letter-spacing: -0.045em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-side-copy {
+  margin-top: 14px;
+  color: var(--muted);
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-destinations {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 26px;
+  border-top: 1px solid var(--line-strong);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-destinations a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  color: var(--ink-2);
+  font-family: var(--ui-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-destinations a:hover {
+  color: var(--link);
+  padding-left: 6px;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-recent {
+  grid-column: 1 / -1;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--line-strong);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-recent-list {
+  justify-content: flex-start;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-recent-item {
+  border-radius: 0;
+  border: 1px solid var(--line-strong);
+  background-color: var(--surface);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-recent-item > a {
+  border-radius: 0;
+  font-family: var(--ui-font-mono);
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-footer {
+  padding: 22px 32px;
+  border-top: 1px solid var(--line-strong);
+  background-color: color-mix(in oklab, var(--bg-sunk) 94%, transparent);
+  font-family: var(--ui-font-mono);
+  font-size: 10px;
+}
+
+html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-footer a {
+  border-radius: 0;
+  font-family: var(--ui-font-mono);
+  font-size: 10px;
+}
+
+@media (max-width: 1000px) {
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-main {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding-top: 40px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-side {
+    grid-column: auto;
+    grid-row: auto;
+    order: 1;
+    max-width: none;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-hero {
+    grid-column: auto;
+    grid-row: auto;
+    order: 0;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-recent {
+    order: 2;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-destinations {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-header {
+    padding: 18px 20px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-main {
+    gap: 22px;
+    padding: 30px 20px 36px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-hero {
+    padding: 24px 20px;
+    box-shadow: 5px 5px 0 color-mix(in oklab, var(--aurora-2) 12%, transparent);
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-eyebrow {
+    margin-bottom: 20px;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-title {
+    font-size: 64px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-tagline {
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-search {
+    margin-top: 26px;
+  }
+
+  html[data-ui-style="cyberpunk"] .ui-home-search .ui-search-shell {
+    height: 54px;
+    padding-left: 12px;
+  }
+
+  html[data-ui-style="cyberpunk"] .ui-search-shell input {
+    padding-left: 10px;
+    font-size: 12px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-stats {
+    gap: 6px;
+    margin-top: 26px;
+    padding-top: 20px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-stats a {
+    padding: 10px 7px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-stat-value {
+    font-size: 21px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-stat-label {
+    font-size: 8px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-side {
+    padding: 24px 20px;
+  }
+
+  html[data-ui-style="cyberpunk"] [data-home-layout="console"] .ui-home-footer {
+    padding: 20px;
+  }
+}

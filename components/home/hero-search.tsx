@@ -9,7 +9,7 @@ import { wikiHref } from "@/lib/links";
 // Search button reaches in and submits it; with nothing typed it just hands focus back.
 
 const pill =
-  "inline-flex h-9 items-center rounded-full border border-transparent bg-bg-sunk px-[18px] text-[13.5px] text-ink-2 transition-[color,border-color,box-shadow] duration-150 hover:border-line hover:text-ink hover:shadow-[var(--shadow-sm)]";
+  "ui-home-action inline-flex h-9 items-center rounded-full border border-transparent bg-bg-sunk px-[18px] text-[13.5px] text-ink-2 transition-[color,border-color,box-shadow] duration-150 hover:border-line hover:text-ink hover:shadow-[var(--shadow-sm)]";
 
 export function HeroSearch({ searchBox, searchLabel, curiousLabel, showCurious }: {
   searchBox: SearchBoxProps;
@@ -33,7 +33,7 @@ export function HeroSearch({ searchBox, searchLabel, curiousLabel, showCurious }
       <div className="rise relative z-20" style={{ animationDelay: "120ms" }}>
         <SearchBox {...searchBox} size="hero" />
       </div>
-      <div className="rise mt-7 flex justify-center gap-3" style={{ animationDelay: "180ms" }}>
+      <div className="ui-home-actions rise mt-7 flex justify-center gap-3" style={{ animationDelay: "180ms" }}>
         <button type="button" onClick={submit} className={pill}>
           {searchLabel}
         </button>
