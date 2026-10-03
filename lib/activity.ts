@@ -5,7 +5,9 @@ import os from "node:os";
 import path from "node:path";
 import { APP_RE, KIND_RE, MAX_EVENT_BYTES, SESSION_RE, toSession, validEvent, type ActivityEvent, type Session } from "@/components/activity/shared";
 
-// The activity history: plain folders and JSON Lines files, no database and no index.
+// The activity history: plain folders and JSON Lines files, no index. The folders are
+// the record and the format every app shares; the database keeps a copy of their lines,
+// read in as they change (lib/db/ingest.ts).
 //
 //   ~/.innernet/history/                  (INNERNET_HISTORY_DIR overrides it)
 //     2026-10-03T05-12-07Z_k3f9a2/        one folder per session, named by its start
@@ -15,7 +17,8 @@ import { APP_RE, KIND_RE, MAX_EVENT_BYTES, SESSION_RE, toSession, validEvent, ty
 // Reading a session is reading every *.jsonl in its folder and sorting by "at". Names
 // are checked against fixed patterns before they touch a path, symlinks are never
 // followed inside the folder, and a line that will not parse is skipped. Only the local
-// app writes here; the demo keeps its visitors' history in their own browsers.
+// app writes here; the demo keeps its visitors' history in their browsers, and for 30
+// days in its own database when it has one (lib/db/demo-history.ts).
 
 const HOME = os.homedir();
 

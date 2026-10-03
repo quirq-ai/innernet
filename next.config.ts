@@ -45,12 +45,15 @@ const GUIDE_SOURCES = [
   "lib/data.ts",
   "lib/search.ts",
   "lib/links.ts",
+  "lib/activity.ts",
+  "lib/db/*.ts",
   "app/page.tsx",
   "app/search/page.tsx",
   "app/wiki/*/page.tsx",
   "app/activity/page.tsx",
   "app/api/suggest/route.ts",
   "app/api/activity/route.ts",
+  "app/api/db/store/route.ts",
   "app/globals.css",
   "components/sigil.tsx",
   "components/home/*.tsx",
@@ -68,13 +71,32 @@ const GUIDE_SOURCES = [
 // does not depend on VERCEL reaching the deployed functions at run time.
 const demoBuild = process.env.INNERNET_DEMO === "1" || process.env.VERCEL === "1";
 
+// PGlite, the database on this machine (lib/db/pglite.ts): a WebAssembly Postgres that
+// reads its own .wasm and data files from node_modules, so it is required at run time
+// rather than bundled. The demo never opens it, so its server functions never carry it.
+const PGLITE = "@electric-sql/pglite";
+// Its files, and the link the build makes to them (.next/node_modules/@electric-sql/pglite-<hash>).
+const PGLITE_FILES = [`node_modules/${PGLITE}/**`, `node_modules/${PGLITE}-*`, `node_modules/.pnpm/${PGLITE.replace("/", "+")}@*/**`];
+
+// Turbopack's persistent cache (.next/cache) saves the whole environment the build ran
+// in, and its files are world-readable. A build that can see the demo's connection
+// string (DATABASE_URL, from .env.neon.local or Vercel) therefore keeps no such cache,
+// so the string never lands on disk outside the file meant to hold it.
+const secretInEnv = !!(process.env.DATABASE_URL || process.env.DATABASE_URL_UNPOOLED);
+
 const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
+  serverExternalPackages: [PGLITE],
+  experimental: {
+    turbopackFileSystemCacheForBuild: !secretInEnv,
+    turbopackFileSystemCacheForDev: !secretInEnv,
+  },
   env: { INNERNET_GUIDE_MEDIA: guideMedia, INNERNET_DEMO_BUILD: demoBuild ? "1" : "" },
   // What each server function carries when deployed: Vercel ships only traced files.
   // Every page reads the demo index, and the home page's field guide reads its sources
-  // and plates. The local index, the film, its renders and the demo's clones never ship.
+  // and plates. The local index, the film, its renders and the demo's clones never ship,
+  // and nor does PGlite in a demo build.
   // (Turbopack matches these patterns anywhere below the project, not only at its top,
   // so they name files exactly rather than whole folders.)
   outputFileTracingIncludes: {
@@ -85,7 +107,16 @@ const nextConfig: NextConfig = {
     "app/page": [...GUIDE_SOURCES, "public/guide/plates/*.svg"],
   },
   outputFileTracingExcludes: {
-    "/**": ["film/**", "brand/**", ".demo-cache/**", "data/index.json", "data/*.tmp", "data/demo/*.tmp", "public/guide/*.mp4"],
+    "/**": [
+      "film/**",
+      "brand/**",
+      ".demo-cache/**",
+      "data/index.json",
+      "data/*.tmp",
+      "data/demo/*.tmp",
+      "public/guide/*.mp4",
+      ...(demoBuild ? PGLITE_FILES : []),
+    ],
   },
   async headers() {
     return [

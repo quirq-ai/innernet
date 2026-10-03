@@ -1,18 +1,36 @@
-import { APP, MAX_EVENT_BYTES, SESSION_RE, newSessionId, type ActivityEvent } from "./shared";
+import {
+  APP,
+  DEMO_MAX_IDS,
+  DEMO_RETENTION_DAYS,
+  DEMO_SESSION_RE,
+  MAX_DEMO_BODY,
+  MAX_EVENT_BYTES,
+  SESSION_RE,
+  demoPath,
+  newSessionId,
+  sessionStart,
+  type ActivityEvent,
+} from "./shared";
 
 // The browser side of the history, shared by the recorder and the header's back and
 // forward buttons. One session per tab: its id lives in sessionStorage, made on first
-// load from the start time and a random id. The trail is the tab's own stack of pages
-// with a cursor, like a browser's: a normal navigation cuts off whatever lay ahead,
-// and the buttons only move the cursor.
+// load from the start time and a random id (12 random characters on the demo). The
+// trail is the tab's own stack of pages with a cursor, like a browser's: a normal
+// navigation cuts off whatever lay ahead, and the buttons only move the cursor.
 //
-// On this machine each event goes to the app's own /api/activity route. On the demo
-// nothing is sent anywhere: the same events, under the same session ids, are kept in
-// this browser's localStorage.
+// On this machine each event goes to the app's own /api/activity route, which writes it
+// to the history folder. On the demo the same events, under the same session ids, are
+// kept in this browser's localStorage; when the demo has a database they also go to
+// /api/activity, with the path cut down to one of the demo's own pages (demoPath), and
+// the server keeps them for 30 days. Every id sent within those 30 days is remembered
+// here, so the history page can read them back and the Clear button can delete them all.
+// Ids go in request bodies, never in an address. Nothing else knows which sessions are
+// this visitor's.
 
 const SESSION_KEY = "innernet-session";
 const TRAIL_KEY = "innernet-trail";
 export const DEMO_KEY = "innernet-history";
+const SENT_KEY = "innernet-history-sent";
 
 /** Fired on window whenever the trail changes, so the buttons can follow. */
 export const TRAIL_EVENT = "innernet:trail";
@@ -20,6 +38,12 @@ export const TRAIL_EVENT = "innernet:trail";
 const MAX_TRAIL = 100;
 const DEMO_SESSIONS = 40;
 const DEMO_EVENTS = 400;
+/** Ids sent to the demo's server are remembered while the server may still hold them
+ * (its retention, and a day's grace), and never more than this many. */
+const SENT_DAYS = DEMO_RETENTION_DAYS + 1;
+const SENT_MAX = 1000;
+/** Set when more than SENT_MAX ids would have been remembered, so Clear can say so. */
+const SENT_DROPPED_KEY = "innernet-history-sent-dropped";
 
 export interface TrailEntry {
   url: string;
@@ -36,16 +60,21 @@ export interface Trail {
 let memorySession: string | null = null;
 let memoryTrail: Trail = { stack: [], cursor: -1 };
 
-export function sessionId(): string {
+/** This tab's session id, made on first use. The demo's ids carry 12 random characters
+ * (DEMO_SESSION_RE), so a shorter one saved before is replaced there. */
+export function sessionId(demo = false): string {
+  const fits = (id: string | null): id is string => !!id && (demo ? DEMO_SESSION_RE : SESSION_RE).test(id);
+  const make = () => newSessionId(new Date(), demo ? 12 : 6);
   try {
     const saved = sessionStorage.getItem(SESSION_KEY);
-    if (saved && SESSION_RE.test(saved)) return saved;
-    const id = memorySession ?? newSessionId();
+    if (fits(saved)) return saved;
+    const id = fits(memorySession) ? memorySession : make();
     sessionStorage.setItem(SESSION_KEY, id);
     memorySession = id;
     return id;
   } catch {
-    return (memorySession ??= newSessionId());
+    if (!fits(memorySession)) memorySession = make();
+    return memorySession;
   }
 }
 
@@ -105,18 +134,113 @@ export function takePendingMove(url: string): "back" | "forward" | null {
 
 export type Fields = { kind: "visit" | "search" | "back" | "forward"; url: string; title?: string; q?: string; via?: "buttons" | "browser" };
 
-/** Record one event: to this machine's history, or on the demo to this browser only. */
-export function record(fields: Fields, demo: boolean) {
-  const session = sessionId();
-  if (demo) {
-    keepInBrowser(session, { at: new Date().toISOString(), app: APP, ...fields });
-    return;
-  }
-  const body = JSON.stringify({ session, ...fields });
-  if (body.length > MAX_EVENT_BYTES) return;
-  fetch("/api/activity", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true, credentials: "same-origin" }).catch(() => {
+/**
+ * Record one event: to this machine's history, or on the demo to this browser, and also
+ * to the demo's database when `server` says it keeps one.
+ */
+export function record(fields: Fields, demo: boolean, server = !demo) {
+  const session = sessionId(demo);
+  if (demo) keepInBrowser(session, { at: new Date().toISOString(), app: APP, ...fields });
+  if (!server) return;
+  // The demo's server keeps only its own pages' paths, and none of an address's tags.
+  const url = demo ? demoPath(fields.url) : fields.url;
+  if (!url) return;
+  const body = JSON.stringify({ session, ...fields, url });
+  if (new TextEncoder().encode(body).length > (demo ? MAX_DEMO_BODY : MAX_EVENT_BYTES)) return;
+  if (demo) rememberSent(session);
+  send("POST", body, true).catch(() => {
     /* offline or the server restarting; one missed line is not worth a retry */
   });
+}
+
+/** A JSON body to /api/activity: ids and events travel in bodies, never in the address. */
+function send(method: "POST" | "DELETE", body: string, keepalive = false): Promise<Response> {
+  return fetch("/api/activity", { method, headers: { "Content-Type": "application/json" }, body, keepalive, credentials: "same-origin", cache: "no-store" });
+}
+
+/** Whether a session id is recent enough that the demo's server may still hold it. */
+const stillHeld = (id: string) => Date.now() - Date.parse(sessionStart(id)) < SENT_DAYS * 864e5;
+
+/** The session ids this browser has sent to the demo's server and it may still hold, newest first. */
+export function sentSessions(): string[] {
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(SENT_KEY) ?? "[]");
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string" && DEMO_SESSION_RE.test(id) && stillHeld(id)).reverse() : [];
+  } catch {
+    return [];
+  }
+}
+
+/** True when this browser once had more ids to remember than it keeps. */
+export function sentDropped(): boolean {
+  try {
+    return localStorage.getItem(SENT_DROPPED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function rememberSent(session: string) {
+  const ids = sentSessions().reverse();
+  if (ids.at(-1) === session) return;
+  const all = [...ids.filter((id) => id !== session), session];
+  try {
+    if (all.length > SENT_MAX) localStorage.setItem(SENT_DROPPED_KEY, "1");
+    localStorage.setItem(SENT_KEY, JSON.stringify(all.slice(-SENT_MAX)));
+  } catch {
+    /* blocked: the page can still show this browser's own copy */
+  }
+}
+
+function chunks(ids: string[]): string[][] {
+  const out: string[][] = [];
+  for (let i = 0; i < ids.length; i += DEMO_MAX_IDS) out.push(ids.slice(i, i + DEMO_MAX_IDS));
+  return out;
+}
+
+export interface ServerHistory {
+  sessions: BrowserHistory;
+  /** Events the server holds for each session asked about. */
+  counts: Record<string, number>;
+}
+
+/** The demo server's copy of these sessions (at most DEMO_MAX_IDS), or null when it could not be asked. */
+export async function fetchServerHistory(ids: string[]): Promise<ServerHistory | null> {
+  const out: ServerHistory = { sessions: {}, counts: {} };
+  const wanted = ids.filter((id) => DEMO_SESSION_RE.test(id)).slice(0, DEMO_MAX_IDS);
+  if (!wanted.length) return out;
+  try {
+    const res = await send("POST", JSON.stringify({ read: wanted }));
+    if (!res.ok) return null;
+    const got = (await res.json()) as { sessions?: BrowserHistory; counts?: Record<string, unknown> };
+    for (const [id, events] of Object.entries(got.sessions ?? {})) if (DEMO_SESSION_RE.test(id) && Array.isArray(events)) out.sessions[id] = events;
+    for (const [id, n] of Object.entries(got.counts ?? {})) if (DEMO_SESSION_RE.test(id) && typeof n === "number") out.counts[id] = n;
+    return out;
+  } catch {
+    return null;
+  }
+}
+
+/** Delete these sessions from the demo's server. True when every request was answered. */
+export async function clearServerHistory(ids: string[]): Promise<boolean> {
+  let ok = true;
+  for (const batch of chunks([...new Set(ids.filter((id) => DEMO_SESSION_RE.test(id)))])) {
+    try {
+      const res = await send("DELETE", JSON.stringify({ sessions: batch }));
+      if (!res.ok) ok = false;
+    } catch {
+      ok = false;
+    }
+  }
+  if (ok) {
+    try {
+      localStorage.removeItem(SENT_KEY);
+      localStorage.removeItem(SENT_DROPPED_KEY);
+    } catch {
+      /* nothing to forget */
+    }
+  }
+  return ok;
 }
 
 export type BrowserHistory = Record<string, ActivityEvent[]>;

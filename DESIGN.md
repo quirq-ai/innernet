@@ -31,15 +31,23 @@ decoration for its own sake.
 5. **Server first.** Pages are Server Components that read `lib/data.ts` and
    `lib/search.ts` directly. The browser fetches from two of our own routes and nothing
    else: the search box asks `/api/suggest`, and the history recorder posts each page
-   visited to `/api/activity` (local mode only, same origin only; the demo keeps history
-   in the visitor's `localStorage`). No external requests from the browser, ever. Links
-   out (GitHub, quirq, the AI assistants) are plain links that open in a new tab.
+   visited to `/api/activity` (same origin only). On the demo it posts only when the demo
+   keeps a database, and the history page then reads and clears the visitor's own
+   sessions there; otherwise the demo keeps history in the visitor's `localStorage`. No
+   external requests from the browser, ever. Links out (GitHub, quirq, the AI
+   assistants) are plain links that open in a new tab.
 6. **Calm motion.** `rise` (fade + 6px lift) on first paint, staggered by ~40ms in
    lists; the slow aurora drift; things that ease in once as they scroll into view (the
    field guide's plates, the Main page's boxes); the home page's hand-off, where the
    first screen's aurora dims and the wordmark lifts as the guide arrives (only where
    the browser ties animation to scrolling); and the Innerpedia globe's slow turn.
    Everything respects `prefers-reduced-motion`: under it nothing moves on its own.
+7. **Private by default.** What Innernet knows about this machine stays on it: the index,
+   the history and their copy in PGlite (`~/.innernet/db`) never reach a server. The demo
+   is the one exception, and it says so wherever history is mentioned (the banner, the
+   history page, the guide, the README), at every width: visitors' pages and searches are
+   kept 30 days, anonymously, under a hash of each tab's id, with no IP address or cookie,
+   and a button clears them.
 
 ## Tokens (app/globals.css)
 
@@ -283,10 +291,14 @@ Innerpedia's front page, a love letter to Wikipedia's.
 - Sessions newest first, grouped by day: start time, duration, event count, app badges,
   "This tab" for the current one, and a strip of the articles' sigils. Each opens onto
   its events merged across apps: time in mono, kind, app badge, the page as a link.
-- A side column explains the format (one folder per session, one JSON Lines file per
-  app), names the folder and gives the shell one-liner.
-- In the demo the list is read from this browser's `localStorage`, the page says that
-  nothing reaches the server, and a button clears it.
+- A side column opens with the Database card (where the copy lives, its counts, the
+  index it holds, Store now as a plain form, and `pnpm db:load`), then explains the
+  format (one folder per session, one JSON Lines file per app), names the folder and
+  gives the shell one-liner.
+- In the demo the list is read from this browser's `localStorage`, merged with the copy
+  the demo's database keeps when it has one (the fuller copy of each session wins). The
+  header and the card say where it is kept and for how long, and one button clears both.
+  Without a database the page says that nothing reaches the server.
 
 ## Voice
 

@@ -79,6 +79,7 @@ export const CHAPTERS: GuideChapter[] = [
     sections: [
       { id: "ledger", label: "The ledger" },
       { id: "localhost", label: "Only localhost" },
+      { id: "database", label: "The database" },
     ],
   },
 ];

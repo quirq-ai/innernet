@@ -2,6 +2,7 @@ import "server-only";
 
 import fs from "node:fs";
 import path from "node:path";
+import { heldLocalIndex, rememberLocalIndex, remoteDemoIndex } from "./db/sync";
 import { DEMO } from "./mode";
 import { normalizeIndex } from "./normalize";
 import type { Page, SiteIndex } from "./types";
@@ -10,6 +11,12 @@ import type { Page, SiteIndex } from "./types";
 // takes effect without restarting the server. The demo (lib/mode.ts) reads the
 // committed data/demo/index.json instead; next.config.ts ships that one file with
 // every server function, and never the local index.
+//
+// The database (lib/db) keeps a copy, and the file stays the source. On this machine
+// each new index is stored in the background, and if data/index.json goes missing the
+// stored one serves instead. On the demo a newer index stored in Neon replaces the
+// bundled one once it has been read (lib/db/sync.ts). getIndex() itself never waits on
+// a database: it answers from memory.
 
 const LOCAL_INDEX = path.join(process.cwd(), "data", "index.json");
 const DEMO_INDEX = path.join(process.cwd(), "data", "demo", "index.json");
@@ -17,8 +24,9 @@ const INDEX_FILE = DEMO ? DEMO_INDEX : LOCAL_INDEX;
 
 export interface Loaded {
   index: SiteIndex;
-  missing: boolean; // true when no index has been built yet
-  version: number; // file mtime; changes whenever the index is rebuilt
+  missing: boolean; // true when there is no index to show: none built yet, and none stored
+  version: number; // changes whenever the index served changes (the file's mtime, or below -1 for one read from the database)
+  source: "file" | "database" | "none"; // where the index served came from
   bySlug: Map<string, Page>;
   byLowerSlug: Map<string, Page>;
   categories: Map<string, Page[]>; // category -> articles, sorted by title
@@ -26,7 +34,8 @@ export interface Loaded {
   byName: Map<string, Page[]>; // lowercased folder name -> every folder of that name
 }
 
-let cache: Loaded | null = null;
+let fromFileCache: Loaded | null = null; // the index file, by its mtime
+let fromDbCache: Loaded | null = null; // an index read from the database, by its version
 
 const EMPTY: SiteIndex = {
   meta: { generatedAt: "", roots: [], maxDepth: 0, counts: { pages: 0, articles: 0, repos: 0, stubs: 0, categories: 0 }, durationMs: 0 },
@@ -34,18 +43,7 @@ const EMPTY: SiteIndex = {
   disambiguation: {},
 };
 
-export function getIndex(): Loaded {
-  let version = 0;
-  try {
-    version = fs.statSync(INDEX_FILE).mtimeMs;
-  } catch {
-    version = -1;
-  }
-  if (cache && cache.version === version) return cache;
-
-  // Older indexes are brought up to the current rules on load: no credentials, no
-  // dashes, UTC dates rolled up the tree (see lib/normalize.ts).
-  const index: SiteIndex = version > 0 ? normalizeIndex(JSON.parse(fs.readFileSync(INDEX_FILE, "utf8"))) : EMPTY;
+function build(index: SiteIndex, version: number, source: Loaded["source"]): Loaded {
   const bySlug = new Map(index.pages.map((p) => [p.slug, p]));
   const byLowerSlug = new Map(index.pages.map((p) => [p.slug.toLowerCase(), p]));
   const categories = new Map<string, Page[]>();
@@ -55,17 +53,58 @@ export function getIndex(): Loaded {
   for (const list of categories.values()) list.sort((a, b) => a.title.localeCompare(b.title));
   const byName = new Map<string, Page[]>();
   for (const p of index.pages) byName.set(p.name.toLowerCase(), [...(byName.get(p.name.toLowerCase()) ?? []), p]);
-  cache = {
+  return {
     index,
-    missing: version <= 0,
+    missing: source === "none",
     version,
+    source,
     bySlug,
     byLowerSlug,
     categories,
     articles: index.pages.filter((p) => p.isArticle),
     byName,
   };
-  return cache;
+}
+
+const NONE = build(EMPTY, -1, "none");
+
+/** The index file, reloaded when its mtime changes, or null when there is none. */
+function fromFile(): Loaded | null {
+  let version = -1;
+  try {
+    version = fs.statSync(INDEX_FILE).mtimeMs;
+  } catch {
+    /* not built yet, or deleted */
+  }
+  if (version <= 0) return null;
+  if (fromFileCache?.version === version) return fromFileCache;
+  // Older indexes are brought up to the current rules on load: no credentials, no
+  // dashes, UTC dates rolled up the tree (see lib/normalize.ts).
+  const index = normalizeIndex(JSON.parse(fs.readFileSync(INDEX_FILE, "utf8")));
+  fromFileCache = build(index, version, "file");
+  if (!DEMO) rememberLocalIndex(index, version);
+  return fromFileCache;
+}
+
+/** An index the database holds, built once per version. Same version as the file it was stored from: the same Loaded. */
+function fromDb(held: { index: SiteIndex; version: number }): Loaded {
+  if (fromDbCache?.version === held.version) return fromDbCache;
+  fromDbCache =
+    fromFileCache?.version === held.version && fromFileCache.index === held.index
+      ? { ...fromFileCache, source: "database" }
+      : build(normalizeIndex(held.index), held.version, "database");
+  return fromDbCache;
+}
+
+export function getIndex(): Loaded {
+  const file = fromFile();
+  if (DEMO) {
+    const remote = remoteDemoIndex(file?.index.meta.generatedAt ?? "");
+    return remote ? fromDb(remote) : (file ?? NONE);
+  }
+  if (file) return file;
+  const held = heldLocalIndex();
+  return held ? fromDb(held) : NONE;
 }
 
 export function getPage(slug: string | null | undefined): Page | null {

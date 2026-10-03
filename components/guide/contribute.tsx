@@ -30,6 +30,8 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
       { path: "lib/data.ts", role: "Loads the index, reloads it when it changes, resolves every /wiki slug." },
       { path: "lib/search.ts", role: "MiniSearch, operators, the prior, snippets, did you mean, suggestions." },
       { path: "lib/links.ts", role: "wikiHref, categoryHref, searchHref, vscodeHref." },
+      { path: "lib/activity.ts", role: "The history's folders: one per session, one JSON Lines file per app." },
+      { path: "lib/db", role: "The database: PGlite on this machine, Neon on the demo, the same SQL for both.", dir: true },
     ],
   },
   {
@@ -41,7 +43,8 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
       { path: "app/search/page.tsx", role: "Results, tabs, the knowledge panel." },
       { path: "app/wiki/[slug]/page.tsx", role: "Every Innerpedia page but the Main page, through resolveSlug." },
       { path: "app/api/suggest/route.ts", role: "Suggestions for the search box, as you type." },
-      { path: "app/api/activity/route.ts", role: "Writes the history on this machine; same origin only, and shut on the demo." },
+      { path: "app/api/activity/route.ts", role: "Writes the history: to this machine's folders, or on a demo with a database, to Neon for 30 days. Same origin only." },
+      { path: "app/api/db/store/route.ts", role: "Store now, from the history page: the index and the history into this machine's database." },
       { path: "app/globals.css", role: "The tokens, both themes, the aurora, prose." },
     ],
   },
@@ -316,6 +319,7 @@ const CHECKS: { what: string; code: string; expect: string }[] = [
   { what: "Search, ranking, operators", code: 'pnpm tsx --conditions=react-server scripts/try-search.ts "linear clone"', expect: "Results, the knowledge-panel pick, did you mean and suggestions." },
   { what: "Anything you can see", code: 'scripts/shot.sh "/wiki/innernet" out.png 1440 2400 dark', expect: "A settled screenshot, and the elements that scroll the page sideways, if any." },
   { what: "The indexer", code: "INNERNET_ROOTS=~/some/small/dir INNERNET_OUT=/tmp/innernet-test.json pnpm index", expect: "A test index; the real one is left alone." },
+  { what: "The database", code: "INNERNET_DB_DIR=/tmp/innernet-db pnpm db:store", expect: "The index and the history stored in a scratch copy; then pnpm db:status with the same folder." },
   { what: "Copy", code: `rg -n "[\\x{2013}\\x{2014}]" -g '!node_modules' -g '!.next' -g '!data' .`, expect: "No matches: no em or en dashes anywhere." },
 ];
 
@@ -355,8 +359,9 @@ const CONVENTIONS: { title: string; text: React.ReactNode }[] = [
     title: "Server first",
     text: (
       <>
-        Pages are Server Components. The browser asks only this app, and only twice: the search box asks <C>/api/suggest</C>, and the history posts each page to{" "}
-        <C>/api/activity</C>. Nothing ever leaves the machine. A new client component needs a reason only the browser can satisfy.
+        Pages are Server Components. The browser asks only this app, and only two routes: the search box asks <C>/api/suggest</C>, and the history posts each page to{" "}
+        <C>/api/activity</C> (on a demo with a database, its history page also reads and clears the visitor&apos;s own sessions there). On this machine nothing ever
+        leaves it. A new client component needs a reason only the browser can satisfy.
       </>
     ),
   },

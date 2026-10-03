@@ -28,7 +28,7 @@ Your existing folders are the source material. One local JSON index powers both 
 | **Search** · `/` and `/search` | A familiar search box, highlighted results, live suggestions, spelling corrections and project knowledge panels. |
 | **Innerpedia** · `/wiki` | Project articles with README overviews, folder trees, technology, Git history and related projects. Browse categories, statistics or a random article. |
 | **Field guide** · `/#guide` | The second half of the home page: an illustrated walkthrough of the crawl, search and privacy rules, an interactive recipe for turning a folder into an article, and a prompt that hands Innernet to an AI assistant. |
-| **History** · `/activity` | Every page you opened, one session per browser tab, kept as plain files on this machine. The header's arrows step back and forward. |
+| **History** · `/activity` | Every page you opened, one session per browser tab, kept as plain files on this machine with a copy in its own database. The header's arrows step back and forward. |
 
 ## The public demo (Vercel)
 
@@ -43,7 +43,9 @@ pnpm dev:demo     # preview the demo locally
 `data/demo/index.json` is committed, and every path in it is a GitHub URL. Vercel builds
 always run the demo (`VERCEL=1`); locally `INNERNET_DEMO=1` switches it on (`lib/mode.ts`).
 In the demo the localhost guard is off, a banner says what you are looking at, folders
-link to GitHub instead of VS Code, and the guide plays the committed 720p film.
+link to GitHub instead of VS Code, and the guide plays the committed 720p film. With a
+database it keeps the pages and searches visitors open for 30 days, anonymously
+([the demo's history](#the-demos-history)); without one, history stays in the browser.
 
 ## How it works
 
@@ -144,9 +146,10 @@ spaces, such as `in:"side projects"`. Results can also be filtered using the
 
 ## History
 
-Innernet writes down what you open, in plain files on this machine. There is no
-database, no index file and no schema registry: a session is a folder, and each app
-that takes part writes its own JSON Lines file inside it.
+Innernet writes down what you open, in plain files on this machine. The files are the
+record and the format every app shares, with no index file and no schema registry: a
+session is a folder, and each app that takes part writes its own JSON Lines file inside
+it. The [database](#the-database) keeps a copy of the lines, read in as they change.
 
 ```text
 ~/.innernet/history/                  set INNERNET_HISTORY_DIR to keep it elsewhere
@@ -176,9 +179,146 @@ echo '{"at":"'$(date -u +%FT%TZ)'","app":"notes","kind":"edit","file":"todo.md"}
 sessions newest first, each opening onto its events merged across apps. The header's
 arrows step back and forward through the pages of the current tab. The browser writes
 through the app's own `/api/activity` route, which accepts only same-origin requests
-on localhost, and browsers driven by automation are not recorded. Delete a session's
-folder to forget it. On the public demo nothing is sent to or stored on the server: the
-same events stay in the visitor's own `localStorage`.
+on localhost, and browsers driven by automation are not recorded. The route appends the
+line to the file first, then reads that session's files into the database; `/activity`
+reads in every folder that changed before it shows the list, so a line another app
+appended shows on the next visit. Without the database the page reads the files, as it
+always has. Delete a session's folder to forget it; the database forgets it on its next
+read. The public
+demo keeps its visitors' history differently: see [the demo's history](#the-demos-history).
+
+## The database
+
+Innernet keeps a copy of what it serves in a small Postgres database. The files stay the
+source; the copy means a deleted index does not blank the site, the history page reads
+every app's lines with one query, and both can be written back out as files.
+
+On this machine it is [PGlite](https://pglite.dev), Postgres compiled to WebAssembly,
+running inside the server on a folder of plain files. Nothing listens on a port and
+nothing leaves the machine.
+
+```text
+~/.innernet/db/          set INNERNET_DB_DIR to keep it elsewhere, INNERNET_DB=off to go without
+  pgdata/                the Postgres cluster (folder mode 700)
+  owner.lock             the process that has it open: one at a time
+```
+
+| Table | Holds |
+| --- | --- |
+| `kv` | Small named values: the index's meta and disambiguation, the schema version, and one mark per history file (bytes read so far, inode, mtime, a hash of the bytes before the mark). |
+| `pages` | One row per page of the index, in the index's order. |
+| `activity` | One row per history line: session, app, time, kind, the event as JSON and the exact line. Its key is a hash of the session, the app and the line, so a line stored twice is one row. |
+
+The server stores each new `data/index.json` as it loads it, and if the file goes missing
+it serves the stored index instead. The history comes in as it changes: after each event
+the recorder sends, and whenever `/activity` is read. A file whose size, inode and mtime
+match its mark is not opened; one that has grown is read from its mark on, new bytes only;
+one shortened, edited in place or replaced is read whole, and its rows become exactly its
+lines. A line the database will not take is skipped on its own, never holding back the
+rest. A session folder or app file you delete is forgotten in the database too. The
+history folder itself is different: the database notes which folder it read (its device,
+inode and birth time), and if it finds another one there (the folder was lost, moved or
+made anew), it keeps every session that did not come with it, however many new ones the
+new folder gains, so `pnpm db:load` can write them back. To forget everything at once,
+delete `~/.innernet/db` as well.
+
+PGlite runs Postgres single-user, with no autovacuum and no checkpointer, so Innernet
+vacuums a table and checkpoints after every few hundred rows rewritten or deleted (a
+re-index counts), and keeps the write-ahead log under 64 MB. The folder stays near
+70 MB for an index of 5,000 pages, however often it is rebuilt.
+
+One process opens the folder at a time: a second server works from the files alone and
+says so once, and the commands below decline politely while the server has it. A lock
+left by a server that crashed is taken over, even if its process id has since gone to
+another program; with no Innernet running, deleting `owner.lock` is always safe.
+
+```bash
+pnpm db:status   # where it lives, its size, what it holds
+pnpm db:store    # store data/index.json and bring the history up to date with its folders
+pnpm db:load     # write the stored index and history back out as files (stop the server first)
+```
+
+`/activity` has a Database card with the same counts and a **Store now** button, which
+runs what `db:store` runs inside the server that already holds the folder (a same-origin
+POST to `/api/db/store`, on localhost only). `db:load` adds the history lines that are
+missing and never deletes any, and it leaves an index file newer than the stored copy
+alone unless you pass `--force`.
+
+| Variable | Effect |
+| --- | --- |
+| `INNERNET_DB_DIR` | Where the database lives (default `~/.innernet/db`). |
+| `INNERNET_DB=off` | No database: Innernet reads and writes its files alone. |
+| `INNERNET_HISTORY_DIR` | Where the history folders live (default `~/.innernet/history`). |
+
+### The demo's database
+
+The public demo uses [Neon](https://neon.tech) serverless Postgres instead, in US East,
+through the `DATABASE_URL` that the Vercel Marketplace sets. Local mode refuses to connect
+to it, or to any remote database, whatever is set. It holds two things.
+
+**The demo index.** On first use, then at most every five minutes, the demo looks for an
+index newer than the bundled `data/demo/index.json` and serves it once it passes the same
+leak checks as `pnpm index:demo`. The server never writes it. To store a fresh one, with
+the connection string in the environment (the maintainers keep it in the gitignored
+`.env.neon.local`, which Next.js never loads):
+
+```bash
+pnpm index:demo
+set -a; . ./.env.neon.local; set +a; pnpm db:store --demo
+```
+
+`db:store --demo` refuses a local index, and anything that names this machine, before a
+byte reaches Neon; the store itself refuses the same again, whoever calls it. Without
+`--demo` the commands drop `DATABASE_URL` from their environment and refuse to run while
+`INNERNET_DEMO`, `INNERNET_DEMO_BUILD` or `VERCEL` is set, so a shell left in demo mode
+cannot send this machine's index anywhere.
+
+A build that can see `DATABASE_URL` turns off Turbopack's persistent cache
+(`next.config.ts`): that cache saves the whole environment of the build in `.next/cache`,
+in files anyone on the machine can read, and the connection string belongs only in
+`.env.neon.local`.
+
+### The demo's history
+
+The recorder keeps each visitor's events in their browser's `localStorage`, and when the
+demo has a database it also posts them to `/api/activity`, which keeps them in the same
+`activity` table for 30 days:
+
+- **What is stored:** per event, the kind (`visit`, `search`, `back` or `forward`), the
+  page's path on the demo (one of its own pages, with no query but the search's own `q`,
+  `t` and `p`: campaign tags and other sites' click ids are dropped in the browser and
+  again on the server), its title or the search words, `via` (whether the header's
+  buttons or the browser's moved you back or forward), and the server's time. Each event
+  is kept once, as JSON.
+- **Under what:** each tab makes a session id from the time it opened, by the visitor's
+  own clock, and 12 random characters. The database keeps only a SHA-256 hash of it,
+  which cannot be turned back into the id or the time.
+- **What is never stored:** an IP address, a user agent, cookies or any other header.
+  Nothing on the site lists sessions: the history page asks for its own sessions by the
+  ids its browser remembers, in the body of a `POST` (`{"read": [ids]}`, at most 50), so
+  only a browser holding an id can read it back, and ids never appear in an address that
+  a request log would keep. The people who run the demo can read the database, as with
+  any server, and Vercel keeps its usual request logs for any site it serves.
+- **For how long:** 30 days. Older rows are never served, and every write deletes a few
+  of them first.
+- **How much:** at most 400 events a session, and 10,000 stored a day across the demo,
+  counted as they are stored (deleting a session gives none back); nothing more once the
+  table reaches 300 MB. A read returns at most 1,000 events, and once the demo has served
+  50,000 in a day it serves none until the next. Past any of these the route answers 429
+  (or, for reads, returns the counts without the events) and the browser keeps its own
+  copy.
+- **How to clear it:** the Clear button on `/activity` deletes, from the database and
+  from the browser, every session this browser sent in the last 30 days
+  (`DELETE /api/activity` with `{"sessions": [ids]}`); the browser remembers up to a
+  thousand of them.
+
+The route takes little: same origin only (its Origin must name its Host, and
+`Sec-Fetch-Site` must say `same-origin` when present), JSON under 2 KB, one of those four
+kinds, one of the demo's own pages, short printable text and a session id of the demo
+recorder's exact shape. Without `DATABASE_URL`, as on a fork, the demo stores nothing:
+`/api/activity` answers 404 and the history stays in the browser alone. A rate limit by
+address, which the app cannot keep without keeping addresses, belongs in the Vercel
+Firewall (a rate-limit rule on `/api/activity`).
 
 ## Privacy
 
@@ -193,6 +333,10 @@ Innernet is built to read and serve your project context on your machine.
   and 96 KB for other images) under the same secret-folder and secret-name rules, with
   symlinks never followed. It does not read `.env`, key files or arbitrary source and
   document contents. The Documents tab classifies folders by file names and types.
+- **Local database.** The copy in `~/.innernet/db` (PGlite, folder mode 700) stays on
+  this machine, and local mode never connects to a remote database. It follows the
+  history folders: a session you delete there is forgotten in the database too. Only a
+  history folder lost or replaced whole has its sessions kept, for `pnpm db:load`.
 - **Redaction.** Secret-looking file names are hidden, credentials are stripped from
   Git remotes, and credential-shaped text becomes `[redacted]` during indexing and
   when an older index is loaded.
@@ -200,9 +344,16 @@ Innernet is built to read and serve your project context on your machine.
   and sets a Content-Security-Policy that keeps the browser on the same origin.
   Development also allows websockets for hot reload. The browser calls only two of the
   app's own routes: `/api/suggest` for suggestions, and `/api/activity` to write the
-  [history](#history), which accepts same-origin requests on localhost only. The public
-  demo sends nothing to `/api/activity` (it answers 404 there) and keeps each visitor's
-  history in their own `localStorage`.
+  [history](#history), which accepts same-origin requests on localhost only. The history
+  page's Store now posts to `/api/db/store`, on localhost only.
+- **The public demo.** It reads nothing from the machine it runs on. With a database it
+  keeps the pages and searches its visitors open for 30 days, anonymously, as described in
+  [the demo's history](#the-demos-history): no IP address, user agent or cookie, only a
+  hash of each tab's id, nothing that lists sessions, and a Clear button that deletes
+  them. Its database also holds the
+  public demo index, checked before it is stored and again before it is served. Without
+  a database it sends nothing to `/api/activity` (that answers 404) and keeps each
+  visitor's history in their own `localStorage`.
 
 During development, Next.js records request URLs, including search queries, in
 `.next/dev/trace`. That file is gitignored and can be deleted.
@@ -232,7 +383,9 @@ pnpm -s typecheck
 | [`lib/text.ts`](lib/text.ts) · [`lib/normalize.ts`](lib/normalize.ts) | Clean and redact text; bring older indexes up to current rules. |
 | [`lib/logo.ts`](lib/logo.ts) | Serve each project's logo from the index at `/api/logo/<hash>`, so pages link to it instead of inlining it. |
 | [`lib/activity.ts`](lib/activity.ts) | Read and append the history: one folder per session, one JSON Lines file per app. |
-| [`app/`](app) · [`components/`](components) | Search, Innerpedia, the field guide and the history. |
+| [`lib/db/`](lib/db) | The database: PGlite on this machine, Neon on the demo, one adapter and the same SQL for both. `ingest.ts` keeps this machine's history in step with its folders; `demo-history.ts` keeps the demo visitors' history. |
+| [`scripts/db.ts`](scripts/db.ts) · [`lib/demo-check.ts`](lib/demo-check.ts) | `pnpm db:status`, `db:store` and `db:load`; the demo's leak checks. |
+| [`app/`](app) · [`components/`](components) | Search, Innerpedia, the field guide and the history. `app/api/activity` writes the history; `app/api/db/store` is Store now. |
 | [`proxy.ts`](proxy.ts) · [`next.config.ts`](next.config.ts) | Localhost checks and browser security headers. |
 | [`scripts/shot.sh`](scripts/shot.sh) | Capture settled app screenshots and report horizontal overflow. |
 

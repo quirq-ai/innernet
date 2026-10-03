@@ -9,7 +9,9 @@ import { readTrail, record, takePendingMove, writeTrail, type Fields } from "./t
 // for a results page, "back" or "forward" for a step along the trail (the header's
 // buttons, or the browser's own when it lands on the neighbouring page), "visit" for
 // everything else. A reload is not a new event. Automated browsers (screenshots, tests)
-// are not recorded, so the history holds only what a person did.
+// are not recorded, so the history holds only what a person did. `server` says whether
+// the event goes to the server: always on this machine, and on the demo only when it
+// keeps a database (components/activity/trail.ts).
 
 // Module state outlives React's double-run of effects in development, so a page is
 // recorded once however many times its effect runs.
@@ -20,7 +22,7 @@ let seenPop: Event | null = null;
 const tidyTitle = (t: string) => t.replace(/\s·\sInnernet$/, "").trim().slice(0, 200);
 const automated = () => typeof navigator !== "undefined" && navigator.webdriver === true;
 
-export function ActivityRecorder({ demo }: { demo: boolean }) {
+export function ActivityRecorder({ demo, server }: { demo: boolean; server: boolean }) {
   const pathname = usePathname();
   const search = useSearchParams().toString();
   const titleBefore = useRef("");
@@ -90,7 +92,7 @@ export function ActivityRecorder({ demo }: { demo: boolean }) {
         entry.label = label;
         writeTrail(t);
       }
-      record(kind === "search" ? { kind, q, url } : { kind, url, title: tidy, ...(q ? { q } : {}), ...(via ? { via } : {}) }, demo);
+      record(kind === "search" ? { kind, q, url } : { kind, url, title: tidy, ...(q ? { q } : {}), ...(via ? { via } : {}) }, demo, server);
     };
     const check = () => {
       if (document.title && document.title !== before) finish(document.title);
@@ -100,7 +102,7 @@ export function ActivityRecorder({ demo }: { demo: boolean }) {
     check();
     // Left before the title came: record it without one rather than with the next page's.
     return () => finish(undefined);
-  }, [pathname, search, demo]);
+  }, [pathname, search, demo, server]);
 
   return null;
 }

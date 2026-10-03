@@ -1,10 +1,13 @@
+import { DAILY_CAP, RETENTION_DAYS, SESSION_CAP } from "@/lib/db/demo-history";
+import { num } from "@/lib/format";
 import { redactSecrets } from "@/lib/text";
 import { CHAPTERS } from "./chapters";
 import { C, ChapterHead, Excerpt, Fine, Prose, SectionHead } from "./parts";
 import { Figure, Plate } from "./plate";
 import { cite } from "./source";
 
-// Chapter V: what is read, what is only counted, what is blacked out, and who may ask.
+// Chapter V: what is read, what is only counted, what is blacked out, who may ask, and
+// what the database keeps, here and on the public demo.
 
 const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
   {
@@ -58,7 +61,9 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
       <>Any request not addressed to localhost: a 403 before anything is read.</>,
       <>Scripts, styles, images and connections from any other origin.</>,
       <>Being framed by another page. Every page also asks search engines to look away.</>,
-      <>Any write but one: the history of what you open, from this app&apos;s own pages, to a folder in your home.</>,
+      <>
+        Any write but one: the history of what you open, from this app&apos;s own pages, to a folder in your home and its copy in <C>~/.innernet/db</C>.
+      </>,
     ],
   },
 ];
@@ -173,13 +178,45 @@ export function Privacy() {
         <p>
           In the browser, a Content-Security-Policy holds every page to its own origin; under <C>next dev</C> it also lets the hot-reload websocket through. The fonts are served by the app itself, the pages ask search engines to look
           away, and apart from moving between pages a page makes two requests, both to this app: the search box asks <C>/api/suggest</C> for suggestions as you
-          type, and the history posts the page you opened to <C>/api/activity</C>, which refuses anything not sent from this app&apos;s own pages on localhost.
+          type, and the history posts the page you opened to <C>/api/activity</C>, which refuses anything not sent from this app&apos;s own pages on localhost. The
+          public demo is the one place it answers anyone else, and only when the demo keeps a database; the next section says what it keeps.
         </p>
       </Prose>
       <Excerpt file="next.config.ts" from="const csp = [" lines={11} mark={["default-src", "frame-ancestors"]} className="mt-6" />
       <Fine className="mt-6 max-w-[680px]">
         One caveat: <C>next dev</C> records request URLs, search queries included, in <C>.next/dev/trace</C>. It is gitignored and recreated; delete it whenever you
         like.
+      </Fine>
+
+      <SectionHead id="database" mark="V.3" title="The database" />
+      <Prose className="mt-8">
+        <p>
+          Innernet keeps a copy of its index and its history in a small Postgres database. On your machine it is PGlite, Postgres compiled to WebAssembly, running
+          inside the server on a folder at <C>~/.innernet/db</C> (folder mode 700). Nothing listens on a port, and local mode refuses to open a remote database
+          whatever the environment says, before a byte is sent:
+        </p>
+      </Prose>
+      <Excerpt file="lib/db/neon.ts" from="export async function openNeon" lines={2} mark={["if (!DEMO) throw"]} className="mt-6" />
+      <Prose className="mt-8">
+        <p>
+          The history folders stay the record. After each page you open, and whenever the history page is read, the files that changed are read into the database,
+          only the new bytes of each. A session folder you delete, or a line you take out of a file, is forgotten there too. Only when the history folder itself is
+          lost or replaced (the database notes which folder it read) does it keep the sessions that did not come with the new one, so <C>pnpm db:load</C> can write
+          them back. Set <C>INNERNET_DB=off</C> and Innernet runs on its files alone; delete <C>~/.innernet/db</C> to forget the copy.
+        </p>
+        <p>
+          The public demo is different, and it is the one place anything you do is written to a server. When it has a database (Neon Postgres, in US East), it keeps
+          the pages and searches its visitors open for {RETENTION_DAYS} days: per event, the kind of event, the page&apos;s path (none of the rest of its address
+          but the search&apos;s own), its title or the search words, whether the back and forward buttons took you there, and the server&apos;s time, under a hash of
+          the id the visitor&apos;s tab made, which gives back neither the id nor the time in it. Never an IP address, a user agent, a cookie or any other header.
+          Nothing lists sessions, ids travel only in request bodies, so only a browser holding a session&apos;s id can read it back, and the Clear button on the
+          history page deletes every one that browser sent. Each session holds at most {num(SESSION_CAP)} events and the whole demo stores at most{" "}
+          {num(DAILY_CAP)} a day. A fork without a database keeps every visitor&apos;s history in their own browser, as the demo did before.
+        </p>
+      </Prose>
+      <Fine className="mt-6 max-w-[680px]">
+        The demo&apos;s rules: {cite("lib/db/demo-history.ts", "export const RETENTION_DAYS")}, its route {cite("app/api/activity/route.ts", "export async function POST")}.
+        This machine&apos;s: {cite("lib/db/ingest.ts", "async function ingest(")}.
       </Fine>
     </section>
   );

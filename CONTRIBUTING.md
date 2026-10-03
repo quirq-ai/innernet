@@ -32,6 +32,8 @@ lint, test or format tooling; these are the checks.
 | Search, ranking, operators | `pnpm tsx --conditions=react-server scripts/try-search.ts "linear clone"` | results, the knowledge-panel pick, did-you-mean and suggestions, printed |
 | Anything you can see | `scripts/shot.sh "/wiki/innernet" out.png 1440 2400 dark` | a settled screenshot, and the names of any elements that scroll the page sideways |
 | The indexer | `INNERNET_ROOTS=~/some/small/dir INNERNET_OUT=/tmp/innernet-test.json pnpm index` | a test index, with your real one left alone |
+| The database | `INNERNET_DB_DIR=/tmp/innernet-db pnpm db:store`, then `pnpm db:status` with the same folder | the index and history stored in a scratch copy, the real one left alone |
+| The history | with the dev server stopped, `INNERNET_HISTORY_DIR=/tmp/h INNERNET_DB_DIR=/tmp/hdb pnpm dev`; open a few pages, append a line to `/tmp/h/<session>/notes.jsonl` and reload `/activity` | the line shows, once, however often the page is read; the real history left alone |
 | Copy | `rg -n "[\x{2013}\x{2014}]" -g '!node_modules' -g '!.next' -g '!data' .` | no matches |
 
 A few things worth knowing about these tools:
@@ -52,6 +54,14 @@ A few things worth knowing about these tools:
   `node_modules/.bin/tsx --conditions=react-server` and this folder's `scripts/try-search.ts`.
 - `INNERNET_MAX_DEPTH=3` overrides the depth in `innernet.config.json` for one run, as
   `INNERNET_ROOTS` does the roots.
+- The demo's database is reached only with its connection string in the environment,
+  loaded for one command from the gitignored `.env.neon.local`:
+  `set -a; . ./.env.neon.local; set +a; INNERNET_DEMO=1 pnpm build`, then the same
+  prefix for `pnpm exec next start -p 3491 -H 127.0.0.1` or `pnpm db:status --demo`.
+  Never copy it into `.env` or `.env.local`, which Next.js would load. A build that sees
+  it keeps no Turbopack cache (`next.config.ts`), since that cache saves the build's
+  whole environment. Test visits on the demo use ids of the demo's shape; clear them with
+  the history page's Clear button, or `DELETE /api/activity`, before you finish.
 - A route crawler (211 routes: every operator, tabs, odd slugs, specials, 404s) was used
   while building Innernet but is not in the repo yet. Landing it as `scripts/crawl.mjs`
   would be a welcome first pull request.
@@ -64,11 +74,14 @@ can satisfy: the search box, the home hero search, the theme toggle and the cont
 rail; the field guide's copy button, folder recipe, reveal motion and progress ruler;
 the Innerpedia globe and the reveal of the boxes below it; and the history's recorder,
 the header's back and forward buttons, and the history page's two views of this browser.
-The browser makes two requests of its own, both to this app: the search box asks
-`/api/suggest`, and the recorder posts each page visited to `/api/activity` (local mode
-only, same origin only; the demo keeps history in `localStorage` and sends nothing). Keep
-it that way: no other browser fetches, no external requests, no new client components
-without a reason only the browser can satisfy.
+The browser asks two of this app's routes and nothing else: the search box asks
+`/api/suggest`, and the recorder posts each page visited to `/api/activity` (same origin
+only). On the demo that post is made only when the demo has a database, and its history
+page then reads and clears the visitor's own sessions on the same route (a `POST` of
+`{"read": [ids]}` and a `DELETE` of `{"sessions": [ids]}`: ids never go in an address);
+without one the demo keeps history in `localStorage` and sends nothing. The history
+page's Store now is a plain form posting to `/api/db/store`, local only. Keep it that way: no other browser fetches, no external requests, no new client
+components without a reason only the browser can satisfy.
 
 **Shared code stays shared.** The indexer imports `lib/text.ts`, `lib/normalize.ts` and
 `lib/types.ts`, and `lib/links.ts`, `lib/format.ts` and `lib/lang-colors.ts` are meant to
@@ -89,7 +102,11 @@ near `dangerouslySetInnerHTML`.
 **Privacy is a feature.** The indexer reads READMEs, CLAUDE.md or AGENTS.md, manifests,
 git metadata and a project's own logo image (found by name), and nothing else. If you need a new kind of input, read names rather
 than contents where you can, and run anything textual through `redactSecrets` and
-`cleanLine` in `lib/text.ts`.
+`cleanLine` in `lib/text.ts`. The database keeps to the same line: this machine's copy
+stays in PGlite on this machine (`lib/db/neon.ts` refuses local mode outright), and the
+demo writes to Neon only the index and what `lib/db/demo-history.ts` lists. Anything new
+a demo keeps about its visitors must be anonymous, capped, gone within 30 days and
+clearable by the visitor, and README.md must say so.
 
 **House style.** Encyclopedia voice in article prose ("is a", "was created in"). Plain,
 warm, a little wry. No exclamation marks. No em or en dashes anywhere, in copy, comments
@@ -169,7 +186,8 @@ aliases, add them to both `LANG_ALIASES` copies (`lib/search.ts` and
 
 - [ ] Typecheck passes.
 - [ ] Screenshots in light and dark, desktop and phone width, for anything visible.
-- [ ] Every page touched still renders with an empty or missing `data/index.json`.
+- [ ] Every page touched still renders with an empty or missing `data/index.json` (with
+      `INNERNET_DB=off`, or the stored copy serves instead).
 - [ ] No em or en dashes, no exclamation marks, encyclopedia voice in prose.
 - [ ] Colours from tokens, links from `lib/links.ts`, index text as React nodes.
 - [ ] No new browser requests, no new reads from disk beyond names and the files listed above.

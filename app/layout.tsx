@@ -3,6 +3,7 @@ import { Inter, Instrument_Serif, JetBrains_Mono, Newsreader } from "next/font/g
 import { Suspense } from "react";
 import { ActivityRecorder } from "@/components/activity/recorder";
 import { DEMO_BAR, DemoBanner } from "@/components/demo-banner";
+import { demoKeepsHistory } from "@/lib/db";
 import { DEMO } from "@/lib/mode";
 import "./globals.css";
 
@@ -43,9 +44,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="grain min-h-dvh bg-bg text-ink">
         {DEMO && <DemoBanner />}
         {children}
-        {/* Writes each page visited to the history (lib/activity.ts); on the demo, to this browser only. */}
+        {/* Writes each page visited to the history (lib/activity.ts); on the demo, to this
+            browser, and to the demo's database when it has one (lib/db/demo-history.ts). */}
         <Suspense fallback={null}>
-          <ActivityRecorder demo={DEMO} />
+          <ActivityRecorder demo={DEMO} server={!DEMO || demoKeepsHistory()} />
         </Suspense>
       </body>
     </html>

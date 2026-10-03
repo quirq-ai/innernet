@@ -1,25 +1,38 @@
 import type { Metadata } from "next";
 import { BrowserHistory } from "@/components/activity/browser-history";
+import { DatabaseCard } from "@/components/activity/database-card";
 import { FormatNotes } from "@/components/activity/format-notes";
 import { SessionList } from "@/components/activity/session-list";
 import { newSessionId, type Session } from "@/components/activity/shared";
 import { ThisTab } from "@/components/activity/this-tab";
 import { SiteFooter } from "@/components/site-footer";
 import { TopBar } from "@/components/top-bar";
-import { HISTORY_DIR, historyLabel, listSessions } from "@/lib/activity";
+import { HISTORY_DIR, historyLabel } from "@/lib/activity";
+import { demoKeepsHistory } from "@/lib/db";
+import { RETENTION_DAYS } from "@/lib/db/demo-history";
+import { historySessions, lastStore, type HistoryListing } from "@/lib/db/ingest";
+import { dbStatus } from "@/lib/db/status";
 import { num } from "@/lib/format";
 import { wikiHref } from "@/lib/links";
 import { DEMO } from "@/lib/mode";
 
 // The history: every session of browsing, newest first, each opening onto its events
-// merged across the apps that wrote to it. On this machine it is read from the files in
-// the history folder on every request. On the demo the server holds nothing, so the
-// list is drawn in the browser from its own localStorage.
+// merged across the apps that wrote to it. On this machine every session folder that
+// changed is read into the database (lib/db/ingest.ts), and the list is read back from
+// it; without the database, from the files, as before. On the demo the list is drawn in
+// the browser from its own localStorage, together with the copy the demo's database
+// keeps when it has one. The Database card says which.
 
-export const metadata: Metadata = {
-  title: "History",
-  description: DEMO ? "What you have opened on this demo, kept in your browser alone." : "Every page opened in Innernet, kept as plain JSON Lines files on this machine.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "History",
+    description: !DEMO
+      ? "Every page opened in Innernet, kept as plain JSON Lines files on this machine, with a copy in its own database."
+      : demoKeepsHistory()
+        ? `What you have opened on this demo, kept in your browser and for ${RETENTION_DAYS} days in the demo's database, with no IP address or cookies.`
+        : "What you have opened on this demo, kept in your browser alone.",
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +45,12 @@ const LINKS = [
 
 const AURORA_MASK = "radial-gradient(ellipse min(620px, 100vw) 300px at 18% 0%, #000 10%, transparent 100%)";
 
-export default function ActivityPage() {
-  const { sessions, older } = DEMO ? { sessions: [], older: 0 } : listSessions();
+export default async function ActivityPage() {
+  const listing: HistoryListing = DEMO ? { sessions: [], older: 0, source: "files" } : await historySessions();
+  const { sessions, older } = listing;
+  const status = await dbStatus();
+  const server = demoKeepsHistory();
+  const copied = !DEMO && status.state === "ready";
   const total = sessions.length + older;
   const now = Date.now();
   const events = sessions.reduce((n, s) => n + s.total, 0);
@@ -58,14 +75,25 @@ export default function ActivityPage() {
                 History
               </h1>
               <p className="rise mt-4 max-w-[560px] font-serif text-[18px] leading-[1.6] text-ink-2 sm:text-[19px]" style={{ animationDelay: "80ms" }}>
-                {DEMO ? (
+                {DEMO && server ? (
+                  <>
+                    Every page you open here, kept in <em>this browser</em> and, for {RETENTION_DAYS} days, in the demo&apos;s database: under a hash of an id each tab makes,
+                    with no IP address, cookies or user agent.
+                  </>
+                ) : DEMO ? (
                   <>
                     Every page you open here, kept in <em>this browser</em> and nowhere else. The demo sends nothing to its server and stores nothing on it.
                   </>
                 ) : (
                   <>
                     Every page you open in Innernet, written down as you go, in plain files at{" "}
-                    <span className="whitespace-nowrap font-mono text-[14px] text-ink">{historyLabel()}</span>.
+                    <span className={`${pathFit(historyLabel())} font-mono text-[14px] text-ink`}>{historyLabel()}</span>
+                    {copied && (
+                      <>
+                        , with a copy in its database at <span className={`${pathFit(status.label)} font-mono text-[14px] text-ink`}>{status.label}</span>
+                      </>
+                    )}
+                    . None of it leaves this machine.
                   </>
                 )}
               </p>
@@ -84,7 +112,7 @@ export default function ActivityPage() {
 
             <div className="mt-12 sm:mt-14">
               {DEMO ? (
-                <BrowserHistory />
+                <BrowserHistory server={server} retentionDays={RETENTION_DAYS} />
               ) : sessions.length ? (
                 <>
                   <SessionList sessions={sessions} now={now} />
@@ -103,8 +131,9 @@ export default function ActivityPage() {
           </div>
 
           <aside aria-label="About the history" className="mt-16 border-t border-line pt-10 lg:mt-[10px] lg:border-t-0 lg:pt-0">
-            <div className="lg:sticky lg:top-24">
-              <FormatNotes dir={DEMO ? "~/.innernet/history" : historyLabel(HISTORY_DIR)} session={example} demo={DEMO} />
+            <DatabaseCard status={status} source={listing.source} last={DEMO ? null : lastStore()} now={now} retentionDays={RETENTION_DAYS} />
+            <div className="mt-10 lg:sticky lg:top-24">
+              <FormatNotes dir={DEMO ? "~/.innernet/history" : historyLabel(HISTORY_DIR)} session={example} demo={DEMO} server={server} retentionDays={RETENTION_DAYS} />
             </div>
           </aside>
         </div>
@@ -113,6 +142,10 @@ export default function ActivityPage() {
     </div>
   );
 }
+
+/** A folder kept on one line when it is short, as the default ~/.innernet ones are, and
+ * free to wrap anywhere when it is long (a path set by INNERNET_HISTORY_DIR or INNERNET_DB_DIR). */
+const pathFit = (p: string) => (p.length <= 40 ? "whitespace-nowrap" : "[overflow-wrap:anywhere]");
 
 function Stat({ n, label, note }: { n: number; label: string; note?: string }) {
   return (

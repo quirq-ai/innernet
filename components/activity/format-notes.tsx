@@ -1,12 +1,12 @@
 import { MAX_EVENT_BYTES } from "./shared";
 
-// The side column of the history page: how the history is kept, in four short parts.
-// The folder, a line, and how any other app joins in with one line of shell.
+// The side column of the history page, under the Database card: how the history is
+// kept. The folder, a line, and how any other app joins in with one line of shell.
 
 const label = "text-[11px] font-medium uppercase tracking-[0.12em] text-muted";
 const code = "mt-2.5 overflow-x-auto rounded-[10px] border border-line bg-bg-sunk px-3.5 py-3 font-mono text-[11.5px] leading-[1.7] text-ink-2";
 
-export function FormatNotes({ dir, session, demo }: { dir: string; session: string; demo: boolean }) {
+export function FormatNotes({ dir, session, demo, server, retentionDays }: { dir: string; session: string; demo: boolean; server: boolean; retentionDays: number }) {
   const root = dir.endsWith("/") ? dir.slice(0, -1) : dir;
   const name = root.split("/").pop() || root;
   const line = `{"at":"${sessionToIso(session)}","app":"innernet","kind":"visit","url":"/wiki/galileo","title":"galileo"}`;
@@ -19,8 +19,8 @@ export function FormatNotes({ dir, session, demo }: { dir: string; session: stri
           How it is kept
         </h2>
         <p className="mt-3 font-serif text-[16px] leading-[1.6] text-ink-2">
-          Plain files and nothing else. Each tab is a <em>session</em>, a folder named for the moment it began. Every app writes its own file of JSON Lines inside it, one event per
-          line, and reading a session is reading them all in order of time.
+          Plain files first. Each tab is a <em>session</em>, a folder named for the moment it began. Every app writes its own file of JSON Lines inside it, one event per line,
+          and reading a session is reading them all in order of time. The database keeps a copy of the lines, never the other way round.
         </p>
         <pre className={code} aria-label="The history folder">
           <span className="text-ink">{root}/</span>
@@ -36,12 +36,16 @@ export function FormatNotes({ dir, session, demo }: { dir: string; session: stri
         </pre>
         {demo ? (
           <p className="mt-2.5 text-[12.5px] leading-[1.55] text-muted">
-            A local Innernet writes this folder to <span className="font-mono text-[11.5px] text-ink-2">~/.innernet/history</span>. The demo writes nothing anywhere: it keeps the same
-            events in your browser.
+            A local Innernet writes this folder to <span className="font-mono text-[11.5px] text-ink-2">~/.innernet/history</span>, with its copy in{" "}
+            <span className="font-mono text-[11.5px] text-ink-2">~/.innernet/db</span>.{" "}
+            {server
+              ? `The demo keeps the same events in your browser, and for ${retentionDays} days in its database.`
+              : "The demo writes nothing anywhere: it keeps the same events in your browser."}
           </p>
         ) : (
           <p className="mt-2.5 text-[12.5px] leading-[1.55] text-muted">
-            Set <span className="font-mono text-[11.5px] text-ink-2">INNERNET_HISTORY_DIR</span> to keep it somewhere else. Delete a folder to forget a session.
+            Set <span className="font-mono text-[11.5px] text-ink-2">INNERNET_HISTORY_DIR</span> to keep it somewhere else. Delete a folder to forget a session; the database
+            forgets it too the next time this page is read.
           </p>
         )}
       </section>
@@ -71,7 +75,7 @@ export function FormatNotes({ dir, session, demo }: { dir: string; session: stri
           {!demo && (
             <>
               {" "}
-              There is no index to update: the next visit to this page reads <span className="font-mono text-[11.5px]">{name}</span> afresh.
+              There is nothing to register: the next visit to this page reads what changed in <span className="font-mono text-[11.5px]">{name}</span>.
             </>
           )}
         </p>
