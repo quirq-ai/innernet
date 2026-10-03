@@ -126,7 +126,12 @@ This changes the names, colours, fonts, density, search settings and encyclopedi
 while using the same index. It replaces the header artwork and browser icons with the
 atlas compass, changes creator metadata, and removes the default publisher link,
 source link and footer credit, so the configured product identity can stand on its own.
-Copy that example into your own JSON file and point the
+The [template collection](../../examples/README.md) also includes **folio**, a warm
+reading room, **relay**, a focused developer console, and **bloom**, a colorful creative
+garden. Every template includes both palettes and local artwork and uses this same
+configuration contract.
+
+Copy a template into your own JSON file and point the
 variable at it. Relative paths resolve from the repository root; an absolute file path
 also works. A partial file can be as small as:
 

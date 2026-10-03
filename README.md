@@ -126,6 +126,10 @@ identity, palette and page layout:
 INNERNET_UI_CONFIG=examples/atlas.ui.json pnpm dev
 ```
 
+Or start with **folio** for a warm reading room, **relay** for a developer console,
+or **bloom** for a colorful creative workspace. Browse the
+[template collection](examples/README.md) and copy the JSON for the style you like.
+
 See the [UI customization guide](docs/ui/README.md#customization) for settings, logo
 setup and how overrides work.
 

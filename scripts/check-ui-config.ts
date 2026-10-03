@@ -50,6 +50,22 @@ check("shipped defaults are valid and immutable", () => {
   assert.deepEqual(config, defaults);
   assert.ok(Object.isFrozen(config) && Object.isFrozen(config.theme.light));
 });
+const examplesDir = path.join(process.cwd(), "examples");
+const templateNames = new Set<string>();
+for (const filename of fs.readdirSync(examplesDir).filter((file) => file.endsWith(".ui.json")).sort()) {
+  check(`${filename} template validates and includes its local artwork`, () => {
+    const value: unknown = JSON.parse(fs.readFileSync(path.join(examplesDir, filename), "utf8"));
+    const config = resolveUiConfig(value, `examples/${filename}`);
+    assert.ok(!templateNames.has(config.brand.name), "Template identities must be distinct");
+    templateNames.add(config.brand.name);
+    const assets = [config.brand.icon, config.brand.appleIcon, config.brand.headerLogo?.src, config.brand.logo?.src, config.brand.encyclopediaLogo?.src];
+    for (const asset of assets) {
+      if (asset) assert.ok(fs.statSync(path.join(process.cwd(), "public", asset)).isFile(), `Missing template artwork: ${asset}`);
+    }
+    const schemaReference = path.resolve(examplesDir, config.$schema);
+    assert.ok(fs.statSync(schemaReference).isFile(), "Template schema reference must resolve");
+  });
+}
 check("partial overrides merge objects and replace arrays", () => {
   validateUiOverride(example, "examples/atlas.ui.json");
   const config = resolveUiConfig(example, "examples/atlas.ui.json");

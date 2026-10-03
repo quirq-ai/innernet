@@ -1,0 +1,332 @@
+{
+  "$schema": "../innernet.ui.override.schema.json",
+  "version": 1,
+  "brand": {
+    "name": "bloom",
+    "encyclopediaName": "bloom garden",
+    "tagline": "A little room for big ideas",
+    "description": "Find a project, follow a connection, and rediscover what is growing in your folders.",
+    "creator": "bloom",
+    "logo": null,
+    "encyclopediaLogo": null,
+    "icon": "/brand/bloom.svg",
+    "appleIcon": "/brand/bloom-apple.png",
+    "italicPrefix": "",
+    "encyclopediaItalicPrefix": "",
+    "headerLogo": {
+      "src": "/brand/bloom.svg",
+      "alt": "bloom",
+      "width": 64,
+      "height": 64
+    },
+    "showPublisherLink": false,
+    "sourceLink": {
+      "enabled": false
+    },
+    "attribution": {
+      "enabled": false,
+      "name": "bloom",
+      "logo": null
+    }
+  },
+  "theme": {
+    "defaultMode": "system",
+    "allowToggle": true,
+    "light": {
+      "bg": "#fff7fb",
+      "bg-sunk": "#f5eaf3",
+      "surface": "#fffdfb",
+      "ink": "#3b2346",
+      "ink-2": "#654764",
+      "muted": "#806478",
+      "faint": "#ac96b0",
+      "line": "rgb(82 43 90 / 0.1)",
+      "line-strong": "rgb(82 43 90 / 0.2)",
+      "link": "#8852b2",
+      "link-hover": "#653587",
+      "visited": "#ac3e73",
+      "mark-bg": "#ffe2ba",
+      "mark-ink": "#5c3444",
+      "notice-bg": "#fff0e4",
+      "notice-line": "#efcba8",
+      "good": "#3c7756",
+      "ring": "#a14d89",
+      "aurora-1": "#f8bdd1",
+      "aurora-2": "#d7c7fb",
+      "aurora-3": "#ffd1af",
+      "aurora-opacity": 0.72,
+      "shadow-sm": [
+        {
+          "x": 0,
+          "y": 2,
+          "blur": 4,
+          "spread": 0,
+          "color": "rgb(94 44 102 / 0.06)"
+        }
+      ],
+      "shadow": [
+        {
+          "x": 0,
+          "y": 2,
+          "blur": 5,
+          "spread": 0,
+          "color": "rgb(94 44 102 / 0.04)"
+        },
+        {
+          "x": 0,
+          "y": 12,
+          "blur": 32,
+          "spread": -12,
+          "color": "rgb(126 65 132 / 0.18)"
+        }
+      ],
+      "shadow-lg": [
+        {
+          "x": 0,
+          "y": 3,
+          "blur": 8,
+          "spread": 0,
+          "color": "rgb(94 44 102 / 0.06)"
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "blur": 64,
+          "spread": -24,
+          "color": "rgb(126 65 132 / 0.26)"
+        }
+      ]
+    },
+    "dark": {
+      "bg": "#211727",
+      "bg-sunk": "#2b1d32",
+      "surface": "#34223d",
+      "ink": "#fff0f8",
+      "ink-2": "#e4cde2",
+      "muted": "#bba2bf",
+      "faint": "#806587",
+      "line": "rgb(242 206 238 / 0.11)",
+      "line-strong": "rgb(242 206 238 / 0.23)",
+      "link": "#d8b3ff",
+      "link-hover": "#ecd3ff",
+      "visited": "#f2a8cf",
+      "mark-bg": "#624234",
+      "mark-ink": "#ffe4be",
+      "notice-bg": "#382638",
+      "notice-line": "#725365",
+      "good": "#a7d5b1",
+      "ring": "#efacd7",
+      "aurora-1": "#74355d",
+      "aurora-2": "#583c81",
+      "aurora-3": "#7a4438",
+      "aurora-opacity": 0.5,
+      "shadow-sm": [
+        {
+          "x": 0,
+          "y": 2,
+          "blur": 4,
+          "spread": 0,
+          "color": "rgb(15 6 20 / 0.4)"
+        }
+      ],
+      "shadow": [
+        {
+          "x": 0,
+          "y": 2,
+          "blur": 5,
+          "spread": 0,
+          "color": "rgb(15 6 20 / 0.35)"
+        },
+        {
+          "x": 0,
+          "y": 12,
+          "blur": 32,
+          "spread": -12,
+          "color": "rgb(15 6 20 / 0.7)"
+        }
+      ],
+      "shadow-lg": [
+        {
+          "x": 0,
+          "y": 3,
+          "blur": 8,
+          "spread": 0,
+          "color": "rgb(15 6 20 / 0.4)"
+        },
+        {
+          "x": 0,
+          "y": 30,
+          "blur": 64,
+          "spread": -24,
+          "color": "rgb(15 6 20 / 0.88)"
+        }
+      ]
+    },
+    "fonts": {
+      "display": "inter",
+      "serif": "newsreader",
+      "sans": "inter",
+      "mono": "jetbrains"
+    },
+    "effects": {
+      "aurora": true,
+      "grain": false,
+      "motion": true
+    }
+  },
+  "layout": {
+    "maxWidth": 1280,
+    "searchWidth": 680,
+    "articleWidth": 960,
+    "density": "comfortable"
+  },
+  "navigation": {
+    "home": [
+      "wiki",
+      "random",
+      "categories",
+      "guide"
+    ],
+    "search": [
+      "wiki",
+      "random",
+      "guide"
+    ],
+    "wiki": [
+      "search",
+      "random",
+      "categories",
+      "allPages",
+      "guide"
+    ],
+    "guide": [
+      "search",
+      "wiki",
+      "random",
+      "top"
+    ],
+    "headerSearch": [
+      "wiki",
+      "random",
+      "guide"
+    ],
+    "headerWiki": [
+      "search",
+      "random",
+      "guide"
+    ],
+    "labels": {
+      "search": "Find an idea",
+      "wiki": "Explore the garden",
+      "guide": "How bloom grows",
+      "random": "Take a wander",
+      "allPages": "Every project",
+      "categories": "Follow a trail",
+      "statistics": "Garden notes",
+      "top": "Back to the sunlight"
+    }
+  },
+  "home": {
+    "showCounts": true,
+    "showExamples": true,
+    "exampleQueries": [
+      "is:article",
+      "kind:docs",
+      "fw:next",
+      "lang:python"
+    ],
+    "showRecent": true,
+    "recentLimit": 6,
+    "showCurious": true,
+    "autoFocus": false
+  },
+  "search": {
+    "suggestions": true,
+    "suggestionLimit": 5,
+    "debounceMs": 150,
+    "focusShortcut": true,
+    "perPage": 9,
+    "showKnowledgePanel": true,
+    "tabs": [
+      "all",
+      "articles",
+      "docs",
+      "repos",
+      "folders"
+    ]
+  },
+  "wiki": {
+    "showContents": true,
+    "showInfobox": true,
+    "mainSections": [
+      "welcome",
+      "browse",
+      "featured",
+      "did-you-know",
+      "news",
+      "on-this-day",
+      "areas"
+    ],
+    "articleSections": [
+      "overview",
+      "see-also",
+      "technology",
+      "structure",
+      "history",
+      "external-links"
+    ]
+  },
+  "guide": {
+    "showRecipe": true
+  },
+  "copy": {
+    "siteNavigation": "Garden paths",
+    "moreNavigation": "Keep exploring",
+    "searchPlaceholder": "What would you like to find?",
+    "wikiSearchPlaceholder": "Search the garden",
+    "home.searchPlaceholder": "Find a project, a note, a new connection…",
+    "home.searchButton": "Find an idea",
+    "home.curiousButton": "Take a wander",
+    "home.try": "Follow a trail",
+    "home.recentlyTouched": "Fresh growth",
+    "home.touched": "last tended {time}",
+    "home.recentTitle": "{path} · last tended {time}",
+    "home.missingTitle": "Your garden is ready to grow",
+    "home.missingDescription": "{app} is waiting to discover your folders. Run this in the project folder, then return to explore.",
+    "search.placeholder": "Find a project, a note, a new connection…",
+    "search.wikiPlaceholder": "Search the garden",
+    "search.label": "Find something",
+    "search.tab.all": "Everything",
+    "search.tab.articles": "Projects",
+    "search.tab.docs": "Notes",
+    "search.tab.repos": "Repositories",
+    "search.tab.folders": "Folders",
+    "search.noResultsTitle": "No discoveries for {query}{filters} yet.",
+    "search.noResultsDescription": "Try another path",
+    "search.recentHeading": "Or see what is growing",
+    "wiki.mainTitle": "{wiki} · A place for every project",
+    "wiki.fromEncyclopedia": "From {wiki}, where projects tell their stories",
+    "wiki.welcomeTitle": "Welcome to {wiki}",
+    "wiki.encyclopediaTagline": "A place for every project to flourish",
+    "wiki.featured": "A project to discover",
+    "wiki.didYouKnow": "Little discoveries",
+    "wiki.news": "New growth",
+    "wiki.onThisDay": "From the garden journal",
+    "wiki.browse": "Find your next trail",
+    "wiki.areas": "More paths through {wiki}",
+    "wiki.readMore": "Step inside",
+    "wiki.article.overview": "The story so far",
+    "wiki.article.see-also": "Nearby discoveries",
+    "wiki.article.structure": "Inside this project",
+    "wiki.article.history": "How it grew",
+    "wiki.article.external-links": "Visit the source",
+    "wiki.contents": "In this story",
+    "wiki.missingTitle": "The first story is waiting",
+    "wiki.missingDescription": "Run {indexCommand} once to start your garden, then refresh this page.",
+    "guideTitle": "How {app} grows",
+    "continueWiki": "Explore {wiki}",
+    "missingPageTitle": "An undiscovered corner",
+    "missingPageSearch": "Find another path",
+    "missingPageBrowse": "Explore every project"
+  }
+}

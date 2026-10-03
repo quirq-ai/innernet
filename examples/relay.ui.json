@@ -1,0 +1,229 @@
+{
+  "$schema": "../innernet.ui.override.schema.json",
+  "version": 1,
+  "brand": {
+    "name": "relay",
+    "encyclopediaName": "relay reference",
+    "tagline": "Locate code. Read context.",
+    "description": "A focused local developer console for finding repositories and reading the context behind your projects.",
+    "language": "en",
+    "creator": "relay",
+    "logo": null,
+    "encyclopediaLogo": null,
+    "icon": "/brand/relay.svg",
+    "appleIcon": "/brand/relay-apple.png",
+    "italicPrefix": "",
+    "encyclopediaItalicPrefix": "",
+    "headerLogo": {
+      "src": "/brand/relay.svg",
+      "alt": "relay signal emblem",
+      "width": 64,
+      "height": 64
+    },
+    "showPublisherLink": false,
+    "sourceLink": {
+      "enabled": false,
+      "label": "{app} source",
+      "href": "/"
+    },
+    "attribution": {
+      "enabled": false,
+      "label": "Built with",
+      "name": "relay",
+      "href": "/",
+      "logo": null
+    }
+  },
+  "theme": {
+    "defaultMode": "dark",
+    "allowToggle": true,
+    "light": {
+      "bg": "#f7fbfc",
+      "bg-sunk": "#eaf2f5",
+      "surface": "#ffffff",
+      "ink": "#13252f",
+      "ink-2": "#334f5d",
+      "muted": "#607781",
+      "faint": "#8a9da5",
+      "line": "rgb(19 37 47 / 0.10)",
+      "line-strong": "rgb(19 37 47 / 0.20)",
+      "link": "#087f81",
+      "link-hover": "#07585e",
+      "visited": "#536caa",
+      "mark-bg": "#cff5ee",
+      "mark-ink": "#104b49",
+      "notice-bg": "#edf8f1",
+      "notice-line": "#c2dece",
+      "good": "#21734b",
+      "ring": "#087f81",
+      "aurora-1": "#d4f2f3",
+      "aurora-2": "#dbe8f5",
+      "aurora-3": "#d3f1e7",
+      "aurora-opacity": 0,
+      "shadow-sm": [
+        { "x": 0, "y": 1, "blur": 2, "spread": 0, "color": "rgb(19 37 47 / 0.06)" }
+      ],
+      "shadow": [
+        { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgb(19 37 47 / 0.04)" },
+        { "x": 0, "y": 8, "blur": 20, "spread": -10, "color": "rgb(19 37 47 / 0.14)" }
+      ],
+      "shadow-lg": [
+        { "x": 0, "y": 2, "blur": 4, "spread": 0, "color": "rgb(19 37 47 / 0.05)" },
+        { "x": 0, "y": 20, "blur": 40, "spread": -18, "color": "rgb(19 37 47 / 0.22)" }
+      ]
+    },
+    "dark": {
+      "bg": "#07141c",
+      "bg-sunk": "#0b1b25",
+      "surface": "#102532",
+      "ink": "#e6f6fa",
+      "ink-2": "#b7d2dc",
+      "muted": "#86a6b4",
+      "faint": "#536f7d",
+      "line": "rgb(203 237 244 / 0.09)",
+      "line-strong": "rgb(203 237 244 / 0.18)",
+      "link": "#67e3db",
+      "link-hover": "#95faf0",
+      "visited": "#9cbdf3",
+      "mark-bg": "rgb(103 227 219 / 0.18)",
+      "mark-ink": "#bdfff3",
+      "notice-bg": "#12231b",
+      "notice-line": "#305546",
+      "good": "#74d39c",
+      "ring": "#67e3db",
+      "aurora-1": "#143945",
+      "aurora-2": "#142b43",
+      "aurora-3": "#113c35",
+      "aurora-opacity": 0,
+      "shadow-sm": [
+        { "x": 0, "y": 1, "blur": 2, "spread": 0, "color": "rgb(0 8 14 / 0.50)" }
+      ],
+      "shadow": [
+        { "x": 0, "y": 1, "blur": 3, "spread": 0, "color": "rgb(0 8 14 / 0.40)" },
+        { "x": 0, "y": 8, "blur": 20, "spread": -10, "color": "rgb(0 8 14 / 0.75)" }
+      ],
+      "shadow-lg": [
+        { "x": 0, "y": 2, "blur": 4, "spread": 0, "color": "rgb(0 8 14 / 0.50)" },
+        { "x": 0, "y": 20, "blur": 40, "spread": -18, "color": "rgb(0 8 14 / 0.90)" }
+      ]
+    },
+    "fonts": {
+      "display": "jetbrains",
+      "serif": "inter",
+      "sans": "inter",
+      "mono": "jetbrains"
+    },
+    "effects": {
+      "aurora": false,
+      "grain": false,
+      "motion": false
+    }
+  },
+  "layout": {
+    "maxWidth": 1360,
+    "searchWidth": 760,
+    "articleWidth": 1000,
+    "density": "compact"
+  },
+  "navigation": {
+    "home": ["wiki", "allPages", "statistics", "guide"],
+    "search": ["wiki", "allPages", "categories", "guide"],
+    "wiki": ["search", "wiki", "allPages", "categories", "statistics", "guide"],
+    "guide": ["search", "wiki", "statistics", "top"],
+    "headerSearch": ["wiki", "allPages", "guide"],
+    "headerWiki": ["search", "allPages", "guide"],
+    "labels": {
+      "search": "Console",
+      "wiki": "Reference",
+      "guide": "Operator guide",
+      "random": "Random project",
+      "allPages": "Project index",
+      "categories": "Tech categories",
+      "statistics": "Index status",
+      "top": "Return to top"
+    }
+  },
+  "home": {
+    "showCounts": true,
+    "showExamples": true,
+    "exampleQueries": ["kind:repo", "lang:typescript", "fw:next", "is:article"],
+    "showRecent": false,
+    "recentLimit": 4,
+    "showCurious": false,
+    "autoFocus": true
+  },
+  "search": {
+    "suggestions": true,
+    "suggestionLimit": 5,
+    "debounceMs": 80,
+    "focusShortcut": true,
+    "perPage": 12,
+    "showKnowledgePanel": true,
+    "tabs": ["all", "repos", "articles", "docs", "folders"]
+  },
+  "wiki": {
+    "showContents": true,
+    "showInfobox": true,
+    "mainSections": ["welcome", "news", "featured", "browse", "areas"],
+    "articleSections": ["overview", "technology", "structure", "history", "see-also", "external-links"]
+  },
+  "guide": {
+    "showRecipe": false
+  },
+  "copy": {
+    "home.title": "{app} / project console",
+    "home.searchPlaceholder": "Search repositories, languages or frameworks",
+    "home.searchButton": "Run search",
+    "home.try": "Queries",
+    "home.folders": "indexed folders",
+    "home.articles": "project notes",
+    "home.repositories": "repositories",
+    "searchPlaceholder": "Search the project index",
+    "wikiSearchPlaceholder": "Search the reference",
+    "search.placeholder": "Search the project index",
+    "search.wikiPlaceholder": "Search the reference",
+    "search.label": "Find code and context",
+    "search.clear": "Reset query",
+    "search.suggestionsLabel": "Matching projects",
+    "search.everything": "Run query: {query}",
+    "search.title": "{query} / {app}",
+    "search.tab.all": "All matches",
+    "search.tab.articles": "Project notes",
+    "search.tab.repos": "Repositories",
+    "search.tab.docs": "Docs",
+    "search.tab.folders": "Directories",
+    "search.noResultsTitle": "No indexed projects match {query}{filters}.",
+    "search.noResultsDescription": "Refine the query",
+    "search.panelAbout": "Project context: {title}",
+    "search.openArticle": "Open reference",
+    "wiki.mainTitle": "{wiki} / project index",
+    "wiki.welcomeTitle": "{wiki}",
+    "wiki.encyclopediaTagline": "projects, tools and implementation context",
+    "wiki.fromEncyclopedia": "{wiki} / project notes",
+    "wiki.news": "Recent repository activity",
+    "wiki.featured": "Repository spotlight",
+    "wiki.browse": "Browse the stack",
+    "wiki.areas": "Reference views",
+    "wiki.contents": "On this page",
+    "wiki.infoboxTitle": "Project facts: {name}",
+    "wiki.article.overview": "README and notes",
+    "wiki.article.technology": "Technology stack",
+    "wiki.article.structure": "Directory map",
+    "wiki.article.history": "Git history",
+    "wiki.article.see-also": "Related projects",
+    "wiki.article.external-links": "Source links",
+    "guideTitle": "{app} / operator guide",
+    "guideDescription": "The indexing workflow, query syntax and local privacy boundary behind your developer console.",
+    "continueWiki": "Open project reference",
+    "missingPageTitle": "Reference entry unavailable",
+    "missingPageDescription": "No project entry exists at this address. Search the index or inspect its crawl depth.",
+    "nothingIndexed": "Index offline",
+    "indexedFrom": "Index synced {age} / {roots}",
+    "refreshWith": "Resync with",
+    "buildWith": "Initialize with",
+    "demo.homeTitle": "{app} / public project console",
+    "demo.homeDescription": "A public {app} console over github.com/{org}, with repository search and a project reference.",
+    "demo.tagline": "Public code and context from {org}",
+    "demo.indexedFrom": "Public index of {roots}, synced {age}"
+  }
+}
