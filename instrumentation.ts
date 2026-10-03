@@ -11,4 +11,7 @@ export async function register() {
   if (process.env.INNERNET_DEMO_BUILD === "1" || process.env.NEXT_RUNTIME !== "nodejs") return;
   const { warmDb } = await import("./lib/db/sync");
   await warmDb();
+  // A connected remote database catches up with whatever changed while the server was down.
+  const { syncSoon } = await import("./lib/db/remote-sync");
+  syncSoon(8_000);
 }

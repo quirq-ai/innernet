@@ -11,7 +11,9 @@ export type { Db, DbKind, DbState, DbStateName, LockHolder, Row, Statement } fro
 
 // Innernet's database, one per process, whichever it is:
 //
-//   local  PGlite in a folder on this machine (lib/db/pglite.ts). Nothing leaves it.
+//   local  PGlite in a folder on this machine (lib/db/pglite.ts), always. A remote
+//          database you connect on Sources is kept in step with it separately
+//          (lib/db/remote-sync.ts); it never takes this one's place.
 //   demo   Neon through DATABASE_URL (lib/db/neon.ts). The server reads the demo index
 //          from it (written only by `pnpm db:store --demo`) and keeps the visitors'
 //          history in it for 30 days (lib/db/demo-history.ts).
@@ -143,3 +145,4 @@ export async function closeDb(): Promise<void> {
   slot.state = IDLE;
   await db?.close();
 }
+

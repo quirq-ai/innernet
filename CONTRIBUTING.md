@@ -18,14 +18,13 @@ pnpm dev          # http://localhost:3470, bound to 127.0.0.1 only
   from this project, whatever output path a command-line local indexer was told.
 - The first `pnpm dev` or `pnpm build` needs the network once, to fetch the fonts. After
   that `next/font` serves them locally and the browser never leaves localhost.
-- Open the **Sources** page (`/sources`) beside **Guide**, choose Local, Remote (public GitHub
-  repositories), or both. Remote accepts a GitHub username or organization name or
-  account URL, plus an optional list of repository names or URLs belonging to that
-  account. An empty list includes all public repositories; the default account is
-  `quirq-ai`. **Save sources**, then **Sync now**. The selection applies immediately and
-  persists in `data/sources.json`. **Sync now** refreshes the selected providers and
-  logs its start and outcome in the current activity session; saving choices is logged
-  too. `pnpm index` remains the local-only command.
+- Open the **Sources** page (`/sources`) beside **Guide**. Under **Input**, choose Local,
+  Remote, or both. Remote takes public GitHub repository links from any account, one per
+  line (`https://github.com/owner/name` or `owner/name`), up to 50; there is no
+  whole-account mode. **Save**, then **Sync now**. The choices persist in
+  `data/sources.json`; **Sync now** refreshes the selected sources and logs its start and
+  outcome in the current activity session, as saving is logged. `pnpm index` remains the
+  local-only command.
   For command-line rebuilds, the server notices the new file on the next request; there
   is nothing to restart.
 
@@ -42,7 +41,7 @@ lint, test or format tooling; these are the checks.
 | The indexer | `INNERNET_ROOTS=~/some/small/dir INNERNET_OUT=/tmp/innernet-test.json pnpm index` | a test index, with your real one left alone |
 | The database | `INNERNET_DB_DIR=/tmp/innernet-db pnpm db:store`, then `pnpm db:status` with the same folder | the index and history stored in a scratch copy, the real one left alone |
 | The history | with the dev server stopped, `INNERNET_HISTORY_DIR=/tmp/h INNERNET_DB_DIR=/tmp/hdb pnpm dev`; open a few pages, append a line to `/tmp/h/<session>/notes.jsonl` and reload `/activity` | the line shows, once, however often the page is read; the real history left alone |
-| Sources | visit `/sources`; check Local, Remote and both; edit the GitHub account and repository list, save, reload, sync, and inspect storage paths | selection and remote edits persist, each remote configuration uses its own snapshot, combined results keep both providers, activity stays local, and content uses ordinary document scrolling |
+| Sources | visit `/sources`; check Local, Remote and both; add repository links from two accounts, save, reload, sync; read Generated data; connect, sync and disconnect the remote with a scratch `INNERNET_HOME` | choices persist, each repository list has its own snapshot, generated paths are relative, a switch to remote asks to confirm and copies the index and history, and the page scrolls as a document |
 | Copy | `rg -n "[\x{2013}\x{2014}]" -g '!node_modules' -g '!.next' -g '!data' .` | no matches |
 
 A few things worth knowing about these tools:
@@ -54,7 +53,8 @@ A few things worth knowing about these tools:
   `prefers-color-scheme`). A narrow width gives the narrow layout but not a phone user
   agent. Pass a tall height to see a whole page, or `SHOT_SCROLL=#guide` (an element or
   a number of pixels) to capture the window scrolled there, as the home page's hand-off
-  to the field guide needs.
+  to the field guide needs. `SHOT_EVAL` runs a snippet in the settled page first, such as
+  a click that opens Sources' connect notice.
 - The server cannot show an index written with `INNERNET_OUT`. Inspect that file with
   `node`, or point `INNERNET_ROOTS` at a small folder and let it write the real one when
   you are happy to rebuild. Terminal scripts can search it, though: `lib/data.ts` reads
@@ -93,23 +93,26 @@ the Innerpedia globe and the reveal of the boxes below it; and the history's rec
 the header's back and forward buttons, the local Sources page controls, and the history
 page's two views of this browser. The search box asks `/api/suggest`, the recorder posts
 each page visited to `/api/activity`. Sources posts to `/api/sources` to inspect or
-save Local/Remote choices and the GitHub account/repository list, `/api/sources/sync` to rebuild the saved selection, and
-`/api/sources/open` to reveal or edit named storage locations. All include the current
-session ID and require the same origin on localhost. Local sync runs the `pnpm index`
-crawler into `data/index.json`; Remote uses the anonymous public GitHub crawler with
-`INNERNET_REMOTE_CACHE=.github-cache` and an `INNERNET_REMOTE_OUT` path chosen for the
-saved remote configuration. The default `quirq-ai` account with no repository filter
-writes `data/github.json` and falls back to the bundled `data/demo/index.json` before
-its first sync. Other accounts or repository lists write `data/github-<hash>.json`
-and have no bundled fallback. Switching configurations never serves the previous
-configuration's snapshot. Both selected means an in-memory combination of the indexes.
-The original local index and activity remain the database's local copy.
+save Local/Remote choices and the repository list, `/api/sources/sync` to rebuild the
+saved selection, `/api/sources/open` to reveal or edit named locations, and
+`/api/storage` to read, test, connect, sync or disconnect the remote database. All include the current session ID
+and require the same origin on localhost. Local sync runs the `pnpm index` crawler into
+`data/index.json`; Remote runs the anonymous public GitHub crawler with
+`INNERNET_REMOTE_CACHE=.github-cache`, `INNERNET_GITHUB_REPOSITORIES` (a JSON list of
+`owner/name`) and an `INNERNET_REMOTE_OUT` of `data/github-<hash>.json`, one per list.
+A list never serves another list's snapshot, and the bundled demo index never stands in
+locally. Both selected means an in-memory combination of the indexes. This machine's
+PGlite is always the database in use; a remote one connected on Sources (`lib/storage.ts`,
+`~/.innernet/remote.json`) is kept in step with it both ways by `lib/db/remote-sync.ts`,
+which only adds to the remote and deletes there only what was deleted here
+(`lib/db/tombstones.ts`). `scripts/try-remote-sync.ts` runs two machines and a remote as
+PGlite folders, with no network. The demo's database is refused as a remote.
 
 Saving choices records a `sources` event; sync records `sync` events with `started`,
 `completed` or `failed` status. Concurrent syncs and source changes during a sync return
-409. Sources is hidden on the demo and its routes return 404 there. The storage section
-shows resolved paths, Copy path and Open folder, plus Edit file for existing session
-JSONL, source settings and local configuration files. Generated pages come from JSON,
+409. Sources is hidden on the demo and its routes return 404 there. Generated data shows
+relative paths with copy and open actions, plus edit for this tab's history file; the
+folder settings open from Input. Generated pages come from JSON,
 not individual HTML files. On the demo the activity post is made only when the demo has a database, and its history
 page then reads and clears the visitor's own sessions on the same route (a `POST` of
 `{"read": [ids]}` and a `DELETE` of `{"sessions": [ids]}`: ids never go in an address);

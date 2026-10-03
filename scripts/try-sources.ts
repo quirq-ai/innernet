@@ -80,6 +80,9 @@ async function main() {
     write("demo/index.json", remote);
     const { getIndex, getLocalIndex, resolveSlug } = await import("../lib/data");
     const { search, suggest } = await import("../lib/search");
+    const { remoteOutputFile } = await import("../lib/sources");
+    const collection = { repositories: ["quirq-ai/shared"] };
+    const snapshotFile = remoteOutputFile(collection)!;
 
     const original = getIndex();
     assert.equal(original.index.pages.length, 2, "Local is selected by default");
@@ -87,15 +90,17 @@ async function main() {
     assert.equal(search("localunique").total, 1);
     assert.equal(getIndex().version, original.version, "unchanged source reads share one search version");
 
-    write("sources.json", { local: false, remote: true });
+    write("sources.json", { local: false, remote: true, remoteConfig: collection });
+    assert.equal(search("remoteunique").total, 0, "an unsynced collection shows no remote pages, and never the bundled demo");
+    fs.writeFileSync(snapshotFile, JSON.stringify(remote));
     const remoteView = getIndex();
     assert.notEqual(remoteView.version, original.version);
     assert.equal(search("localunique").total, 0, "deselected pages leave the search engine");
-    assert.equal(search("remoteunique").total, 1, "the bundled snapshot serves before first remote sync");
+    assert.equal(search("remoteunique").total, 1, "the collection's snapshot serves once synced");
     assert.equal(suggest("shared")[0]?.slug, "github:shared");
     assert.equal(getLocalIndex().index.pages.length, 2, "database storage still receives only the original local index");
 
-    write("sources.json", { local: true, remote: true });
+    write("sources.json", { local: true, remote: true, remoteConfig: collection });
     const both = getIndex();
     assert.notEqual(both.version, remoteView.version);
     assert.equal(search("discovery").total, 2);
@@ -113,15 +118,15 @@ async function main() {
 
     const refreshed = structuredClone(remote);
     refreshed.pages[0].readme = "freshremote discovery";
-    write("github.json", refreshed);
+    fs.writeFileSync(snapshotFile, JSON.stringify(refreshed));
     const refreshedView = getIndex();
     assert.notEqual(refreshedView.version, both.version);
     assert.equal(search("remoteunique").total, 0);
-    assert.equal(search("freshremote").total, 1, "a synced GitHub file replaces the bundled snapshot without restart");
+    assert.equal(search("freshremote").total, 1, "a new sync replaces the snapshot without restart");
 
-    fs.unlinkSync(path.join(project, "data", "github.json"));
+    fs.unlinkSync(snapshotFile);
     assert.notEqual(getIndex().version, refreshedView.version);
-    assert.equal(search("remoteunique").total, 1, "removing the synced file returns to the bundled snapshot");
+    assert.equal(search("remoteunique").total, 0, "removing the snapshot removes its pages; the bundled demo never stands in");
     assert.equal(search("freshremote").total, 0);
 
     write("sources.json", { local: true, remote: false });
@@ -129,7 +134,7 @@ async function main() {
     assert.equal(search("localunique").total, 1);
     assert.notEqual(getIndex().version, refreshedView.version);
     assert.equal(getLocalIndex().index.meta.demo, undefined);
-    console.log("Source selection passed: local / remote / both, links, disambiguation, snapshot fallback, search refresh and local storage isolation.");
+    console.log("Source selection passed: local / remote / both, links, disambiguation, per-collection snapshots, search refresh and local storage isolation.");
   } finally {
     if (previousRoot === undefined) delete process.env.INNERNET_PROJECT_ROOT;
     else process.env.INNERNET_PROJECT_ROOT = previousRoot;

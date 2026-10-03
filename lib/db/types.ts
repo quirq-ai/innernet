@@ -1,12 +1,15 @@
 // The database contract, shared by both drivers (lib/db/pglite.ts on this machine,
-// lib/db/neon.ts on the demo) and everything that talks to them. Same SQL for both: no
+// lib/db/neon.ts for Neon) and everything that talks to them. Same SQL for both: no
 // ORM, just text with $1 placeholders and plain rows back.
 //
 // Values travel as text, numbers or booleans. JSON goes in as a string cast in the SQL
 // ($1::jsonb) and comes back parsed. Times come back as numbers only when the SQL says so
 // (see `epochMs` in lib/db/schema.ts), because the two drivers disagree on Date objects.
 
-export type DbKind = "pglite" | "neon";
+/** "pglite": this machine's database. "remote": your own database (Neon), connected on
+ * Sources and kept in step with it. "neon": the public demo's, which this machine's data
+ * never enters. */
+export type DbKind = "pglite" | "remote" | "neon";
 
 export type Row = Record<string, unknown>;
 
@@ -17,7 +20,7 @@ export interface Statement {
 
 export interface Db {
   kind: DbKind;
-  /** Where the data lives, for people: "~/.innernet/db" or "Neon Postgres". Never a secret. */
+  /** Where the data lives, for people: "~/.innernet/db", "innernet-personal on Neon" or "Neon Postgres". Never a secret. */
   label: string;
   /** One statement, its rows. */
   query<T extends Row = Row>(text: string, params?: unknown[]): Promise<T[]>;

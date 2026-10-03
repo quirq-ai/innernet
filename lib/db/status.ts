@@ -11,9 +11,10 @@ import { folderBytes, resolveDbDir } from "./pglite";
 import { syncSnapshot } from "./sync";
 import type { DbKind, DbStateName, LockHolder } from "./types";
 
-// What the database holds and where, in one call, for the history page (/activity) and
-// anything else that wants to say so. Never throws and never waits on the network: on
-// this machine it asks PGlite, which is in the process; on the demo it reports what the
+// What the database holds and where, in one call, for the history page (/activity),
+// Sources and anything else that wants to say so. Never throws and never waits on the
+// network: on this machine it asks PGlite, which is in the process (the remote database,
+// when connected, reports through lib/db/remote-sync.ts); on the demo it reports what the
 // last background check of Neon saw, so rendering a page never queries Neon. (The demo's
 // visitor history is read by the visitor's own browser, through /api/activity.)
 
@@ -34,7 +35,7 @@ export interface DbStatus {
   /** The history lines the database holds (local only). Times are ISO. `kept`: sessions held
    * for `pnpm db:load` because the history folder they were in was lost or replaced. */
   activity: { lines: number; sessions: number; apps: number; first: string | null; last: string | null; kept: number } | null;
-  /** The database's folder on disk, in bytes (local only). */
+  /** The database's folder on disk, in bytes (this machine's database only). */
   bytes: number | null;
   /** Demo: when Neon was last asked (ISO), null before the first check. */
   checkedAt: string | null;
@@ -72,9 +73,10 @@ export async function dbStatus(): Promise<DbStatus> {
 
   const db = await getDb();
   const st = dbState();
+  const kind = st.kind ?? (st.state === "off" ? null : "pglite");
   const base: DbStatus = {
     mode: "local",
-    kind: st.kind ?? (st.state === "off" ? null : "pglite"),
+    kind,
     state: st.state,
     label: st.label || "files only",
     note: st.note,
@@ -82,7 +84,7 @@ export async function dbStatus(): Promise<DbStatus> {
     serving,
     index: null,
     activity: null,
-    bytes: st.state === "off" || st.state === "building" ? null : folderBytes(resolveDbDir()),
+    bytes: kind !== "pglite" || st.state === "off" || st.state === "building" ? null : folderBytes(resolveDbDir()),
     checkedAt: null,
   };
   if (!db) return base;

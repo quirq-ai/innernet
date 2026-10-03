@@ -4,6 +4,7 @@ import { APP, DEMO_SESSION_RE, MAX_DEMO_BODY, MAX_EVENT_BYTES, SESSION_RE, clean
 import { demoKeepsHistory, getDb } from "@/lib/db";
 import { addVisit, forgetVisits, MAX_IDS, readVisits, RETENTION_DAYS } from "@/lib/db/demo-history";
 import { ingestSession } from "@/lib/db/ingest";
+import { syncSoon } from "@/lib/db/remote-sync";
 import { errorText, sayOnce } from "@/lib/db/log";
 import { DEMO } from "@/lib/mode";
 import { readCapped, sameOrigin } from "@/lib/same-origin";
@@ -92,7 +93,11 @@ export async function POST(req: Request) {
   if (!DEMO) {
     const result = appendEvent(session, APP, fields);
     if (!result.ok) return refuse(result.status, result.error);
-    after(() => ingestSession(session));
+    // Taken into PGlite, then, with a remote database connected, sent up a moment later.
+    after(async () => {
+      await ingestSession(session);
+      syncSoon();
+    });
     return new Response(null, { status: 204 });
   }
 

@@ -5,6 +5,11 @@
 //                             its folders (the history page's Store now does the same)
 //   pnpm db:load              write the stored index and history back out as files
 //
+//   pnpm db:status --remote   the remote database connected on Sources (~/.innernet/remote.json)
+//   pnpm db:store --remote    sync this machine with it once, both ways, as the server does
+//                             by itself while it is connected (lib/db/remote-sync.ts)
+//   pnpm db:load --remote     write what it holds out as files: a new machine's way in
+//
 //   pnpm db:status --demo     the same three for the demo's Neon database, which holds
 //   pnpm db:store --demo      data/demo/index.json and nothing else; storing runs the
 //   pnpm db:load --demo       demo's leak checks first, loading writes data/demo/index.json
@@ -26,8 +31,9 @@ const args = process.argv.slice(2);
 const command = args.find((a) => !a.startsWith("-")) ?? "status";
 const demo = args.includes("--demo");
 const force = args.includes("--force");
+const remote = args.includes("--remote");
 
-const USAGE = "Usage: pnpm db:status | db:store | db:load  [--demo] [--force]";
+const USAGE = "Usage: pnpm db:status | db:store | db:load  [--remote | --demo] [--force]";
 const NEON_HINT = "set -a; . ./.env.neon.local; set +a; pnpm db:" + command + " --demo";
 
 /** Stop before anything is open. */
@@ -43,6 +49,7 @@ function fail(message: string): never {
 }
 
 if (!["status", "store", "load"].includes(command)) stop(USAGE);
+if (remote && demo) stop("--demo and --remote are different databases: choose one.");
 // Any of the three switches lib/mode.ts reads as the demo, so none can turn this
 // machine's command into one against Neon.
 const demoVars = ["INNERNET_DEMO", "INNERNET_DEMO_BUILD", "VERCEL"].filter((name) => process.env[name] === "1");
@@ -107,6 +114,10 @@ async function main() {
   const { activityCounts, loadActivity, writeHistoryLines } = await import("../lib/db/activity");
   const { storeLocal } = await import("../lib/db/ingest");
   const { folderBytes, lockHolder, resolveDbDir } = await import("../lib/db/pglite");
+  const { remoteDatabase, remoteLabel } = await import("../lib/storage");
+  const { openRemote } = await import("../lib/db/neon");
+  const { bootstrap } = await import("../lib/db/schema");
+  const { syncBetween } = await import("../lib/db/remote-sync");
   const { demoIndexProblems } = await import("../lib/demo-check");
   const { HISTORY_DIR, historyLabel } = await import("../lib/activity");
   const { normalizeIndex } = await import("../lib/normalize");
@@ -119,7 +130,14 @@ async function main() {
   const indexFile = path.join(projectDir, demo ? "data/demo/index.json" : "data/index.json");
   const rel = path.relative(projectDir, indexFile);
 
-  const db = await getDb();
+  // --remote opens the remote database itself; everything else goes through getDb().
+  let db: Awaited<ReturnType<typeof getDb>>;
+  if (remote) {
+    const config = remoteDatabase();
+    if (!config) stop("No remote database is set up: ~/.innernet/remote.json names none.");
+    db = await openRemote(config, remoteLabel(config));
+    await bootstrap(db);
+  } else db = await getDb();
   try {
     // ------------------------------------------------ no database to open
     if (!db) {
@@ -150,18 +168,20 @@ async function main() {
       fail(st.note);
     }
 
-    // The database must be the one asked for: PGlite for this machine, Neon for --demo.
-    if (db.kind !== (demo ? "neon" : "pglite")) fail(`Stopped: expected ${demo ? "the demo's Neon database" : "this machine's database"}, and opened ${db.label}.`);
+    // The database must be the one asked for: the demo's for --demo, else the storage
+    // chosen: this machine's or your remote one, never the demo's.
+    const expected = demo ? "neon" : remote ? "remote" : "pglite";
+    if (db.kind !== expected) fail(`Stopped: expected ${demo ? "the demo's Neon database" : expected === "remote" ? "your remote database" : "this machine's database"}, and opened ${db.label}.`);
 
     // ------------------------------------------------ status
     if (command === "status") {
       const [info, pages, counts] = await Promise.all([storedIndexInfo(db), storedPageCount(db), activityCounts(db)]);
       let size: string;
-      if (demo) {
+      if (db.kind !== "pglite") {
         const [r] = await db.query<{ n: number }>("SELECT pg_database_size(current_database())::float8 AS n");
         size = `${bytes(Number(r?.n ?? 0))} in the database`;
       } else size = `${bytes(folderBytes(resolveDbDir()))} on disk`;
-      console.log(demo ? "Innernet demo database (Neon Postgres, DATABASE_URL)" : "Innernet database (PGlite, this machine)");
+      console.log(demo ? "Innernet demo database (Neon Postgres, DATABASE_URL)" : db.kind === "remote" ? "Innernet database (remote)" : "Innernet database (PGlite, this machine)");
       console.log(`  where     ${db.label}, ${size}`);
       console.log(
         info
@@ -184,6 +204,22 @@ async function main() {
     // ------------------------------------------------ store
     if (command === "store") {
       const raw = readIndexFile(indexFile);
+      if (remote) {
+        // A sync, both ways, between this machine's database and the remote one.
+        const local = await getDb();
+        if (!local) {
+          fail(
+            dbState().state === "locked"
+              ? "This machine's database is open in the server, which keeps a connected remote in step by itself (Sync now on Sources). Stop it to sync from here."
+              : `This machine's database is not available: ${dbState().note}`,
+          );
+        }
+        const r = await syncBetween(local, db, { indexFile, historyDir: HISTORY_DIR });
+        console.log(`index     ${r.index === "up" ? "sent up" : r.index === "down" ? `brought down into ${rel}` : r.index === "same" ? "the same on both" : "none to sync"}`);
+        console.log(`history   ${num(r.up)} ${r.up === 1 ? "line" : "lines"} sent up, ${num(r.down)} brought down, ${num(r.removed)} deleted there because they were deleted here`);
+        console.log(`remote    ${db.label} now holds ${num(r.pages ?? 0)} pages and ${plural(r.lines ?? 0, "history line")} (${r.ms} ms)`);
+        return;
+      }
       if (!demo) {
         // The same store as the history page's Store now (lib/db/ingest.ts).
         const r = await storeLocal(db, raw ? normalizeIndex(raw as SiteIndex) : null);

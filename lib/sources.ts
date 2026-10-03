@@ -5,13 +5,12 @@ import os from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { PROJECT_ROOT } from "./project-root";
-import { DEFAULT_REMOTE, isDefaultRemote, normalizeRemoteConfig, type RemoteConfig } from "./remote-config";
+import { EMPTY_REMOTE, normalizeRemoteConfig, type RemoteConfig } from "./remote-config";
 
 export interface SourceSelection { local: boolean; remote: boolean }
 
 export const SOURCE_SETTINGS_FILE = path.join(PROJECT_ROOT, "data", "sources.json");
 export const LOCAL_INDEX_FILE = path.join(PROJECT_ROOT, "data", "index.json");
-export const REMOTE_INDEX_FILE = path.join(PROJECT_ROOT, "data", "github.json");
 export const BUNDLED_REMOTE_INDEX_FILE = path.join(PROJECT_ROOT, "data", "demo", "index.json");
 export const SOURCE_CONFIG_FILE = path.join(PROJECT_ROOT, "innernet.config.json");
 export const REMOTE_CACHE_DIR = path.join(PROJECT_ROOT, ".github-cache");
@@ -38,19 +37,20 @@ export function readRemoteConfig(): RemoteConfig {
     saved = JSON.parse(fs.readFileSync(SOURCE_SETTINGS_FILE, "utf8"));
   } catch (error) {
     if (!error || typeof error !== "object" || !("code" in error) || error.code !== "ENOENT") {
-      throw new Error("Saved source settings could not be read. Fix the GitHub fields in Sources and save again.");
+      throw new Error("Saved source settings could not be read. Fix the repositories in Sources and save again.");
     }
-    return { ...DEFAULT_REMOTE, repositories: [] };
+    return { ...EMPTY_REMOTE, repositories: [] };
   }
   if (saved && Object.hasOwn(saved, "remoteConfig")) return normalizeRemoteConfig(saved.remoteConfig);
-  return { ...DEFAULT_REMOTE, repositories: [] };
+  return { ...EMPTY_REMOTE, repositories: [] };
 }
 
 export function writeSourceSelection(selection: SourceSelection, remote = readRemoteConfig()): void {
   if (!validSourceSelection(selection)) throw new Error("Choose at least one source.");
   fs.mkdirSync(path.dirname(SOURCE_SETTINGS_FILE), { recursive: true });
   const temporary = `${SOURCE_SETTINGS_FILE}.${process.pid}.tmp`;
-  fs.writeFileSync(temporary, JSON.stringify({ local: selection.local, remote: selection.remote, remoteConfig: normalizeRemoteConfig(remote) }, null, 2) + "\n", { mode: 0o600 });
+  const { repositories } = normalizeRemoteConfig({ repositories: remote.repositories });
+  fs.writeFileSync(temporary, JSON.stringify({ local: selection.local, remote: selection.remote, remoteConfig: { repositories } }, null, 2) + "\n", { mode: 0o600 });
   fs.renameSync(temporary, SOURCE_SETTINGS_FILE);
 }
 
@@ -67,14 +67,15 @@ export function localSourceConfig(): { roots: string[]; maxDepth: number } {
   return { roots, maxDepth };
 }
 
-/** Separate snapshots keep a changed account/list from showing another source's pages. */
-export function remoteOutputFile(remote = readRemoteConfig()): string {
-  if (isDefaultRemote(remote)) return REMOTE_INDEX_FILE;
-  const key = createHash("sha256").update(JSON.stringify(remote)).digest("hex").slice(0, 20);
+/** The snapshot of one collection of repositories. Each distinct list has its own, so a
+ * changed list never shows another list's pages. Null for an empty list. */
+export function remoteOutputFile(remote = readRemoteConfig()): string | null {
+  if (!remote.repositories.length) return null;
+  const key = createHash("sha256").update(JSON.stringify(remote.repositories)).digest("hex").slice(0, 20);
   return path.join(PROJECT_ROOT, "data", `github-${key}.json`);
 }
 
-export function remoteIndexFile(remote = readRemoteConfig()): string {
-  const output = remoteOutputFile(remote);
-  return !fs.existsSync(output) && isDefaultRemote(remote) ? BUNDLED_REMOTE_INDEX_FILE : output;
+/** The snapshot the app reads for the saved collection: the same file, synced or not yet. */
+export function remoteIndexFile(remote = readRemoteConfig()): string | null {
+  return remoteOutputFile(remote);
 }

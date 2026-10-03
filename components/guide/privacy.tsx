@@ -184,10 +184,10 @@ export function Privacy() {
         <p>
           In the browser, a Content-Security-Policy holds every page to its own origin; under <C>next dev</C> it also lets the hot-reload websocket through. The fonts are served by the app itself, the pages ask search engines to look
           away, and browser requests stay on this app: the search box asks <C>/api/suggest</C> for suggestions as you type, the history posts the page you opened to{" "}
-          <C>/api/activity</C>, and the local Sources page uses <C>/api/sources</C> to inspect or save choices, <C>/api/sources/sync</C> to refresh them, and{" "}
-          <C>/api/sources/open</C> to open a named storage location. All require this app&apos;s own origin on localhost. The server downloads public
-          repositories anonymously from your selected GitHub account when Remote is synced; your local content, activity and database stay here. The public demo accepts its own visitors&apos;
-          history only when it keeps a database; the next section says what it keeps. Sources is unavailable on the demo.
+          <C>/api/activity</C>, and the local Sources page uses <C>/api/sources</C> to inspect or save choices, <C>/api/sources/sync</C> to refresh them,{" "}
+          <C>/api/sources/open</C> to open a named location, and <C>/api/storage</C> to connect or sync the remote database. All require this app&apos;s own origin on
+          localhost. The server downloads the public repositories you list, anonymously, when Remote is synced; a sync uploads nothing. The public demo accepts
+          its own visitors&apos; history only when it keeps a database; the next section says what it keeps. Sources is unavailable on the demo.
         </p>
       </Prose>
       <Excerpt file="next.config.ts" from="const csp = [" lines={11} mark={["default-src", "frame-ancestors"]} className="mt-6" />
@@ -200,7 +200,7 @@ export function Privacy() {
       <Prose className="mt-8">
         <p>
           Innernet keeps a copy of its index and its history in a small Postgres database. On your machine it is PGlite, Postgres compiled to WebAssembly, running
-          inside the server on a folder at <C>~/.innernet/db</C> (folder mode 700). Nothing listens on a port, and local mode refuses to open a remote database
+          inside the server on a folder at <C>~/.innernet/db</C> (folder mode 700). Nothing listens on a port, and local mode refuses the demo&apos;s database
           whatever the environment says, before a byte is sent:
         </p>
       </Prose>
@@ -213,9 +213,11 @@ export function Privacy() {
           them back. Set <C>INNERNET_DB=off</C> and Innernet runs on its files alone; delete <C>~/.innernet/db</C> to forget the copy.
         </p>
         <p>
-          Sources shows the resolved locations of your history and database, including any environment overrides. Its current-session row points straight to{" "}
-          <C>innernet.jsonl</C>: use Edit file to change its JSON lines, then reload History. Choosing Remote changes the content you browse, while activity and
-          the database remain local. The database copies the local index; GitHub snapshots and the combined view stay separate.
+          Sources lists everything the input generates, each with its path relative to the app or your home folder; this tab&apos;s row opens{" "}
+          <C>innernet.jsonl</C> for editing, then reload History. Choosing GitHub repositories changes the content you browse; it moves nothing. The copy leaves
+          this machine only if you connect a remote database, your own Neon, which asks you to confirm first: from then on the local index (folder paths, README
+          text, agent instructions) and the history are kept in step with it, and your other machines&apos; history comes down, until you disconnect. Its URL
+          stays in <C>~/.innernet/remote.json</C>, and the demo&apos;s database is refused as a remote.
         </p>
         <p>
           The public demo is different, and it is the one place anything you do is written to a server. When it has a database (Neon Postgres, in US East), it keeps

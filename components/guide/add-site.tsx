@@ -220,16 +220,14 @@ export function AddSite() {
           Each root becomes an article at depth 0, typed Root folder, and always the primary topic for its name. Its own name is not part of any path below it, so{" "}
           <C>in:</C> with the root&apos;s name does not list what the root holds, only what sits under some other folder of that name; search for what is inside
           instead. The footers list every root. The local index lives at <C>data/index.json</C> in this project, so a trial index written elsewhere with{" "}
-          <C>INNERNET_OUT</C> does not change what the app serves. Each remote account and repository selection has its own <C>data/github-&lt;hash&gt;.json</C>{" "}
-          snapshot. The default quirq-ai account with no repository filter uses <C>data/github.json</C> and, until its first sync, the included public demo snapshot.
-          Other remote selections need a sync before they have pages to browse.
+          <C>INNERNET_OUT</C> does not change what the app serves. Remote takes a list of public GitHub repositories from any account, and each list has its own{" "}
+          <C>data/github-&lt;hash&gt;.json</C> snapshot, made by its first sync.
         </p>
         {!DEMO && (
           <p>
-            Below the source choices, <strong>Where your data lives</strong> shows the exact paths for the page indexes, history, database, settings and caches.
-            Use <strong>Copy path</strong> or <strong>Open folder</strong> to find them. <strong>Edit file</strong> opens this tab&apos;s activity JSONL, saved source
-            choices or folder configuration when the file exists. Edit activity lines, then reload History; edit your original folders and sync to update pages.
-            Innerpedia renders pages from JSON, so there is no separate HTML file for each article.
+            Below the input, <strong>Generated data</strong> lists what it makes, each with a path relative to the app or your home folder, its size and when it
+            last changed, with buttons to copy the path, open the folder, or edit this tab&apos;s history file. Edit history lines, then reload History; edit your
+            original folders and sync to update pages. Innerpedia renders pages from JSON, so there is no separate HTML file for each article.
           </p>
         )}
       </Prose>
