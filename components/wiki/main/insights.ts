@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AGENTS_CATEGORY } from "@/lib/agents";
 import { getIndex, getPage, type Loaded } from "@/lib/data";
 import type { Commit, Page } from "@/lib/types";
 
@@ -21,6 +22,9 @@ function once<T>(key: string, fn: (L: Loaded) => T): T {
   if (!memo.has(key)) memo.set(key, fn(L));
   return memo.get(key) as T;
 }
+
+/** The Main page is about projects: agents' folders have their own portal and tab. */
+const ofProjects = (pages: Page[]) => pages.filter((p) => p.realm === "project");
 
 /** The moment the index was taken. Facts are phrased relative to it, not to "now". */
 export function indexTime(): number {
@@ -60,7 +64,7 @@ export function containers(): Set<string> {
   return once("containers", ({ articles }) => {
     const out = new Set<string>();
     for (const a of articles) {
-      if (a.partOf) continue;
+      if (a.partOf || a.realm !== "project") continue;
       let cur = getPage(a.parent);
       while (cur) {
         out.add(cur.slug);
@@ -76,7 +80,7 @@ export function workspaces(): Set<string> {
   return once("workspaces", ({ articles }) => {
     const n = new Map<string, number>();
     for (const a of articles) {
-      if (a.partOf || a.depth === 0) continue;
+      if (a.partOf || a.depth === 0 || a.realm !== "project") continue;
       for (let cur = getPage(a.parent); cur; cur = getPage(cur.parent)) n.set(cur.slug, (n.get(cur.slug) ?? 0) + 1);
     }
     return new Set([...n].filter(([slug, c]) => c >= 3 && getPage(slug)?.isArticle).map(([slug]) => slug));
@@ -85,7 +89,7 @@ export function workspaces(): Set<string> {
 
 /* ------------------------------------------------------------ categories */
 
-export type CategoryKind = "collection" | "language" | "framework" | "year" | "kind" | "maintenance" | "part";
+export type CategoryKind = "collection" | "language" | "framework" | "year" | "kind" | "maintenance" | "part" | "agent";
 
 export interface CategoryInfo {
   name: string;
@@ -111,6 +115,10 @@ function classify(L: Loaded, name: string): CategoryInfo {
   if (year) return { ...base, kind: "year", subject: year[1] };
   if (name === MAINTENANCE) return { ...base, kind: "maintenance" };
   if (name in KIND_BLURBS) return { ...base, kind: "kind" };
+  // Agents, and the folders of each tool ("Claude Code folders").
+  if (name === AGENTS_CATEGORY) return { ...base, kind: "agent" };
+  const tool = name.match(/^(.+) folders$/);
+  if (tool && pages.length && pages.every((p) => p.realm === "agent")) return { ...base, kind: "agent", subject: tool[1] };
   const part = name.match(/^Parts of (.+)$/);
   if (part) return { ...base, kind: "part", subject: part[1], page: getPage(pages.find((p) => p.partOf)?.partOf) };
   const lang = name.match(/^(.+) projects$/);
@@ -169,6 +177,7 @@ export function browseGroups(): BrowseGroup[] {
     const of = (k: CategoryKind) => all.filter((c) => c.kind === k);
     return [
       { label: "Collections", items: of("collection").slice(0, 8) },
+      { label: "Agents", items: of("agent").filter((c) => c.name !== AGENTS_CATEGORY).slice(0, 8) },
       { label: "Languages", items: of("language").slice(0, 8) },
       { label: "Frameworks", items: of("framework").slice(0, 8) },
       { label: "Kinds", items: of("kind") },
@@ -183,7 +192,7 @@ function substance(p: Page): number {
   return Math.log1p(p.words) * Math.log1p(p.totalFiles) * (1 + Math.log1p(p.git?.commitCount ?? 0) / 4);
 }
 
-const independent = (p: Page) => p.isArticle && !p.partOf && p.depth > 0;
+const independent = (p: Page) => p.isArticle && !p.partOf && p.depth > 0 && p.realm === "project";
 
 /** Today's featured article and a few runners-up: substantial, recently active, with a README. */
 export function featured(): Page[] {
@@ -205,7 +214,7 @@ export function featured(): Page[] {
   });
 }
 
-const KIND_ORDER: Record<Page["kind"], number> = { repo: 0, project: 1, docs: 2, code: 3, assets: 4, folder: 5 };
+const KIND_ORDER: Record<Page["kind"], number> = { repo: 0, project: 1, agent: 2, docs: 3, code: 4, assets: 5, folder: 6 };
 
 /** The tiles of the Main page's globe, best first. The most substantial independent
  * projects, one per distinct project, with those that keep a logo of their own drawn
@@ -213,7 +222,8 @@ const KIND_ORDER: Record<Page["kind"], number> = { repo: 0, project: 1, docs: 2,
  * joins them. No one logo is used more than twice, so a family of projects that share a
  * mark does not paper over the rest. */
 export function globeTiles(n: number): Page[] {
-  return once(`globeTiles:${n}`, ({ articles }) => {
+  return once(`globeTiles:${n}`, ({ articles: all }) => {
+    const articles = ofProjects(all);
     const seen = new Set<string>();
     const distinct = (p: Page) => {
       const key = p.summary?.slice(0, 60) ?? p.name;
@@ -251,7 +261,8 @@ export interface NewsItem {
 /** The five most recently touched articles. When a change bubbles up through parent
  *  folders, the news belongs to the deepest article that made it. */
 export function news(): { items: NewsItem[]; ongoing: Page[]; quiet: Page[] } {
-  return once("news", ({ articles }) => {
+  return once("news", ({ articles: all }) => {
+    const articles = ofProjects(all);
     const t = indexTime();
     const candidates = articles
       .filter((p) => independent(p) && p.modified)
@@ -314,7 +325,8 @@ export type Fact =
 /** "Did you know..." facts, computed from the index. */
 export function facts(): Fact[] {
   return once("facts", (L) => {
-    const { articles, index, categories } = L;
+    const { index, categories } = L;
+    const articles = ofProjects(L.articles);
     const box = containers();
     const out: Fact[] = [];
 
@@ -395,7 +407,8 @@ export type OnThisDay =
 const DULL = /^(merge|chore|bump|update readme|update readme\.md|wip|temp|initial commit|add files via upload)\b/i;
 
 export function onThisDay(): OnThisDay {
-  return once("otd", ({ index, articles }) => {
+  return once("otd", ({ index, articles: all }) => {
+    const articles = ofProjects(all);
     const byYear = new Map<string, Map<string, { pages: Page[]; commits: Commit[] }>>();
     for (const p of index.pages) {
       if (!p.git?.onThisDay.length) continue;
@@ -466,6 +479,7 @@ export interface Statistics {
 const KIND_LABELS: Record<Page["kind"], string> = {
   project: "Projects",
   repo: "Repositories",
+  agent: "Agents",
   docs: "Documents",
   code: "Source folders",
   assets: "Media folders",

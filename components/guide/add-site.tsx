@@ -186,8 +186,9 @@ export function AddSite() {
           forty letters or more, or four files side by side when at least three in five of them are documents.
         </p>
         <p>
-          <span className="font-medium text-ink">Some names are never read.</span> The crawler skips a name that starts with a dot, a pruned name such as{" "}
-          <C>dist</C>, <C>build</C> or <C>vendor</C>, a name ending <C>.app</C>, a symlink, and a folder holding <C>pyvenv.cfg</C>. A name containing cred, secret or
+          <span className="font-medium text-ink">Some names are never read.</span> The crawler skips a dot folder a tool generates, such as <C>.next</C> or{" "}
+          <C>.venv</C>, a pruned name such as <C>dist</C>, <C>build</C> or <C>vendor</C>, a name ending <C>.app</C>, a symlink, and a folder holding{" "}
+          <C>pyvenv.cfg</C>. Every other dot folder, <C>.claude</C> or <C>.xo</C>, is an agent&apos;s, and gets an agent&apos;s page. A name containing cred, secret or
           private, or ending in key or keys, still gets a page, but its README, notes and manifest are never opened.
         </p>
         <p className="fg-fine">

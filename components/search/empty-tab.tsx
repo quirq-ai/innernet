@@ -8,6 +8,7 @@ import { TABS, type Tab } from "@/lib/search";
 
 const NOUN: Record<Exclude<Tab, "all">, [string, string]> = {
   articles: ["project", "projects"],
+  agents: ["agent", "agents"],
   repos: ["repository", "repositories"],
   docs: ["document", "documents"],
   folders: ["folder", "folders"],

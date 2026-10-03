@@ -28,6 +28,7 @@ source material. Local JSON indexes power both readers.
 | --- | --- |
 | **Search** · `/` and `/search` | A familiar search box, highlighted results, live suggestions, spelling corrections and project knowledge panels. |
 | **Innerpedia** · `/wiki` | Project articles with README overviews, folder trees, technology, Git history and related projects. Browse categories, statistics or a random article. |
+| **Agents** · `/search?q=is:agent&t=agents` | The other half of the index: every dot folder an agent or tool keeps (`.claude`, `.codex`, `.cursor`, `.xo`...), each with an article of its instructions, memory, sessions and activity. |
 | **Field guide** · `/#guide` | The second half of the home page: an illustrated walkthrough of the crawl, search and privacy rules, an interactive recipe for turning a folder into an article, and a prompt that hands Innernet to an AI assistant. |
 | **History** · `/activity` | Every page you opened, one session per browser tab, kept as plain files on this machine with a copy in its own database. The header's arrows step back and forward. |
 
@@ -65,6 +66,26 @@ connect projects across your directory tree.
 
 Search runs on the server with MiniSearch. The app uses Next.js, React, TypeScript and
 Tailwind CSS, with Markdown rendered by react-markdown and remark-gfm.
+
+### Projects and agents
+
+Every page belongs to one of two halves. A folder whose name starts with a dot is an
+agent's: `.claude`, `.codex`, `.cursor`, `.agents`, `.xo`, `.openclaw` and the like,
+wherever they sit in your sources, together with everything inside them. Everything
+else is a project's. The rule lives in `lib/agents.ts`.
+
+Each agent's folder gets an article of its own, an octagon among the circles and
+squares: which tool keeps it and which project it belongs to, then **Instructions and
+memory** (its `CLAUDE.md`, `AGENTS.md`, `SOUL.md`, `IDENTITY.md`, rules and `memory/`
+notes, shown as written) and **Sessions and activity** (how many sessions or transcripts
+it keeps and when, from file names, sizes and dates; their contents are never read).
+A project's article names the agents that keep folders in it.
+
+Two kinds of dot folder are not agents. Folders a tool generates (`.git`, `.next`,
+`.turbo`, `.venv`, `.cache` and similar) are skipped like `node_modules`, and folders
+that hold credentials (`.ssh`, `.aws`, `.docker`, `.clerk` and similar) are never
+entered. An agent's `worktrees` are checkouts of projects indexed elsewhere, so they
+are skipped too.
 
 ## Get started
 
@@ -187,10 +208,12 @@ project names, paths, descriptions, README text, dependencies and agent notes.
 | `fw:next` | Projects using Next.js. |
 | `is:article` | Innerpedia articles. |
 | `is:stub` | Folders with less project context. |
+| `is:agent` | Agents' folders and everything in them. `is:project` finds the rest. |
+| `kind:agent` | An agent's own folder: `.claude`, `.codex`, `.xo`... |
 
 Combine them with free text, such as `chat lang:ts fw:next`. Quote values containing
 spaces, such as `in:"side projects"`. Results can also be filtered using the
-**Projects**, **Repositories**, **Documents** and **Folders** tabs.
+**Projects**, **Agents**, **Repositories**, **Documents** and **Folders** tabs.
 
 ## History
 
@@ -386,8 +409,13 @@ Innernet is built to read and serve your project context on your machine.
   project manifests and Git metadata, plus a repository's or project's own logo image,
   found by name (`logo`, `icon`, `mark`, `favicon` and the like, up to 64 KB for SVG
   and 96 KB for other images) under the same secret-folder and secret-name rules, with
-  symlinks never followed. It does not read `.env`, key files or arbitrary source and
-  document contents. The Documents tab classifies folders by file names and types.
+  symlinks never followed. In an agent's own dot folder it also reads instruction and
+  memory files (`CLAUDE.md`, `AGENTS.md`, `SOUL.md`, rules, `memory/` notes; the first
+  8,000 characters of each, ten files at most, redacted like a README), and it counts
+  session and log files by name, size and date without opening them. It does not read
+  `.env`, key files, settings files or arbitrary source and document contents. Dot
+  folders that hold credentials (`.ssh`, `.aws`, `.clerk`...) are never entered. The
+  Documents tab classifies folders by file names and types.
 - **Local database.** The copy in `~/.innernet/db` (PGlite, folder mode 700) stays on
   this machine, and local mode never connects to a remote database. It follows the
   history folders: a session you delete there is forgotten in the database too. Only a

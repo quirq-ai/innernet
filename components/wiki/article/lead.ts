@@ -1,4 +1,5 @@
 import { workspaces } from "@/components/wiki/main/insights";
+import { agentTool } from "@/lib/agents";
 import { ancestors, getIndex, getPage, getPages } from "@/lib/data";
 import { bytes, monthYear, num, plural, timeAgo } from "@/lib/format";
 import { isRemote, wikiHref } from "@/lib/links";
@@ -73,8 +74,15 @@ const NOUNS: { fw: string; noun: string; implies?: boolean }[] = [
   { fw: "React", noun: "React project" },
 ];
 
+/** The tool that keeps an agent's folder: "Claude Code", "XO". */
+export const toolOf = (p: Page) => p.agent?.tool ?? agentTool(p.name);
+
+/** An agent's own folders inside a project: its dot folders, in name order. */
+export const agentsOf = (p: Page) => getPages(p.children).filter((c) => c.kind === "agent" || (c.realm === "agent" && p.realm === "project"));
+
 /** "TypeScript Next.js application", "Rust workspace", "collection of documents". */
 export function descriptor(p: Page): string {
+  if (p.kind === "agent") return `${toolOf(p)} agent folder`;
   if (p.kind === "docs") return p.isArticle ? "collection of documents" : "folder of documents";
   if (p.kind === "assets") return "media folder";
   if (p.kind === "code" && !p.isArticle) return "source folder";
@@ -98,6 +106,7 @@ export function descriptor(p: Page): string {
 
 /** Infobox "Type": the descriptor with a capital, minus a language the Language row repeats. */
 export function typeLabel(p: Page): string {
+  if (p.kind === "agent") return `${toolOf(p)} agent`;
   if (p.depth === 0) return "Root folder";
   const d = descriptor(p);
   const lang = codeLanguages(p)[0];
@@ -113,6 +122,8 @@ export function shortKind(p: Page): string {
   switch (p.kind) {
     case "repo":
       return "repository";
+    case "agent":
+      return "agent";
     case "docs":
       return "documents";
     case "assets":
@@ -303,10 +314,12 @@ export function leadSegs(p: Page): Seg[] {
     }
   }
 
-  // 5. What lives inside, for collections and workspaces.
-  const inner = desc.filter((q) => q.isArticle);
+  // 5. What lives inside, for collections and workspaces. A project's agents are named
+  // on their own below, not among its articles.
+  const ours = (q: Page) => q.isArticle && (p.realm === "agent" || q.realm === "project");
+  const inner = desc.filter(ours);
   if (inner.length >= 3) {
-    const direct = getPages(p.children).filter((q) => q.isArticle);
+    const direct = getPages(p.children).filter(ours);
     const pool = direct.length >= 3 ? direct : inner;
     const largest = [...pool].sort((a, b) => b.totalFiles - a.totalFiles).slice(0, 3);
     out.push({ text: ` Innerpedia has ${count(inner.length)} articles on folders inside it, the largest being ` }, ...listSegs(largest), { text: "." });
@@ -315,6 +328,21 @@ export function leadSegs(p: Page): Seg[] {
   // 6. A small courtesy to the agents.
   const notes = ["CLAUDE.md", "AGENTS.md"].filter((m) => p.markers.includes(m));
   if (notes.length) out.push({ text: ` It keeps instructions for coding agents in ${notes.join(" and ")}.` });
+  const kept = p.realm === "project" ? agentsOf(p) : [];
+  if (kept.length) {
+    out.push({ text: kept.length === 1 ? ` ${toolOf(kept[0])} keeps a folder of its own here, ` : ` ${count(kept.length)} agents keep folders of their own here: ` }, ...listSegs(kept), { text: "." });
+  }
+
+  // 7. For an agent: what it reads and how often it has run.
+  const a = p.agent;
+  if (a) {
+    const reads = a.instructions.length;
+    const s = a.sessions;
+    const parts: string[] = [];
+    if (reads) parts.push(`${countOf(reads, "file")} of instructions and memory`);
+    if (s) parts.push(`the record of ${countOf(s.count, "session")}${s.last ? `, the latest ${timeAgo(s.last)}` : ""}`);
+    if (parts.length) out.push({ text: ` It holds ${parts.join(", and ")}.` });
+  }
 
   return out;
 }

@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { Sigil } from "@/components/sigil";
+import { agentTool, isAgentFolderName, toolCategory } from "@/lib/agents";
 import { bytes } from "@/lib/format";
 import type { PageKind } from "@/lib/types";
 import { RECIPE_NAMES, type RecipeName, type RecipeProps } from "./recipe-shared";
@@ -165,8 +166,11 @@ function simulate(s: State, p: RecipeProps): Outcome {
     ops: [],
     prior: 0,
   };
-  // A pruned name is skipped at any depth, even by the tally below the limit.
-  if (s.name.startsWith(".")) return { ...base, none: "dot" };
+  // A pruned name is skipped at any depth, even by the tally below the limit. A dot
+  // folder is an agent's, unless a tool generates it or it holds credentials.
+  const agent = isAgentFolderName(s.name);
+  const tool = agent ? agentTool(s.name) : null;
+  if (s.name.startsWith(".") && !agent) return { ...base, none: "dot" };
   if (PRUNED.has(s.name)) return { ...base, none: "pruned" };
   if (s.depth > p.maxDepth) return { ...base, none: "deep" };
 
@@ -196,7 +200,8 @@ function simulate(s: State, p: RecipeProps): Outcome {
   else if ((direct >= 3 && share(MEDIA_EXT) >= 0.6) || (direct > 0 && share(MEDIA_EXT) === 1)) kind = "assets";
   else if (CODE_DIRS.has(s.name.toLowerCase()) || codeShare >= 0.5) kind = "code";
   if (notes && kind !== "repo") kind = "project";
-  const isArticle = kind === "repo" || kind === "project" || (kind === "docs" && direct >= 4) || !!notes;
+  if (agent && kind !== "repo") kind = "agent";
+  const isArticle = agent || kind === "repo" || kind === "project" || (kind === "docs" && direct >= 4) || !!notes;
 
   // Summary: README paragraph, else manifest description, else notes that describe.
   const summary = readme?.para ?? (manifest ? TEXT.desc : null) ?? (notes && !instructs ? notes : null);
@@ -232,7 +237,8 @@ function simulate(s: State, p: RecipeProps): Outcome {
 
   // The type line and the opening of the lead.
   let desc: string;
-  if (kind === "docs") desc = isArticle ? "collection of documents" : "folder of documents";
+  if (kind === "agent") desc = `${tool} agent folder`;
+  else if (kind === "docs") desc = isArticle ? "collection of documents" : "folder of documents";
   else if (kind === "assets") desc = "media folder";
   else if (kind === "code" && !isArticle) desc = "source folder";
   else if (kind === "folder" && !isArticle) desc = "folder";
@@ -240,7 +246,7 @@ function simulate(s: State, p: RecipeProps): Outcome {
   else if (codeLang) desc = `${codeLang} project`;
   else if (kind === "repo") desc = "Git repository";
   else desc = "project";
-  const label = frameworks.includes("Next.js") ? "Next.js application" : desc;
+  const label = kind === "agent" ? `${tool} agent` : frameworks.includes("Next.js") ? "Next.js application" : desc;
   const typeLabel = label[0].toUpperCase() + label.slice(1);
   // Where it sits, as components/wiki/article/lead.ts says it for plain folders.
   const parent = above[above.length - 1];
@@ -290,6 +296,12 @@ function simulate(s: State, p: RecipeProps): Outcome {
   const sections: Outcome["sections"] = isArticle
     ? [
         { label: "Overview", on: !!readme || (!!notes && !instructs), note: readme ? "the README" : notes && !instructs ? "a quote from CLAUDE.md" : undefined },
+        ...(agent
+          ? [
+              { label: "Instructions and memory", on: !!notes, note: notes ? "CLAUDE.md, shown as written" : "when it keeps CLAUDE.md, AGENTS.md, SOUL.md or memory files" },
+              { label: "Sessions and activity", on: true, note: "from file names, sizes and dates" },
+            ]
+          : []),
         { label: "Structure", on: visible.length > 0 || hidden.length > 0 },
         { label: "Technology", on: languages.length > 0 || frameworks.length > 0 || manifest },
         { label: "History", on: s.git, note: s.git ? "commits and authors" : undefined },
@@ -298,14 +310,17 @@ function simulate(s: State, p: RecipeProps): Outcome {
       ]
     : [{ label: "Contents", on: visible.length > 0 || hidden.length > 0 }];
 
-  const notice = isArticle
+  const notice = agent
+    ? ""
+    : isArticle
     ? readme
       ? ""
       : "This article was written from the folder alone. You can help Innerpedia by adding a README."
     : "This folder is a stub. You can help Innerpedia by adding a README.";
 
   const categories: string[] = [];
-  if (isArticle) {
+  if (agent) categories.push("Agents", toolCategory(tool!));
+  else if (isArticle) {
     if (codeLang && kind !== "docs") categories.push(`${codeLang} projects`);
     categories.push(...frameworks);
     if (kind === "repo") categories.push("Git repositories");
@@ -316,13 +331,15 @@ function simulate(s: State, p: RecipeProps): Outcome {
   }
 
   const tabs = ["All"];
-  if (isArticle && kind !== "docs") tabs.push("Projects");
+  if (agent) tabs.push("Agents");
+  else if (isArticle && kind !== "docs") tabs.push("Projects");
   if (kind === "repo") tabs.push("Repositories");
   if (kind === "docs") tabs.push("Documents");
   if (!isArticle) tabs.push("Folders");
   const ops = [
     `kind:${kind}`,
     isArticle ? "is:article" : "is:stub",
+    agent ? "is:agent" : "is:project",
     ...languages.slice(0, 3).map((l) => `lang:${l.toLowerCase()}`),
     ...(manifest ? ["fw:next", "fw:react"] : []),
     ...(parent ? [`in:${parent}`] : []),
@@ -331,6 +348,7 @@ function simulate(s: State, p: RecipeProps): Outcome {
   let prior = isArticle ? 1.8 : 1;
   if (kind === "repo") prior *= 1.25;
   if (kind === "code" && !isArticle) prior *= 0.55;
+  if (agent) prior *= 0.7;
   prior *= 1 / (1 + 0.05 * s.depth);
   prior *= 1.25; // touched today
 
@@ -551,7 +569,7 @@ function NoPage({ o, s, props }: { o: Outcome; s: State; props: RecipeProps }) {
       ? `Past the ${props.maxDepth} levels Innerpedia reads, a folder gets no page. Its files, size and languages are counted into the tally of its depth ${props.maxDepth} parent, which names what lies below; a .git down here is never read.`
       : o.none === "pruned"
         ? `${s.name} is a pruned name, like node_modules, dist and vendor: the crawler never enters it. Its parent lists it among the folders left out.`
-        : `A name that starts with a dot is pruned and never mentioned, not even among the folders left out.`;
+        : `${s.name} is a dot folder a tool generates, like .next, .turbo and .venv: the crawler never enters it or mentions it. Other dot folders are agents', and get a page.`;
   return (
     <div className="mt-5 grid place-items-center rounded-xl border border-dashed border-line-strong px-6 py-10 text-center">
       <Verdict o={o} />

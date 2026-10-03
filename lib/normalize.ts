@@ -1,12 +1,13 @@
 // One pass that brings an index up to the current rules, shared by the indexer (before
 // it writes) and the server (when it loads an index written by an older indexer). It
 // only does what needs no disk: credentials redacted, text in house style, summaries
-// re-picked, logos checked, dates in UTC and rolled up the tree, categories completed.
-// Idempotent.
-// No imports beyond lib/text, so the indexer can use it outside Next.
+// re-picked, logos checked, dates in UTC and rolled up the tree, categories completed,
+// every page placed among projects or agents. Idempotent.
+// No imports beyond lib/text and lib/agents, so the indexer can use it outside Next.
 
+import { agentTool, realmOf } from "./agents";
 import { cleanLine, dropLeadIn, firstParagraph, readsAsInstructions, redactSecrets, undash } from "./text";
-import type { Page, SiteIndex } from "./types";
+import type { AgentSession, Page, SiteIndex } from "./types";
 
 export const MEDIA_EXT = new Set([
   "png", "jpg", "jpeg", "gif", "webp", "svg", "heic", "avif", "mp4", "mov", "webm", "mp3", "wav", "m4a", "aac", "ico", "psd", "fig", "zip",
@@ -73,6 +74,45 @@ function cleanLogo(p: Page) {
   if (!p.logo || (p.logoSurface != null && !SURFACES.has(p.logoSurface))) p.logoSurface = null;
 }
 
+const sessionList = (xs: unknown): AgentSession[] =>
+  Array.isArray(xs)
+    ? xs
+        .filter((x): x is AgentSession => !!x && typeof x.path === "string" && typeof x.date === "string" && typeof x.bytes === "number")
+        .map((x) => ({ path: x.path, date: utc(x.date) ?? x.date, bytes: x.bytes }))
+    : [];
+
+/** An agent's own folder keeps its instructions, sessions and activity; anything else
+ * loses them. Instruction text is redacted again, as a README is. */
+function cleanAgent(p: Page) {
+  if (p.agent == null) return;
+  const a = p.agent;
+  if (typeof a !== "object" || p.realm !== "agent") {
+    p.agent = null;
+    return;
+  }
+  a.tool = typeof a.tool === "string" && a.tool ? cleanLine(a.tool) : agentTool(p.name);
+  a.instructions = Array.isArray(a.instructions)
+    ? a.instructions
+        .filter((f) => !!f && typeof f.path === "string" && typeof f.text === "string")
+        .map((f) => ({ path: f.path, text: redactSecrets(f.text), words: typeof f.words === "number" ? f.words : 0, modified: utc(f.modified) }))
+        .filter((f) => f.text.trim())
+    : [];
+  if (a.sessions) {
+    a.sessions.first = utc(a.sessions.first);
+    a.sessions.last = utc(a.sessions.last);
+    a.sessions.recent = sessionList(a.sessions.recent);
+    if (!Array.isArray(a.sessions.monthly)) a.sessions.monthly = [];
+  } else a.sessions = null;
+  const act = a.activity;
+  a.activity = {
+    files: typeof act?.files === "number" ? act.files : 0,
+    last: utc(act?.last),
+    recent: typeof act?.recent === "number" ? act.recent : 0,
+    monthly: Array.isArray(act?.monthly) ? act.monthly : [],
+    logs: sessionList(act?.logs),
+  };
+}
+
 /** A folder named like source ("assets", "public") that holds nothing but media. */
 function mediaOnly(p: Page): boolean {
   return p.fileCount > 0 && p.files.length === p.fileCount && p.files.every((f) => MEDIA_EXT.has(extOf(f)));
@@ -82,8 +122,10 @@ export function normalizeIndex(index: SiteIndex): SiteIndex {
   const bySlug = new Map(index.pages.map((p) => [p.slug, p]));
 
   for (const p of index.pages) {
+    p.realm = realmOf(p);
     cleanText(p);
     cleanLogo(p);
+    cleanAgent(p);
     p.created = utc(p.created);
     p.modified = utc(p.modified);
     if (p.git) {
@@ -123,5 +165,7 @@ export function normalizeIndex(index: SiteIndex): SiteIndex {
     p.categories = cats;
   }
   index.meta.counts.categories = new Set(index.pages.flatMap((p) => p.categories)).size;
+  // An agent is the outermost dot folder of its kind: one whose parent is a project's.
+  index.meta.counts.agents = index.pages.filter((p) => p.realm === "agent" && (!p.parent || bySlug.get(p.parent)?.realm !== "agent")).length;
   return index;
 }

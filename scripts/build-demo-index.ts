@@ -546,8 +546,11 @@ async function main() {
       return p;
     }
   };
-  // Never anywhere, not even inside README text.
-  const banned = [...new Set([orgDir, cacheRoot, projectDir, realOr(orgDir), realOr(projectDir), os.homedir(), realOr(os.homedir()), ".demo-cache", ".github-cache", DOT])].filter(Boolean);
+  // Never anywhere, not even inside README text. The caches are banned by their clone
+  // layout (".github-cache/quirq-ai"), which is what a leaked crawl path holds: their bare
+  // names are ordinary words in this project's own README, which documents them.
+  const layouts = [".demo-cache", ".github-cache"].map((c) => `${c}/${source.owner}`);
+  const banned = [...new Set([orgDir, cacheRoot, projectDir, realOr(orgDir), realOr(projectDir), os.homedir(), realOr(os.homedir()), ...layouts, DOT])].filter(Boolean);
   for (const b of banned) if (json.includes(b)) problems.push(`output contains ${JSON.stringify(b)}`);
 
   // Path shapes that name a machine. In text quoted from a repository (README, notes,

@@ -62,6 +62,8 @@ export function mergeIndexes(local: SiteIndex | null, remote: SiteIndex | null):
   const sources = [local, remote].filter((index): index is SiteIndex => index !== null);
   const roots = sources.flatMap((index) => index.meta.roots);
   const articles = pages.filter((p) => p.isArticle).length;
+  const realmBySlug = new Map(pages.map((p) => [p.slug, p.realm]));
+  const agents = pages.filter((p) => p.realm === "agent" && (!p.parent || realmBySlug.get(p.parent) !== "agent")).length;
   return {
     meta: {
       generatedAt: sources.map((index) => index.meta.generatedAt).sort().at(-1) ?? "",
@@ -74,6 +76,7 @@ export function mergeIndexes(local: SiteIndex | null, remote: SiteIndex | null):
         repos: pages.filter((p) => p.kind === "repo").length,
         stubs: pages.length - articles,
         categories: new Set(pages.flatMap((p) => p.categories)).size,
+        agents,
       },
       durationMs: sources.reduce((total, index) => total + index.meta.durationMs, 0),
       // A GitHub source is usable in the local application; it is not demo mode.

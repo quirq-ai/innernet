@@ -105,8 +105,9 @@ export function HowItWorks() {
       <Prose className="mt-10">
         <p>
           It never follows a symlink, skips any folder holding <C>pyvenv.cfg</C> (a Python virtualenv by any name), and prunes names that are build output, caches or
-          dependencies. Pruned names that do not start with a dot, and <C>.git</C>, are listed on the parent&apos;s page as left out; other dot-folders vanish without a
-          word.
+          dependencies. Pruned names that do not start with a dot, and <C>.git</C>, are listed on the parent&apos;s page as left out. A dot folder belongs to an agent
+          (<C>.claude</C>, <C>.codex</C>, <C>.cursor</C>, <C>.xo</C>) and is read like any other, as the agents&apos; half of the index; only the dot folders a tool
+          generates (<C>.next</C>, <C>.turbo</C>, <C>.venv</C>) and those that hold credentials (<C>.ssh</C>, <C>.aws</C>) vanish without a word.
         </p>
       </Prose>
       <Excerpt file={B} from="const PRUNE = new Set([" lines={7} className="mt-6" />
@@ -114,8 +115,9 @@ export function HowItWorks() {
         <p>
           In each folder it opens three kinds of file at most: the README (its first 14,000 bytes), <C>CLAUDE.md</C> or else <C>AGENTS.md</C> (the first prose
           paragraph of its first 20,000 bytes), and one manifest (<C>package.json</C>, then <C>pyproject.toml</C>, <C>Cargo.toml</C>, <C>go.mod</C>,{" "}
-          <C>requirements.txt</C>). A folder with its own <C>.git</C> also gets five <C>git</C> commands, ten seconds each at most. Every other file is only counted:
-          its size, its dates and its extension, which becomes a language.
+          <C>requirements.txt</C>). A folder with its own <C>.git</C> also gets five <C>git</C> commands, ten seconds each at most. An agent&apos;s own folder also has
+          its instruction and memory files read (<C>CLAUDE.md</C>, <C>AGENTS.md</C>, <C>SOUL.md</C>, rules, <C>memory</C> notes), and its sessions counted by name,
+          size and date. Every other file is only counted: its size, its dates and its extension, which becomes a language.
         </p>
       </Prose>
       {!missing && (

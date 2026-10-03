@@ -60,6 +60,8 @@ export function ResultItem({
     .slice(0, 2)
     .forEach((f, i) => facts.push({ node: f, wide: i > 0 }));
   if (p.git) facts.push({ node: <span className="tabular-nums">{p.git.commitCount === 1 ? "1 commit" : `${num(p.git.commitCount)} commits`}</span> });
+  if (p.agent?.sessions) facts.push({ node: <span className="tabular-nums">{p.agent.sessions.count === 1 ? "1 session" : `${num(p.agent.sessions.count)} sessions`}</span> });
+  if (p.agent?.instructions.length) facts.push({ node: p.agent.instructions.length === 1 ? "1 instruction file" : `${p.agent.instructions.length} instruction files`, wide: true });
   if (p.modified) facts.push({ node: `updated ${timeAgo(p.modified)}` });
 
   return (

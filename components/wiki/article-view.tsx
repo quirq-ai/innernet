@@ -3,6 +3,7 @@ import { getIndex } from "@/lib/data";
 import { searchHref, sourceHref, sourceLabel, wikiHref } from "@/lib/links";
 import { readsAsInstructions } from "@/lib/text";
 import type { Page } from "@/lib/types";
+import { AgentInstructions, AgentSessions } from "./article/agent";
 import { ContentsBox, ContentsNav, type ContentsItem } from "./article/contents-nav";
 import { History } from "./article/history";
 import { Infobox } from "./article/infobox";
@@ -16,7 +17,7 @@ import { hasTechnology, Technology } from "./article/technology";
 // A full Innerpedia article: contents on the left, the article with its infobox in
 // the middle, sections only where there is something to say.
 
-const SECTION_IDS = ["top", "overview", "structure", "technology", "history", "see-also", "external-links", "contents"];
+const SECTION_IDS = ["top", "overview", "instructions", "sessions", "structure", "technology", "history", "see-also", "external-links", "contents"];
 
 function Hatnote({ page, slug }: { page: Page; slug: string }) {
   const key = slug.replace(/_\(disambiguation\)$/i, "");
@@ -39,12 +40,15 @@ export function ArticleView({ page, disambiguation }: { page: Page; disambiguati
   const agentQuote = !readme && page.agentNotes && page.agentNotes !== summary && !readsAsInstructions(page.agentNotes) ? page.agentNotes : null;
   const hasStructure = page.children.length > 0 || page.files.length > 0 || page.hiddenChildren.length > 0;
   const git = page.git && page.git.commitCount > 0 ? page.git : null;
+  const agent = page.agent ?? null;
 
   const items: ContentsItem[] = [{ id: "top", label: "(Top)" }];
   if (readme || agentQuote) {
     items.push({ id: "overview", label: "Overview" });
     for (const h of readme?.headings.slice(0, 10) ?? []) items.push({ id: h.id, label: h.text, depth: 1 });
   }
+  if (agent?.instructions.length) items.push({ id: "instructions", label: "Instructions and memory" });
+  if (agent) items.push({ id: "sessions", label: agent.sessions ? "Sessions and activity" : "Activity" });
   if (hasStructure) items.push({ id: "structure", label: "Structure" });
   if (hasTechnology(page)) items.push({ id: "technology", label: "Technology" });
   if (git) items.push({ id: "history", label: "History" });
@@ -86,7 +90,7 @@ export function ArticleView({ page, disambiguation }: { page: Page; disambiguati
               {summary && <p>{summary}</p>}
             </div>
 
-            {!page.readme && (
+            {!page.readme && page.realm === "project" && (
               <Notice page={page} className="mt-2">
                 This article was written from the folder alone. You can help Innerpedia by{" "}
                 <a href={sourceHref(page.path)} className="link whitespace-nowrap not-italic">
@@ -110,6 +114,18 @@ export function ArticleView({ page, disambiguation }: { page: Page; disambiguati
                     <blockquote>{agentQuote}</blockquote>
                   </div>
                 )}
+              </Section>
+            )}
+
+            {agent && agent.instructions.length > 0 && (
+              <Section id="instructions" title="Instructions and memory">
+                <AgentInstructions agent={agent} />
+              </Section>
+            )}
+
+            {agent && (
+              <Section id="sessions" title={agent.sessions ? "Sessions and activity" : "Activity"}>
+                <AgentSessions agent={agent} />
               </Section>
             )}
 

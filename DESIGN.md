@@ -23,7 +23,9 @@ decoration for its own sake.
    its own logo shows that instead, on a tile chosen from the logo's colours. Server
    components use `<PageSigil page>` (components/page-sigil.tsx), which picks the logo
    when there is one, wherever a page is represented: results, knowledge panel, infobox,
-   lists of related pages, the Main page's boxes.
+   lists of related pages, the Main page's boxes. The tile's shape says what it is:
+   repositories round, projects soft squares, agents' dot folders octagons
+   (`AGENT_CLIP`), plain folders small-radius and muted.
 4. **The web's conventions are features.** Blue links that turn violet once visited,
    breadcrumbs above result titles, "About N results (0.01 seconds)", Wikipedia's lead
    paragraph, infobox, contents, hatnotes, "See also", categories at the foot. Keep them;
@@ -182,8 +184,9 @@ One page in two movements: the search engine, then the field guide.
   Claude, ChatGPT or Grok" (the demo: "Run Innernet on your own folders with..."), each
   name a plain link that opens the assistant in a new tab with the prompt written, and a
   **Copy prompt** button. Its headline links to the full card.
-- "Recently touched": 6 to 8 articles with the most recent `modified`, each a sigil or
-  logo + name chip linking to the article.
+- "Recently touched": 6 to 8 project articles with the most recent `modified`, each a
+  sigil or logo + name chip linking to the article. Agents are left out: they write to
+  their folders all day and have a tab of their own.
 - At the foot of the screen, the cue: "The field guide" in small mono caps over a
   hairline with a drop of ink running down it.
 - **The field guide** (`components/guide/field-guide.tsx`, `<section id="guide">`)
@@ -197,7 +200,7 @@ One page in two movements: the search engine, then the field guide.
 
 ### Results `/search?q=&t=&p=`
 
-- `<TopBar q>`. Under it a tab row (All, Projects, Repositories, Documents, Folders) with
+- `<TopBar q>`. Under it a tab row (All, Projects, Agents, Repositories, Documents, Folders) with
   counts in `text-faint`, active tab ink with a 2px underline. Tabs keep `q`.
 - Meta line: "About 36 results (0.004 seconds)" in `text-muted`, 13px.
 - Two columns on desktop: results (max-width ~652px) and the knowledge panel (~360px,
