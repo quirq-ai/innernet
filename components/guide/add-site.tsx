@@ -123,6 +123,7 @@ export function AddSite() {
             /wiki/weather-station
           </Link>{" "}
           says &ldquo;Nothing here, yet&rdquo;; the running server picks up the new file on the next request, and the article is there.
+          {!DEMO && <> You can also open <strong>Sources</strong> next to Guide, select Local, save your choices, and use <strong>Sync now</strong>. It refreshes the page when done and records the sync in your activity.</>}
         </>
       ),
     },
@@ -200,6 +201,14 @@ export function AddSite() {
           A root is a folder the crawl starts from. The roots and the depth live in <C>innernet.config.json</C>, at the top of this project. Add a path to the list and
           index again; or name the roots for one run with <C>INNERNET_ROOTS</C>, which replaces the list rather than adding to it.
         </p>
+        {!DEMO && (
+          <p>
+            Open <strong>Sources</strong> next to Guide to choose Local folders, Remote public repositories on GitHub, or both. Under Remote, enter a GitHub
+            username or organization name or account URL; the default is quirq-ai. Optionally list repository names or URLs from that account, one per line.
+            An empty list includes all its public repositories. <strong>Save sources</strong> remembers your choices across restarts, then <strong>Sync now</strong>{" "}
+            rebuilds the saved selection. Your activity and database stay on this machine with either choice.
+          </p>
+        )}
       </Prose>
       <div className="mt-6 max-w-[660px] space-y-3" data-reveal>
         <Excerpt file="innernet.config.json" from="{" lines={4} />
@@ -209,9 +218,19 @@ export function AddSite() {
         <p>
           Each root becomes an article at depth 0, typed Root folder, and always the primary topic for its name. Its own name is not part of any path below it, so{" "}
           <C>in:</C> with the root&apos;s name does not list what the root holds, only what sits under some other folder of that name; search for what is inside
-          instead. The footers list every root, and the server only ever reads{" "}
-          <C>data/index.json</C> in this folder, so an index written elsewhere with <C>INNERNET_OUT</C> cannot be browsed.
+          instead. The footers list every root. The local index lives at <C>data/index.json</C> in this project, so a trial index written elsewhere with{" "}
+          <C>INNERNET_OUT</C> does not change what the app serves. Each remote account and repository selection has its own <C>data/github-&lt;hash&gt;.json</C>{" "}
+          snapshot. The default quirq-ai account with no repository filter uses <C>data/github.json</C> and, until its first sync, the included public demo snapshot.
+          Other remote selections need a sync before they have pages to browse.
         </p>
+        {!DEMO && (
+          <p>
+            Below the source choices, <strong>Where your data lives</strong> shows the exact paths for the page indexes, history, database, settings and caches.
+            Use <strong>Copy path</strong> or <strong>Open folder</strong> to find them. <strong>Edit file</strong> opens this tab&apos;s activity JSONL, saved source
+            choices or folder configuration when the file exists. Edit activity lines, then reload History; edit your original folders and sync to update pages.
+            Innerpedia renders pages from JSON, so there is no separate HTML file for each article.
+          </p>
+        )}
       </Prose>
 
       <SectionHead id="names" mark="II.4" title="How names work" aside={missing ? undefined : `${num(facts.shared)} shared names`} />

@@ -1,31 +1,28 @@
 import "server-only";
 
 import fs from "node:fs";
-import path from "node:path";
 import { heldLocalIndex, rememberLocalIndex, remoteDemoIndex } from "./db/sync";
+import { mergeIndexes } from "./merge-indexes";
 import { DEMO } from "./mode";
 import { normalizeIndex } from "./normalize";
+import { BUNDLED_REMOTE_INDEX_FILE, LOCAL_INDEX_FILE, readSourceSelection, remoteIndexFile } from "./sources";
 import type { Page, SiteIndex } from "./types";
 
-// Loads data/index.json once and reloads it when the file changes, so `pnpm index`
-// takes effect without restarting the server. The demo (lib/mode.ts) reads the
-// committed data/demo/index.json instead; next.config.ts ships that one file with
-// every server function, and never the local index.
+// Local mode combines the selected sources from data/sources.json: data/index.json
+// for folders and data/github.json for GitHub (with the bundled snapshot as fallback).
+// Changed files and source selections take effect without restarting the server.
+// The public demo keeps its original bundled-file / Neon flow.
 //
 // The database (lib/db) keeps a copy, and the file stays the source. On this machine
-// each new index is stored in the background, and if data/index.json goes missing the
+// each new local-folder index is stored in the background, and if data/index.json goes missing the
 // stored one serves instead. On the demo a newer index stored in Neon replaces the
 // bundled one once it has been read (lib/db/sync.ts). getIndex() itself never waits on
 // a database: it answers from memory.
 
-const LOCAL_INDEX = path.join(process.cwd(), "data", "index.json");
-const DEMO_INDEX = path.join(process.cwd(), "data", "demo", "index.json");
-const INDEX_FILE = DEMO ? DEMO_INDEX : LOCAL_INDEX;
-
 export interface Loaded {
   index: SiteIndex;
   missing: boolean; // true when there is no index to show: none built yet, and none stored
-  version: number; // changes whenever the index served changes (the file's mtime, or below -1 for one read from the database)
+  version: number; // changes whenever the served source selection or index changes
   source: "file" | "database" | "none"; // where the index served came from
   bySlug: Map<string, Page>;
   byLowerSlug: Map<string, Page>;
@@ -34,8 +31,10 @@ export interface Loaded {
   byName: Map<string, Page[]>; // lowercased folder name -> every folder of that name
 }
 
-let fromFileCache: Loaded | null = null; // the index file, by its mtime
-let fromDbCache: Loaded | null = null; // an index read from the database, by its version
+let serial = 0;
+const fromFileCache = new Map<string, { signature: string; loaded: Loaded }>();
+let fromDbCache: { heldVersion: number; index: SiteIndex; loaded: Loaded } | null = null;
+let selectedCache: { selection: string; local: Loaded | null; remote: Loaded | null; loaded: Loaded } | null = null;
 
 const EMPTY: SiteIndex = {
   meta: { generatedAt: "", roots: [], maxDepth: 0, counts: { pages: 0, articles: 0, repos: 0, stubs: 0, categories: 0 }, durationMs: 0 },
@@ -68,43 +67,67 @@ function build(index: SiteIndex, version: number, source: Loaded["source"]): Loa
 
 const NONE = build(EMPTY, -1, "none");
 
-/** The index file, reloaded when its mtime changes, or null when there is none. */
-function fromFile(): Loaded | null {
-  let version = -1;
+/** Reload changed files; only the original local index is copied to the database. */
+function fromFile(file: string): Loaded | null {
+  let stat: fs.Stats;
   try {
-    version = fs.statSync(INDEX_FILE).mtimeMs;
+    stat = fs.statSync(file);
   } catch {
     /* not built yet, or deleted */
+    fromFileCache.delete(file);
+    return null;
   }
-  if (version <= 0) return null;
-  if (fromFileCache?.version === version) return fromFileCache;
+  const signature = `${stat.mtimeMs}:${stat.ctimeMs}:${stat.size}`;
+  const cached = fromFileCache.get(file);
+  if (cached?.signature === signature) return cached.loaded;
   // Older indexes are brought up to the current rules on load: no credentials, no
   // dashes, UTC dates rolled up the tree (see lib/normalize.ts).
-  const index = normalizeIndex(JSON.parse(fs.readFileSync(INDEX_FILE, "utf8")));
-  fromFileCache = build(index, version, "file");
-  if (!DEMO) rememberLocalIndex(index, version);
-  return fromFileCache;
+  const index = normalizeIndex(JSON.parse(fs.readFileSync(file, "utf8")));
+  const loaded = build(index, ++serial, "file");
+  fromFileCache.set(file, { signature, loaded });
+  if (!DEMO && file === LOCAL_INDEX_FILE) rememberLocalIndex(index, loaded.version);
+  return loaded;
 }
 
-/** An index the database holds, built once per version. Same version as the file it was stored from: the same Loaded. */
+/** An index the database holds, built once per version. */
 function fromDb(held: { index: SiteIndex; version: number }): Loaded {
-  if (fromDbCache?.version === held.version) return fromDbCache;
-  fromDbCache =
-    fromFileCache?.version === held.version && fromFileCache.index === held.index
-      ? { ...fromFileCache, source: "database" }
-      : build(normalizeIndex(held.index), held.version, "database");
-  return fromDbCache;
+  if (fromDbCache?.heldVersion === held.version && fromDbCache.index === held.index) return fromDbCache.loaded;
+  const loaded = build(normalizeIndex(held.index), ++serial, "database");
+  fromDbCache = { heldVersion: held.version, index: held.index, loaded };
+  return loaded;
 }
 
-export function getIndex(): Loaded {
-  const file = fromFile();
-  if (DEMO) {
-    const remote = remoteDemoIndex(file?.index.meta.generatedAt ?? "");
-    return remote ? fromDb(remote) : (file ?? NONE);
-  }
+/** The raw local index, independent of selected sources, for database storage. */
+export function getLocalIndex(): Loaded {
+  const file = fromFile(LOCAL_INDEX_FILE);
   if (file) return file;
   const held = heldLocalIndex();
   return held ? fromDb(held) : NONE;
+}
+
+export function getIndex(): Loaded {
+  if (DEMO) {
+    const file = fromFile(BUNDLED_REMOTE_INDEX_FILE);
+    const remote = remoteDemoIndex(file?.index.meta.generatedAt ?? "");
+    return remote ? fromDb(remote) : (file ?? NONE);
+  }
+  const selection = readSourceSelection();
+  const key = `${selection.local}:${selection.remote}`;
+  const local = selection.local ? getLocalIndex() : null;
+  let remote: Loaded | null = null;
+  if (selection.remote) {
+    try { remote = fromFile(remoteIndexFile()); }
+    catch { /* Sources remains available to repair invalid settings or rebuild a broken snapshot. */ }
+  }
+  if (selectedCache?.selection === key && selectedCache.local === local && selectedCache.remote === remote) return selectedCache.loaded;
+  const localIndex = local && !local.missing ? local.index : null;
+  const source = remote ? "file" : local?.source ?? "none";
+  // Normalise before merging: existing categories and all link targets already belong
+  // to their correct source. Never send this derived view to rememberLocalIndex.
+  const index = mergeIndexes(localIndex, remote?.index ?? null);
+  const loaded = build(index, ++serial, source);
+  selectedCache = { selection: key, local, remote, loaded };
+  return loaded;
 }
 
 export function getPage(slug: string | null | undefined): Page | null {

@@ -1,7 +1,7 @@
 # Contributing to innernet
 
-Innernet is small enough to hold in your head: one crawler, one JSON file, one search
-engine and an encyclopedia drawn from it. This page is how to work on it. For how it
+Innernet is small enough to hold in your head: a crawler, local JSON indexes, one search
+engine and an encyclopedia drawn from them. This page is how to work on it. For how it
 behaves (the crawl rules, ranking, operators, every kind of Innerpedia page), read the
 field guide on the home page at [/#guide](http://localhost:3470/#guide). For how it should look
 and sound, read [DESIGN.md](DESIGN.md).
@@ -14,11 +14,19 @@ pnpm index        # crawl ~/Programming into data/index.json (about a minute)
 pnpm dev          # http://localhost:3470, bound to 127.0.0.1 only
 ```
 
-- Run the dev server from this folder. The server reads `data/index.json` relative to
-  the working directory, whatever the indexer was told.
+- Run the dev server from this folder. It reads the selected local and GitHub indexes
+  from this project, whatever output path a command-line local indexer was told.
 - The first `pnpm dev` or `pnpm build` needs the network once, to fetch the fonts. After
   that `next/font` serves them locally and the browser never leaves localhost.
-- Re-index whenever you like. The server notices the new file on the next request; there
+- Open the **Sources** page (`/sources`) beside **Guide**, choose Local, Remote (public GitHub
+  repositories), or both. Remote accepts a GitHub username or organization name or
+  account URL, plus an optional list of repository names or URLs belonging to that
+  account. An empty list includes all public repositories; the default account is
+  `quirq-ai`. **Save sources**, then **Sync now**. The selection applies immediately and
+  persists in `data/sources.json`. **Sync now** refreshes the selected providers and
+  logs its start and outcome in the current activity session; saving choices is logged
+  too. `pnpm index` remains the local-only command.
+  For command-line rebuilds, the server notices the new file on the next request; there
   is nothing to restart.
 
 ## The loop
@@ -34,6 +42,7 @@ lint, test or format tooling; these are the checks.
 | The indexer | `INNERNET_ROOTS=~/some/small/dir INNERNET_OUT=/tmp/innernet-test.json pnpm index` | a test index, with your real one left alone |
 | The database | `INNERNET_DB_DIR=/tmp/innernet-db pnpm db:store`, then `pnpm db:status` with the same folder | the index and history stored in a scratch copy, the real one left alone |
 | The history | with the dev server stopped, `INNERNET_HISTORY_DIR=/tmp/h INNERNET_DB_DIR=/tmp/hdb pnpm dev`; open a few pages, append a line to `/tmp/h/<session>/notes.jsonl` and reload `/activity` | the line shows, once, however often the page is read; the real history left alone |
+| Sources | visit `/sources`; check Local, Remote and both; edit the GitHub account and repository list, save, reload, sync, and inspect storage paths | selection and remote edits persist, each remote configuration uses its own snapshot, combined results keep both providers, activity stays local, and content uses ordinary document scrolling |
 | Copy | `rg -n "[\x{2013}\x{2014}]" -g '!node_modules' -g '!.next' -g '!data' .` | no matches |
 
 A few things worth knowing about these tools:
@@ -68,19 +77,44 @@ A few things worth knowing about these tools:
 
 ## Conventions
 
+**Popups never scroll.** Popups, modals, dialogs and popovers are only for brief
+information or small, focused confirmations that fit without scrolling, including on
+phones and at increased text size. If content needs scrolling, put it on a normal
+page. Do not clip, hide or shrink content to fit an overlay. Source choices and
+storage locations belong on `/sources`. Check narrow and wide screens when changing
+an overlay; the app-wide rule is in
+[`.cursor/rules/non-scrolling-popups.mdc`](.cursor/rules/non-scrolling-popups.mdc).
+
 **Server first.** Pages are Server Components that read `lib/data.ts` and
 `lib/search.ts`. The client components are few and each has a reason only the browser
 can satisfy: the search box, the home hero search, the theme toggle and the contents
 rail; the field guide's copy button, folder recipe, reveal motion and progress ruler;
 the Innerpedia globe and the reveal of the boxes below it; and the history's recorder,
-the header's back and forward buttons, and the history page's two views of this browser.
-The browser asks two of this app's routes and nothing else: the search box asks
-`/api/suggest`, and the recorder posts each page visited to `/api/activity` (same origin
-only). On the demo that post is made only when the demo has a database, and its history
+the header's back and forward buttons, the local Sources page controls, and the history
+page's two views of this browser. The search box asks `/api/suggest`, the recorder posts
+each page visited to `/api/activity`. Sources posts to `/api/sources` to inspect or
+save Local/Remote choices and the GitHub account/repository list, `/api/sources/sync` to rebuild the saved selection, and
+`/api/sources/open` to reveal or edit named storage locations. All include the current
+session ID and require the same origin on localhost. Local sync runs the `pnpm index`
+crawler into `data/index.json`; Remote uses the anonymous public GitHub crawler with
+`INNERNET_REMOTE_CACHE=.github-cache` and an `INNERNET_REMOTE_OUT` path chosen for the
+saved remote configuration. The default `quirq-ai` account with no repository filter
+writes `data/github.json` and falls back to the bundled `data/demo/index.json` before
+its first sync. Other accounts or repository lists write `data/github-<hash>.json`
+and have no bundled fallback. Switching configurations never serves the previous
+configuration's snapshot. Both selected means an in-memory combination of the indexes.
+The original local index and activity remain the database's local copy.
+
+Saving choices records a `sources` event; sync records `sync` events with `started`,
+`completed` or `failed` status. Concurrent syncs and source changes during a sync return
+409. Sources is hidden on the demo and its routes return 404 there. The storage section
+shows resolved paths, Copy path and Open folder, plus Edit file for existing session
+JSONL, source settings and local configuration files. Generated pages come from JSON,
+not individual HTML files. On the demo the activity post is made only when the demo has a database, and its history
 page then reads and clears the visitor's own sessions on the same route (a `POST` of
 `{"read": [ids]}` and a `DELETE` of `{"sessions": [ids]}`: ids never go in an address);
 without one the demo keeps history in `localStorage` and sends nothing. The history
-page's Store now is a plain form posting to `/api/db/store`, local only. Keep it that way: no other browser fetches, no external requests, no new client
+page's Store now is a plain form posting to `/api/db/store`, local only. Keep it that way: no other browser fetches, no external browser requests, no new client
 components without a reason only the browser can satisfy.
 
 **Shared code stays shared.** The indexer imports `lib/text.ts`, `lib/normalize.ts` and

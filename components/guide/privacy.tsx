@@ -62,7 +62,7 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
       <>Scripts, styles, images and connections from any other origin.</>,
       <>Being framed by another page. Every page also asks search engines to look away.</>,
       <>
-        Any write but one: the history of what you open, from this app&apos;s own pages, to a folder in your home and its copy in <C>~/.innernet/db</C>.
+        Source and history actions from another site. This app accepts them only from its own pages on localhost, and opens only named app storage locations.
       </>,
     ],
   },
@@ -94,7 +94,7 @@ export function Privacy() {
         title="Private by design"
         className="mt-10"
         alt="This machine drawn as a walled enclosure holding the index, search and Innerpedia. One gate, 127.0.0.1, is the only way in; arrows toward the cloud, telemetry and third parties stop at the wall and are struck through. A dial reads 0 bytes sent."
-        caption={<>Private by design. Everything Innernet makes stays inside this machine; the only door is localhost, and nothing is sent anywhere.</>}
+        caption={<>Private by design. Your local index, activity and database stay on this machine. Remote sync downloads public GitHub content without uploading them.</>}
       />
 
       <SectionHead id="ledger" mark="V.1" title="The ledger" />
@@ -177,9 +177,11 @@ export function Privacy() {
       <Prose className="mt-8">
         <p>
           In the browser, a Content-Security-Policy holds every page to its own origin; under <C>next dev</C> it also lets the hot-reload websocket through. The fonts are served by the app itself, the pages ask search engines to look
-          away, and apart from moving between pages a page makes two requests, both to this app: the search box asks <C>/api/suggest</C> for suggestions as you
-          type, and the history posts the page you opened to <C>/api/activity</C>, which refuses anything not sent from this app&apos;s own pages on localhost. The
-          public demo is the one place it answers anyone else, and only when the demo keeps a database; the next section says what it keeps.
+          away, and browser requests stay on this app: the search box asks <C>/api/suggest</C> for suggestions as you type, the history posts the page you opened to{" "}
+          <C>/api/activity</C>, and the local Sources page uses <C>/api/sources</C> to inspect or save choices, <C>/api/sources/sync</C> to refresh them, and{" "}
+          <C>/api/sources/open</C> to open a named storage location. All require this app&apos;s own origin on localhost. The server downloads public
+          repositories anonymously from your selected GitHub account when Remote is synced; your local content, activity and database stay here. The public demo accepts its own visitors&apos;
+          history only when it keeps a database; the next section says what it keeps. Sources is unavailable on the demo.
         </p>
       </Prose>
       <Excerpt file="next.config.ts" from="const csp = [" lines={11} mark={["default-src", "frame-ancestors"]} className="mt-6" />
@@ -203,6 +205,11 @@ export function Privacy() {
           only the new bytes of each. A session folder you delete, or a line you take out of a file, is forgotten there too. Only when the history folder itself is
           lost or replaced (the database notes which folder it read) does it keep the sessions that did not come with the new one, so <C>pnpm db:load</C> can write
           them back. Set <C>INNERNET_DB=off</C> and Innernet runs on its files alone; delete <C>~/.innernet/db</C> to forget the copy.
+        </p>
+        <p>
+          Sources shows the resolved locations of your history and database, including any environment overrides. Its current-session row points straight to{" "}
+          <C>innernet.jsonl</C>: use Edit file to change its JSON lines, then reload History. Choosing Remote changes the content you browse, while activity and
+          the database remain local. The database copies the local index; GitHub snapshots and the combined view stay separate.
         </p>
         <p>
           The public demo is different, and it is the one place anything you do is written to a server. When it has a database (Neon Postgres, in US East), it keeps

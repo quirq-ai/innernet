@@ -29,9 +29,11 @@ decoration for its own sake.
    paragraph, infobox, contents, hatnotes, "See also", categories at the foot. Keep them;
    make them beautiful.
 5. **Server first.** Pages are Server Components that read `lib/data.ts` and
-   `lib/search.ts` directly. The browser fetches from two of our own routes and nothing
-   else: the search box asks `/api/suggest`, and the history recorder posts each page
-   visited to `/api/activity` (same origin only). On the demo it posts only when the demo
+   `lib/search.ts` directly. The browser fetches only from our own routes: the search
+   box asks `/api/suggest`, the history recorder posts each page visited to
+   `/api/activity`, and the local Sources page uses `/api/sources`,
+   `/api/sources/sync` and `/api/sources/open` (same origin on localhost only).
+   On the demo the recorder posts only when the demo
    keeps a database, and the history page then reads and clears the visitor's own
    sessions there; otherwise the demo keeps history in the visitor's `localStorage`. No
    external requests from the browser, ever. Links out (GitHub, quirq, the AI
@@ -48,6 +50,11 @@ decoration for its own sake.
    history page, the guide, the README), at every width: visitors' pages and searches are
    kept 30 days, anonymously, under a hash of each tab's id, with no IP address or cookie,
    and a button clears them.
+8. **Popups never scroll.** Every popup, modal, dialog and popover is only for brief
+   information or a small, focused confirmation. Its content must fit without
+   horizontal or vertical scrolling, including on phones and at increased text size.
+   Content that needs scrolling belongs on a normal page with ordinary document
+   scrolling. Never clip, hide or shrink content to force it into an overlay.
 
 ## Tokens (app/globals.css)
 
@@ -100,10 +107,35 @@ Dark mode is automatic (`prefers-color-scheme`) with a manual override
   compact>` and the theme toggle.
 - `components/brand-nav.tsx` `<BrandLinks>`: what every header carries on its right:
   the trail (`<HistoryNav>`: back, forward and the clock to `/activity`), the Guide
-  button (to `/#guide`), quirq and GitHub. `compact` lets them give way on narrow
+  button (to `/#guide`), the local Sources button beside it, quirq and GitHub. `compact` lets them give way on narrow
   screens (the Guide to its icon, GitHub off phones), to a search box in `<TopBar>` and
   to the Innerpedia link on home. Every header also has exactly one `<ThemeToggle>`,
   beside it.
+- Sources navigates to `/sources`, a normal page with independent Local and Remote checkboxes. Local uses
+  configured folders; Remote uses public GitHub repositories; both combine
+  their pages. Remote has an editable GitHub username or organization field accepting
+  a name or account URL, and an optional list accepting repository names or URLs from
+  that account, one per line. An empty list means all public repositories. The default
+  account is quirq-ai. At least one source must remain selected. Save sources applies the selection
+  immediately and persists it in `data/sources.json`; Sync now refreshes the saved
+  selection, with progress and success or error feedback. Local writes `data/index.json`;
+  Remote uses `.github-cache` and a separate `data/github-<hash>.json` for each account
+  and repository selection. The default quirq-ai account without a repository filter
+  uses `data/github.json` and can initially fall back to the bundled demo snapshot.
+  A newly configured remote has no pages until synced. Unsaved source or remote
+  configuration changes must be saved before syncing.
+- Below the source choices, Where your data lives shows exact paths for the current
+  session JSONL file, all history, both page indexes, source choices, folder
+  configuration, the database, downloads and app files and caches. Copy path and Open
+  folder make each location reachable; Edit file is available for existing activity,
+  settings and configuration files. Explain that pages are rendered from JSON, not
+  separate HTML files, and identify browser session and appearance storage too.
+- Source changes and the start and completed or failed sync outcome appear in the
+  current tab's activity session. Activity and the database stay local for every
+  selection. Controls stay disabled while an operation runs; concurrent sync requests
+  or source changes during a sync return 409. The demo hides Sources and refuses its
+  routes. The Sources page uses ordinary document scrolling at every width, with no
+  modal, focus trap or internally scrolling content container.
 - `components/search-box.tsx` `<SearchBox size="hero"|"compact">`: combobox with live
   suggestions, `/` to focus, Enter to search, arrow keys to pick a page.
 - `components/sigil.tsx` `<Sigil seed={slug} name kind muted={!isArticle} size logo logoSurface>`;

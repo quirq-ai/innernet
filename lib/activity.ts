@@ -64,9 +64,15 @@ export function appendEvent(session: string, app: string, fields: Record<string,
     }
     // The session must be a real folder, and the file is never reached through a link.
     if (!fs.lstatSync(dir).isDirectory()) return { ok: false, status: 409, error: "Session is not a folder." };
-    const fd = fs.openSync(path.join(dir, `${app}.jsonl`), fs.constants.O_WRONLY | fs.constants.O_APPEND | fs.constants.O_CREAT | fs.constants.O_NOFOLLOW, 0o600);
+    const fd = fs.openSync(path.join(dir, `${app}.jsonl`), fs.constants.O_RDWR | fs.constants.O_APPEND | fs.constants.O_CREAT | fs.constants.O_NOFOLLOW, 0o600);
     try {
-      fs.writeSync(fd, line);
+      // A text editor may save valid JSONL without a final newline. Inspect the
+      // already-open file (with the same no-follow protection) so the next event
+      // cannot be joined onto that last object and make both events unreadable.
+      const size = fs.fstatSync(fd).size;
+      const last = Buffer.alloc(1);
+      const needsSeparator = size > 0 && fs.readSync(fd, last, 0, 1, size - 1) === 1 && last[0] !== 10;
+      fs.writeSync(fd, (needsSeparator ? "\n" : "") + line);
     } finally {
       fs.closeSync(fd);
     }

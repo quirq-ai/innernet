@@ -63,7 +63,7 @@ function highlights(s: Session): { lead: string[]; more: number } {
   const out: string[] = [];
   for (const e of s.events) {
     const name =
-      e.app !== APP ? (str(e.title) ?? str(e.q) ?? str(e.url)) : e.kind === "visit" || e.kind === "search" ? pageLabel(str(e.url), str(e.title), e.kind === "search" ? str(e.q) : undefined) : undefined;
+      e.app !== APP ? (str(e.title) ?? str(e.q) ?? str(e.url)) : e.kind === "sources" ? "Sources updated" : e.kind === "sync" ? "Sync sources" : e.kind === "visit" || e.kind === "search" ? pageLabel(str(e.url), str(e.title), e.kind === "search" ? str(e.q) : undefined) : undefined;
     if (!name || seen.has(name)) continue;
     seen.add(name);
     out.push(name);
@@ -196,18 +196,24 @@ function SessionItem({ session: s, open, delay }: { session: Session; open: bool
 const KIND_GLYPH: Record<string, string> = { back: "←", forward: "→" };
 
 function EventRow({ e, showApp }: { e: ActivityEvent; showApp: boolean }) {
+  const sync = e.app === APP && e.kind === "sync";
+  const sources = e.app === APP && e.kind === "sources";
   const href = safeHref(e.url);
   const seed = wikiSeed(e.url);
   const q = str(e.q);
   const title = str(e.title);
   const label = e.kind === "search" && q ? null : e.app === APP ? pageLabel(str(e.url), title) : (title ?? str(e.url));
   const extras = Object.entries(e)
-    .filter(([k, v]) => !["at", "app", "kind", "url", "title", "q", "via"].includes(k) && v !== null && v !== undefined && v !== "")
+    .filter(([k, v]) => !["at", "app", "kind", "url", "title", "q", "via", ...(sync ? ["status", "command", "pages", "durationMs", "generatedAt", "error"] : []), ...(sync || sources ? ["local", "remote"] : [])].includes(k) && v !== null && v !== undefined && v !== "")
     .slice(0, 4)
     .map(([k, v]) => `${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
 
   const content =
-    e.kind === "search" && q ? (
+    sync ? (
+      <span className="text-ink">
+        {e.status === "completed" ? "Sources synced" : e.status === "failed" ? "Source sync failed" : e.status === "started" ? "Sync sources started" : (title ?? "Sync sources")}
+      </span>
+    ) : e.kind === "search" && q ? (
       <>
         <span className="text-muted">searched for </span>
         {href ? (
@@ -255,10 +261,27 @@ function EventRow({ e, showApp }: { e: ActivityEvent; showApp: boolean }) {
             {content}
             {!content && extras.length === 0 && <span className="text-faint">no details</span>}
           </span>
+          {sync && <SyncDetails event={e} />}
+          {(sync || sources) && (e.local === true || e.remote === true) && <span className="block text-[12.5px] text-muted">{[e.local === true && "Local folders", e.remote === true && "GitHub"].filter(Boolean).join(" + ")}</span>}
           {href && e.kind !== "search" && label !== e.url && <span className="block truncate font-mono text-[11.5px] text-muted">{e.url as string}</span>}
           {extras.length > 0 && <span className="block truncate font-mono text-[11.5px] text-muted">{extras.join(" · ")}</span>}
         </span>
       </div>
     </li>
+  );
+}
+
+function SyncDetails({ event: e }: { event: ActivityEvent }) {
+  const parts = [str(e.command) ?? "pnpm index"];
+  if (typeof e.pages === "number" && Number.isFinite(e.pages)) parts.push(`${plural(e.pages, "page")} indexed`);
+  if (typeof e.durationMs === "number" && Number.isFinite(e.durationMs)) {
+    const seconds = Math.max(0, e.durationMs) / 1000;
+    parts.push(seconds < 60 ? `${seconds.toFixed(1)} s` : duration(e.durationMs));
+  }
+  return (
+    <>
+      <span className="block break-words font-mono text-[11.5px] text-muted">{parts.join(" · ")}</span>
+      {str(e.error) && <span className="block break-words text-[12.5px] leading-relaxed text-ink-2">{str(e.error)}</span>}
+    </>
   );
 }

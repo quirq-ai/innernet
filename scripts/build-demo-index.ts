@@ -1,6 +1,10 @@
 // Build the demo index: the public repositories of github.com/quirq-ai as one Innerpedia.
 //   pnpm index:demo        # clones into .demo-cache/, writes data/demo/index.json
 //   INNERNET_DEMO_MAX_DEPTH=4 pnpm index:demo   # fewer folder levels (default 6)
+//   INNERNET_REMOTE_CACHE=.github-cache INNERNET_REMOTE_OUT=data/github.json pnpm index:demo
+//     # local Sources sync; keeps the committed demo index and its cache separate
+//   INNERNET_GITHUB_OWNER=octocat INNERNET_GITHUB_REPOSITORIES='["Hello-World"]' pnpm index:demo
+//     # an organization or user; an empty repository array means all public repositories
 //
 // data/demo/index.json is committed, and it is all the demo (Vercel) ever serves, so this
 // script keeps it to what any anonymous visitor of GitHub can already see:
@@ -16,37 +20,122 @@
 //     logos included. Afterwards every page path becomes its GitHub URL, file dates become
 //     git dates, and the run fails if any string in the output, or any SVG logo once
 //     decoded, still names this machine.
-//   - The root's logo is the organization's public GitHub avatar, fetched here once,
+//   - The root's logo is the account's public GitHub avatar, fetched here once,
 //     anonymously, and embedded, so the demo itself never asks GitHub for anything.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
-import { DEMO_ORG, DEMO_ORG_URL } from "../lib/mode";
+import { pathToFileURL } from "node:url";
+import { DEMO_ORG } from "../lib/mode";
 import { normalizeIndex } from "../lib/normalize";
 import { cleanLine, markdownToText, redactSecrets } from "../lib/text";
 import type { IndexMeta, Page, SiteIndex } from "../lib/types";
 
 const started = Date.now();
 const projectDir = path.resolve(__dirname, "..");
-const cacheRoot = path.join(projectDir, ".demo-cache");
-const orgDir = path.join(cacheRoot, DEMO_ORG);
+const source = githubSelection(process.env);
+const ownerUrl = `https://github.com/${source.owner}`;
+const cacheRoot = path.resolve(projectDir, process.env.INNERNET_REMOTE_CACHE || ".demo-cache");
+const orgDir = path.join(cacheRoot, source.owner);
 const crawlFile = path.join(cacheRoot, "crawl.json");
-const outFile = path.join(projectDir, "data", "demo", "index.json");
-const ROOT_LABEL = `github.com/${DEMO_ORG}`;
+const outFile = path.resolve(projectDir, process.env.INNERNET_REMOTE_OUT || path.join("data", "demo", "index.json"));
+const ROOT_LABEL = `github.com/${source.owner}`;
 /** Commits fetched per repository. Dates and counts are read within this history. */
 const HISTORY = 300;
-/** Folder levels below the organization that get pages (repositories are level 1). */
+/** Folder levels below the account that get pages (repositories are level 1). */
 const MAX_DEPTH = Number(process.env.INNERNET_DEMO_MAX_DEPTH ?? 6);
 /** The crawler skips dot folders, so ".github" is cloned under this stand-in and renamed back. */
 const DOT = "__dot__";
 const README_MAX = 14_000; // the crawler's README cap
 
+interface GithubSelection {
+  owner: string;
+  repositories: string[];
+}
+
+/** Validate before a source can become part of an API URL or cache path. */
+export function githubSelection(env: Record<string, string | undefined>): GithubSelection {
+  const owner = (env.INNERNET_GITHUB_OWNER ?? DEMO_ORG).trim().toLowerCase();
+  if (!/^[a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?$/.test(owner) || owner.includes("--")) {
+    throw new Error("INNERNET_GITHUB_OWNER must be a GitHub username or organization name");
+  }
+  let repositories: unknown;
+  try {
+    repositories = JSON.parse(env.INNERNET_GITHUB_REPOSITORIES ?? "[]");
+  } catch {
+    throw new Error("INNERNET_GITHUB_REPOSITORIES must be a JSON array of repository names");
+  }
+  if (!Array.isArray(repositories) || repositories.some((name) => typeof name !== "string" || !validRepoName(name.trim()))) {
+    throw new Error("INNERNET_GITHUB_REPOSITORIES must contain repository names, without owner names, URLs or paths");
+  }
+  return { owner, repositories: [...new Set((repositories as string[]).map((name) => name.trim().toLowerCase()))] };
+}
+
+function validRepoName(name: string): boolean {
+  return /^[A-Za-z0-9._-]{1,100}$/.test(name) && name !== "." && name !== ".." && !name.includes("__dot__");
+}
+
+// A remote cache is disposable, so it must be a dedicated child of this project.
+// Resolve and inspect every existing ancestor before deleting or running destructive
+// git commands. In particular, an old cache must never redirect them via a junction.
+function childPath(root: string, target: string): string {
+  const resolved = path.resolve(target);
+  const rel = path.relative(root, resolved);
+  if (!rel || rel === ".." || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
+    throw new Error(`refusing cache path outside ${root}: ${resolved}`);
+  }
+  return resolved;
+}
+
+function noLinkedAncestors(root: string, target: string, includeTarget = true): void {
+  const rel = path.relative(root, childPath(root, target));
+  const parts = rel.split(path.sep);
+  if (!includeTarget) parts.pop();
+  let current = root;
+  for (const part of ["", ...parts]) {
+    current = path.join(current, part);
+    const stat = fs.lstatSync(current, { throwIfNoEntry: false });
+    if (stat?.isSymbolicLink()) throw new Error(`refusing linked cache path: ${current}`);
+    if (stat && !stat.isDirectory() && current !== target) throw new Error(`cache parent is not a directory: ${current}`);
+  }
+}
+
+function cachePath(target: string, includeTarget = true): string {
+  const resolved = childPath(cacheRoot, target);
+  noLinkedAncestors(projectDir, cacheRoot);
+  noLinkedAncestors(cacheRoot, resolved, includeTarget);
+  return resolved;
+}
+
+/** Delete only inside this cache. Links are unlinked, never followed, including
+ * Windows junctions and links anywhere below a repository being discarded. */
+function removeCacheEntry(target: string): void {
+  const resolved = cachePath(target, false);
+  const stat = fs.lstatSync(resolved, { throwIfNoEntry: false });
+  if (!stat) return;
+  if (stat.isSymbolicLink() || !stat.isDirectory()) {
+    fs.unlinkSync(resolved);
+    return;
+  }
+  for (const name of fs.readdirSync(resolved)) removeCacheEntry(path.join(resolved, name));
+  fs.rmdirSync(resolved);
+}
+
+/** Git's own metadata must also stay in the cache before fetch/reset/clean can run. */
+function unlinkedTree(dir: string): boolean {
+  const stat = fs.lstatSync(dir, { throwIfNoEntry: false });
+  if (!stat || stat.isSymbolicLink()) return false;
+  return !stat.isDirectory() || fs.readdirSync(dir).every((name) => unlinkedTree(path.join(dir, name)));
+}
+
 // ---------------------------------------------------------------- GitHub, anonymously
 
 interface GhRepo {
   name: string;
+  owner: { login: string };
   private: boolean;
   visibility?: string;
   archived: boolean;
@@ -72,30 +161,74 @@ async function anonymousGet(url: string): Promise<Response> {
   }
 }
 
-async function listPublicRepos(): Promise<GhRepo[]> {
-  const all: GhRepo[] = [];
-  for (let page = 1; page <= 50; page++) {
-    const url = `https://api.github.com/orgs/${DEMO_ORG}/repos?type=public&per_page=100&page=${page}`;
-    const res = await anonymousGet(url);
-    if (!res.ok) {
-      const hint = res.status === 403 || res.status === 429 ? " (anonymous calls are limited to 60 an hour; try again later)" : "";
-      throw new Error(`GitHub API answered ${res.status} for ${url}${hint}`);
+function apiFailure(res: Response, url: string): Error {
+  const hint = res.status === 403 || res.status === 429 ? " (anonymous calls are limited to 60 an hour; try again later)" : "";
+  return new Error(`GitHub API answered ${res.status} for ${url}${hint}`);
+}
+
+function assertRepoIdentity(repo: GhRepo, owner: string, name?: string): void {
+  if (!repo || !validRepoName(repo.name ?? "") || repo.owner?.login?.toLowerCase() !== owner
+    || (name !== undefined && repo.name.toLowerCase() !== name.toLowerCase())) {
+    throw new Error(`GitHub returned a repository outside the requested source ${owner}${name ? `/${name}` : ""}`);
+  }
+}
+
+function unavailableReason(repo: GhRepo): string | null {
+  return repo.private !== false || repo.visibility !== "public" ? "not public"
+    : repo.archived ? "archived"
+    : repo.disabled ? "disabled"
+    : !(repo.size > 0) || !repo.default_branch ? "empty"
+    : null;
+}
+
+/** Organizations and personal accounts share the same selection shape. Explicit
+ * names must all be available, otherwise retain the previous index and fail. */
+export async function fetchSourceRepos(selection: GithubSelection): Promise<GhRepo[]> {
+  if (selection.repositories.length) {
+    const repos: GhRepo[] = [];
+    for (const name of selection.repositories) {
+      const url = `https://api.github.com/repos/${selection.owner}/${name}`;
+      const res = await anonymousGet(url);
+      if (res.status === 404) throw new Error(`GitHub repository ${selection.owner}/${name} was not found or is not public`);
+      if (!res.ok) throw apiFailure(res, url);
+      const repo = await res.json() as GhRepo;
+      assertRepoIdentity(repo, selection.owner, name);
+      const reason = unavailableReason(repo);
+      if (reason) throw new Error(`GitHub repository ${selection.owner}/${name} cannot be indexed: ${reason}`);
+      repos.push(repo);
     }
+    return repos;
+  }
+
+  const all: GhRepo[] = [];
+  let accountType = "orgs";
+  for (let page = 1; page <= 50; page++) {
+    const listUrl = () => `https://api.github.com/${accountType}/${selection.owner}/repos?type=${accountType === "orgs" ? "public" : "owner"}&per_page=100&page=${page}`;
+    let url = listUrl();
+    let res = await anonymousGet(url);
+    if (page === 1 && accountType === "orgs" && res.status === 404) {
+      accountType = "users";
+      url = listUrl();
+      res = await anonymousGet(url);
+    }
+    if (!res.ok) throw apiFailure(res, url);
     const batch = (await res.json()) as GhRepo[];
     if (!Array.isArray(batch)) throw new Error(`GitHub API returned no list for ${url}`);
+    for (const repo of batch) assertRepoIdentity(repo, selection.owner);
     all.push(...batch);
     if (batch.length < 100) break;
+    if (page === 50) throw new Error(`GitHub source ${selection.owner} exceeds 5,000 repositories; select specific repositories`);
   }
   return all.filter((r) => r.private === false && r.visibility === "public");
 }
 
-/** The organization's avatar as a data URI: github.com/<org>.png, redirected to GitHub's
+/** The account's avatar as a data URI: github.com/<owner>.png, redirected to GitHub's
  * avatar host, anonymously. Null when it cannot be had (the caller keeps the last one). */
 async function orgAvatar(): Promise<string | null> {
   for (const size of [256, 160, 96]) {
     let res: Response;
     try {
-      res = await anonymousGet(`${DEMO_ORG_URL}.png?size=${size}`);
+      res = await anonymousGet(`${ownerUrl}.png?size=${size}`);
     } catch {
       return null;
     }
@@ -114,20 +247,24 @@ async function orgAvatar(): Promise<string | null> {
 
 // ---------------------------------------------------------------- git, with no config
 
+// Git for Windows understands /dev/null, but rejects Node's os.devNull (\\.\nul).
+// Keep Git's spelling here; it also works with Git on macOS and Linux.
+const GIT_NULL = "/dev/null";
 const gitEnv: NodeJS.ProcessEnv = {
   ...process.env,
-  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_CONFIG_GLOBAL: GIT_NULL,
   GIT_CONFIG_NOSYSTEM: "1",
   GIT_TERMINAL_PROMPT: "0",
   GCM_INTERACTIVE: "never",
 };
-for (const k of ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_ASKPASS", "SSH_ASKPASS", "GIT_CONFIG_COUNT", "GIT_CONFIG_PARAMETERS", "GH_TOKEN", "GITHUB_TOKEN"]) {
+for (const k of ["GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_ASKPASS", "SSH_ASKPASS", "GIT_CONFIG", "GIT_CONFIG_COUNT", "GIT_CONFIG_PARAMETERS", "GH_TOKEN", "GITHUB_TOKEN"]) {
   delete gitEnv[k];
 }
-const NO_CREDENTIALS = ["-c", "credential.helper=", "-c", "core.askPass="];
+const NO_CREDENTIALS = ["-c", "credential.helper=", "-c", "core.askPass=", "-c", `core.hooksPath=${GIT_NULL}`];
 
 function git(cwd: string, args: string[], timeout = 300_000): string {
-  return execFileSync("git", args, {
+  cachePath(cwd);
+  return execFileSync("git", [...NO_CREDENTIALS, ...args], {
     cwd,
     env: gitEnv,
     encoding: "utf8",
@@ -146,23 +283,29 @@ function tryGit(cwd: string, args: string[]): string | null {
 }
 
 const cacheName = (name: string) => (name.startsWith(".") ? DOT + name.slice(1) : name);
-const cloneUrl = (name: string) => `https://github.com/${DEMO_ORG}/${name}.git`;
+const cloneUrl = (name: string) => `${ownerUrl}/${name}.git`;
 
 function syncRepo(repo: GhRepo, branch: string): void {
   // Asserted here, right before any network fetch, whatever the filters above did.
   if (repo.private !== false || repo.visibility !== "public") throw new Error(`refusing to clone ${repo.name}: not public`);
-  const dir = path.join(orgDir, cacheName(repo.name));
+  const dir = cachePath(path.join(orgDir, cacheName(repo.name)));
   const url = cloneUrl(repo.name);
-  const fresh = fs.existsSync(path.join(dir, ".git")) && tryGit(dir, ["config", "--get", "remote.origin.url"]) === url;
+  const gitDir = path.join(dir, ".git");
+  const samePath = (a: string | null, b: string) => !!a && path.relative(path.resolve(dir, a), b) === "";
+  const fresh = fs.lstatSync(gitDir, { throwIfNoEntry: false })?.isDirectory()
+    && unlinkedTree(gitDir)
+    && samePath(tryGit(dir, ["rev-parse", "--show-toplevel"]), dir)
+    && samePath(tryGit(dir, ["rev-parse", "--git-common-dir"]), gitDir)
+    && tryGit(dir, ["config", "--get", "remote.origin.url"]) === url;
   if (fresh) {
-    git(dir, [...NO_CREDENTIALS, "fetch", "--quiet", "--depth", String(HISTORY), "--filter=blob:none", "--no-tags", "origin", `+refs/heads/${branch}:refs/remotes/origin/${branch}`]);
+    git(dir, ["fetch", "--quiet", "--depth", String(HISTORY), "--filter=blob:none", "--no-tags", "origin", `+refs/heads/${branch}:refs/remotes/origin/${branch}`]);
     git(dir, ["checkout", "--quiet", "--force", "-B", branch, `refs/remotes/origin/${branch}`]);
     git(dir, ["reset", "--quiet", "--hard"]);
     git(dir, ["clean", "-ffdxq"]);
   } else {
-    fs.rmSync(dir, { recursive: true, force: true });
+    removeCacheEntry(dir);
     // Blobless: full trees for the history read below, file contents only for the checkout.
-    git(orgDir, [...NO_CREDENTIALS, "clone", "--quiet", "--depth", String(HISTORY), "--single-branch", "--branch", branch, "--filter=blob:none", "--no-tags", url, cacheName(repo.name)]);
+    git(orgDir, ["clone", "--quiet", "--depth", String(HISTORY), "--single-branch", "--branch", branch, "--filter=blob:none", "--no-tags", "--", url, cacheName(repo.name)]);
   }
 }
 
@@ -246,26 +389,29 @@ function walkStrings(value: unknown, fn: (s: string, at: string[]) => void, at: 
 // ---------------------------------------------------------------- run
 
 async function main() {
-  const listed = await listPublicRepos();
+  childPath(projectDir, cacheRoot);
+  noLinkedAncestors(projectDir, cacheRoot);
+  cachePath(orgDir);
+  const listed = await fetchSourceRepos(source);
   const repos = listed
     .filter((r) => !r.archived && !r.disabled && r.size > 0 && !!r.default_branch)
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   const skipped = listed.filter((r) => !repos.includes(r)).map((r) => `${r.name} (${r.archived ? "archived" : r.disabled ? "disabled" : "empty"})`);
   for (const r of repos) {
-    if (!/^[A-Za-z0-9._-]+$/.test(r.name) || r.name === "." || r.name === ".." || r.name.includes(DOT)) throw new Error(`unexpected repository name ${JSON.stringify(r.name)}`);
+    if (!validRepoName(r.name)) throw new Error(`unexpected repository name ${JSON.stringify(r.name)}`);
     if (!/^[A-Za-z0-9._/-]+$/.test(r.default_branch!) || r.default_branch!.includes("..")) throw new Error(`unexpected branch name on ${r.name}`);
   }
   if (new Set(repos.map((r) => cacheName(r.name).toLowerCase())).size !== repos.length) throw new Error("two repositories map to one cache folder");
-  if (!repos.length) throw new Error(`no public, non-empty repositories found for ${DEMO_ORG}`);
-  console.log(`${repos.length} public repositories in ${DEMO_ORG}${skipped.length ? `, skipping ${skipped.join(", ")}` : ""}`);
+  if (!repos.length) throw new Error(`no public, non-empty repositories found for ${source.owner}`);
+  console.log(`${repos.length} public repositories in ${source.owner}${skipped.length ? `, skipping ${skipped.join(", ")}` : ""}`);
 
   // Clone or refresh each, and clear out anything that is no longer on the public list.
   fs.mkdirSync(orgDir, { recursive: true });
   const wanted = new Set(repos.map((r) => cacheName(r.name)));
   for (const entry of fs.readdirSync(orgDir)) {
     if (!wanted.has(entry)) {
-      console.log(`removing ${entry} from the cache: not a public repository`);
-      fs.rmSync(path.join(orgDir, entry), { recursive: true, force: true });
+      console.log(`removing ${entry} from the ${source.owner} cache: not among the selected public repositories`);
+      removeCacheEntry(path.join(orgDir, entry));
     }
   }
   const info = new Map<string, { repo: GhRepo; branch: string; dir: string; truncated: boolean; spans: ReturnType<typeof folderSpans> }>();
@@ -282,14 +428,16 @@ async function main() {
   }
 
   // The ordinary crawl, pointed at the cache.
-  fs.rmSync(crawlFile, { force: true });
-  execFileSync(path.join(projectDir, "node_modules", ".bin", "tsx"), [path.join(projectDir, "scripts", "build-index.ts")], {
+  removeCacheEntry(crawlFile);
+  const requireFromProject = createRequire(path.join(projectDir, "package.json"));
+  const tsxLoader = pathToFileURL(requireFromProject.resolve("tsx")).href;
+  execFileSync(process.execPath, ["--import", tsxLoader, path.join(projectDir, "scripts", "build-index.ts")], {
     cwd: projectDir,
     env: { ...gitEnv, INNERNET_ROOTS: orgDir, INNERNET_OUT: crawlFile, INNERNET_MAX_DEPTH: String(MAX_DEPTH) },
     stdio: ["ignore", "inherit", "inherit"],
   });
   const crawled = JSON.parse(fs.readFileSync(crawlFile, "utf8")) as SiteIndex;
-  fs.rmSync(crawlFile, { force: true });
+  removeCacheEntry(crawlFile);
 
   // ------------------------------------------------ paths become GitHub URLs
   const undot = (s: string) => s.split(DOT).join(".");
@@ -302,7 +450,7 @@ async function main() {
     const [first, ...rest] = rel ? rel.split("/") : [];
     p.root = ROOT_LABEL;
     if (p.depth === 0) {
-      p.path = DEMO_ORG_URL;
+      p.path = ownerUrl;
       p.relPath = "";
       continue;
     }
@@ -310,8 +458,8 @@ async function main() {
     if (!repo) throw new Error(`page ${p.slug} lies outside the public repositories`);
     const inRepo = rest.join("/");
     p.path = inRepo
-      ? `${DEMO_ORG_URL}/${encodeURIComponent(repo.repo.name)}/tree/${encodePath(repo.branch)}/${encodePath(inRepo)}`
-      : `${DEMO_ORG_URL}/${encodeURIComponent(repo.repo.name)}`;
+      ? `${ownerUrl}/${encodeURIComponent(repo.repo.name)}/tree/${encodePath(repo.branch)}/${encodePath(inRepo)}`
+      : `${ownerUrl}/${encodeURIComponent(repo.repo.name)}`;
     p.relPath = [repo.repo.name, ...rest].join("/");
     // Dates from history: a fresh clone stamps every file with today.
     const span = repo.spans.folders.get(inRepo.normalize("NFC")) ?? repo.spans.repo;
@@ -337,10 +485,10 @@ async function main() {
     Object.entries(crawled.disambiguation).map(([k, v]) => [undot(k), { primary: v.primary && undot(v.primary), slugs: v.slugs.map(undot) }]),
   );
 
-  // The root: the organization, with its GitHub profile as its README.
+  // The root: the account, with its GitHub profile as its README.
   const repoSpans = [...info.values()].map((r) => r.spans.repo);
-  rootPage.name = DEMO_ORG;
-  rootPage.title = DEMO_ORG;
+  rootPage.name = source.owner;
+  rootPage.title = source.owner;
   rootPage.created = iso(Math.min(...repoSpans.map((s) => s.created)));
   rootPage.modified = iso(Math.max(...repoSpans.map((s) => s.modified)));
   const profile = info.get(cacheName(".github"));
@@ -353,30 +501,32 @@ async function main() {
     if (rootPage.readme) rootPage.categories = rootPage.categories.filter((c) => c !== "Articles lacking a README");
   }
 
-  // The root's logo: the organization's avatar. Should GitHub not answer, the avatar of
-  // the last demo index stands in, so an offline rebuild does not lose it.
+  // The root's logo: the account's avatar. Should GitHub not answer, keep the prior
+  // avatar only when it belongs to the same account.
   let avatar = await orgAvatar();
   if (!avatar) {
     try {
-      const last = (JSON.parse(fs.readFileSync(outFile, "utf8")) as SiteIndex).pages.find((p) => p.depth === 0)?.logo;
+      const previous = JSON.parse(fs.readFileSync(outFile, "utf8")) as SiteIndex;
+      const last = previous.meta.demo?.org?.toLowerCase() === source.owner
+        ? previous.pages.find((p) => p.depth === 0)?.logo : null;
       if (typeof last === "string" && last.startsWith("data:image/")) avatar = last;
     } catch {
       /* no earlier index */
     }
-    console.warn(avatar ? "  could not fetch the organization's avatar; keeping the last one" : "  could not fetch the organization's avatar; the root keeps its sigil");
+    console.warn(avatar ? "  could not fetch the account's avatar; keeping the last one" : "  could not fetch the account's avatar; the root keeps its sigil");
   }
   rootPage.logo = avatar;
   rootPage.logoSurface = avatar ? "none" : null;
 
   const meta: IndexMeta = {
     ...crawled.meta,
-    roots: [{ label: ROOT_LABEL, path: DEMO_ORG_URL }],
+    roots: [{ label: ROOT_LABEL, path: ownerUrl }],
     durationMs: Date.now() - started,
     demo: {
-      org: DEMO_ORG,
+      org: source.owner,
       repos: [...info.values()].map(({ repo, branch }) => ({
         name: repo.name,
-        url: `${DEMO_ORG_URL}/${repo.name}`,
+        url: `${ownerUrl}/${repo.name}`,
         branch,
         fork: repo.fork,
         description: repo.description ? cleanLine(repo.description) : null,
@@ -397,7 +547,7 @@ async function main() {
     }
   };
   // Never anywhere, not even inside README text.
-  const banned = [...new Set([orgDir, cacheRoot, projectDir, realOr(orgDir), realOr(projectDir), os.homedir(), realOr(os.homedir()), ".demo-cache", DOT])].filter(Boolean);
+  const banned = [...new Set([orgDir, cacheRoot, projectDir, realOr(orgDir), realOr(projectDir), os.homedir(), realOr(os.homedir()), ".demo-cache", ".github-cache", DOT])].filter(Boolean);
   for (const b of banned) if (json.includes(b)) problems.push(`output contains ${JSON.stringify(b)}`);
 
   // Path shapes that name a machine. In text quoted from a repository (README, notes,
@@ -447,16 +597,16 @@ async function main() {
 
   const repoNames = new Set(index.meta.demo!.repos.map((r) => r.name));
   for (const p of index.pages) {
-    if (p.path !== DEMO_ORG_URL && !p.path.startsWith(`${DEMO_ORG_URL}/`)) problems.push(`pages[${p.slug}].path is ${JSON.stringify(p.path)}`);
+    if (p.path !== ownerUrl && !p.path.startsWith(`${ownerUrl}/`)) problems.push(`pages[${p.slug}].path is ${JSON.stringify(p.path)}`);
     if (p.root !== ROOT_LABEL) problems.push(`pages[${p.slug}].root is ${JSON.stringify(p.root)}`);
     if (p.depth === 1 && !repoNames.has(p.name)) problems.push(`pages[${p.slug}] is not a listed repository`);
-    if (p.git && p.git.remote !== `${DEMO_ORG_URL}/${p.name}`) problems.push(`pages[${p.slug}].git.remote is ${JSON.stringify(p.git.remote)}`);
+    if (p.git && p.git.remote !== `${ownerUrl}/${p.name}`) problems.push(`pages[${p.slug}].git.remote is ${JSON.stringify(p.git.remote)}`);
   }
   if (index.pages.filter((p) => p.depth === 1).length !== repoNames.size) problems.push("repository pages and meta.demo.repos disagree");
 
   // The public list once more: a repository made private during the run must not ship.
-  const nowPublic = new Set((await listPublicRepos()).map((r) => r.name));
-  for (const name of repoNames) if (!nowPublic.has(name)) problems.push(`${name} is no longer a public repository`);
+  const nowPublic = new Set((await fetchSourceRepos(source)).map((r) => r.name.toLowerCase()));
+  for (const name of repoNames) if (!nowPublic.has(name.toLowerCase())) problems.push(`${name} is no longer a public repository`);
 
   if (problems.length) {
     console.error(`demo index NOT written, ${problems.length} problem(s):`);
@@ -475,13 +625,15 @@ async function main() {
   console.log(
     `demo index: ${repoNames.size} repositories, ${c.pages} folders, ${c.articles} articles, ${c.categories} categories, ` +
       `${(json.length / 1024 / 1024).toFixed(2)} MB -> ${path.relative(projectDir, outFile)} in ${Date.now() - started} ms` +
-      `\n  logos: ${projects.filter((p) => p.logo).length} of ${projects.length} repositories and projects${rootPage.logo ? ", and the organization's avatar on the root" : ""}` +
+      `\n  logos: ${projects.filter((p) => p.logo).length} of ${projects.length} repositories and projects${rootPage.logo ? ", and the account's avatar on the root" : ""}` +
       (shallow.length ? `\n  history read to the last ${HISTORY} commits for: ${shallow.join(", ")}` : "") +
       (quotedPaths.size ? `\n  paths quoted from the repositories' own text: ${[...quotedPaths].join(", ")}` : ""),
   );
 }
 
-main().catch((err) => {
-  console.error(err instanceof Error ? err.message : err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err instanceof Error ? err.message : err);
+    process.exit(1);
+  });
+}

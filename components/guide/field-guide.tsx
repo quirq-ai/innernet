@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getIndex } from "@/lib/data";
 import { longDate, timeAgo } from "@/lib/format";
-import { INDEX_PATH } from "@/lib/mode";
 import { AddSite } from "./add-site";
 import { CHAPTERS } from "./chapters";
 import { Contribute } from "./contribute";
@@ -66,8 +65,7 @@ function Colophon() {
       </svg>
       <h2 className="fg-smallcaps mt-6">Colophon</h2>
       <p className="mx-auto mt-4 max-w-[560px] font-serif text-[16px] italic leading-[1.65] text-ink-2">
-        Set in Instrument Serif, Newsreader, Inter and JetBrains Mono. Every number on this page was read from{" "}
-        <span className="font-mono text-[0.85em] not-italic">{INDEX_PATH}</span>
+        Set in Instrument Serif, Newsreader, Inter and JetBrains Mono. Every number on this page was read from the active index
         {missing ? "" : <>, indexed {timeAgo(index.meta.generatedAt)} on {longDate(index.meta.generatedAt)}</>}, and every excerpt from the code as it stands.{" "}
         {plates}
       </p>

@@ -5,14 +5,14 @@ import { ResultItem } from "@/components/search/result-item";
 import { getIndex, getPage } from "@/lib/data";
 import { bytes, num } from "@/lib/format";
 import { categoryHref, searchHref, wikiHref } from "@/lib/links";
-import { DEMO, INDEX_PATH } from "@/lib/mode";
+import { DEMO } from "@/lib/mode";
 import { pageSummary, search } from "@/lib/search";
 import type { Page } from "@/lib/types";
 import { CHAPTERS } from "./chapters";
 import { depthCounts, indexFacts, kindCounts, specimenPage } from "./data";
 import { C, ChapterHead, Excerpt, Figures, Fine, Prose, SectionHead } from "./parts";
 import { Figure, Plate } from "./plate";
-import { cite, fileSize } from "./source";
+import { cite } from "./source";
 
 // Chapter I: the pipeline, then its three stations, each with its plate and the live
 // numbers of this machine's index.
@@ -22,17 +22,17 @@ const B = "scripts/build-index.ts";
 export function HowItWorks() {
   const { index, missing } = getIndex();
   const { meta } = index;
-  const size = fileSize(INDEX_PATH);
+  const size = Buffer.byteLength(JSON.stringify(index));
   const roots = meta.roots.map((r) => r.label);
   // The demo's root is a GitHub organization that `pnpm index` would not walk.
-  const walked = DEMO ? [] : roots;
+  const walked = DEMO ? [] : meta.roots.filter((r) => !/^https?:\/\//i.test(r.path)).map((r) => r.label);
   const facts = indexFacts();
 
   return (
     <section aria-labelledby="how-it-works-title">
       <ChapterHead
         chapter={CHAPTERS[0]}
-        kicker="One command reads your folders into one file. Two readers, a search engine and an encyclopedia, turn that file into pages you can browse."
+        kicker="Sources become JSON indexes. Two readers, a search engine and an encyclopedia, turn those records into pages you can browse."
       >
         <Plate
           id="pipeline"
@@ -48,14 +48,23 @@ export function HowItWorks() {
         />
         <Prose className="mt-12">
           <p>
-            Innernet is a personal internet. Its web is the folders on this machine; its search engine finds them the way you find pages, and its encyclopedia,
-            Innerpedia, gives every project an article and every other folder a stub. Nothing leaves the machine.
+            Innernet is a personal internet. Its web starts with your folders and can include public GitHub repositories. Its search engine finds
+            them the way you find pages, and its encyclopedia, Innerpedia, gives every project an article and every other folder a stub. Your local data stays here.
           </p>
           <p>
-            The whole thing runs on one file. <C>pnpm index</C> walks {walked.length ? <C>{walked.join(", ")}</C> : "the configured roots"}, reads a handful of small
+            For local folders, <C>pnpm index</C> walks {walked.length ? <C>{walked.join(", ")}</C> : "the configured roots"}, reads a handful of small
             files in each folder, and writes <C>data/index.json</C> through a temporary file and a rename, so the server never sees half of one. The server checks the
             file&apos;s modification time on every request and reloads it when it changes: no restart, no file watcher.
           </p>
+          {!DEMO && (
+            <p>
+              Sources, next to Guide, lets you select Local, Remote, or both. Remote accepts a GitHub account and an optional repository list; leave the list
+              empty for all that account&apos;s public repositories. Save, then sync to download them into <C>.github-cache</C> and write a separate{" "}
+              <C>data/github-&lt;hash&gt;.json</C> snapshot for that selection. The default quirq-ai account with no filter uses <C>data/github.json</C> and can
+              use the bundled demo snapshot before its first sync. Selecting both combines their records for search and
+              Innerpedia. Articles are rendered from these records, not saved as separate HTML files. Sources also shows where each index and your activity files live.
+            </p>
+          )}
         </Prose>
         {!missing && (
           <Figures
@@ -64,7 +73,7 @@ export function HowItWorks() {
               { value: num(meta.counts.pages), label: "folders indexed", note: roots.join(", ") },
               { value: meta.maxDepth + 1, label: "levels of pages", note: `maxDepth ${meta.maxDepth}, depth 0 to ${meta.maxDepth}` },
               { value: `${Math.round(meta.durationMs / 1000)} s`, label: "to index, last run", note: "durationMs" },
-              { value: size ? bytes(size) : "none", label: "one JSON file", note: INDEX_PATH },
+              { value: bytes(size), label: "loaded JSON index", note: DEMO ? "public demo" : "selected sources" },
             ]}
           />
         )}
@@ -283,7 +292,7 @@ function Specimen() {
       bodyClassName="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
       caption={
         <>
-          Two readers, one record. The entry for <Link href={wikiHref(page.slug)} className="link not-italic">{page.title}</Link> in <C>{INDEX_PATH}</C>, as{" "}
+          Two readers, one record. The entry for <Link href={wikiHref(page.slug)} className="link not-italic">{page.title}</Link> in the active index, as{" "}
           {DEMO ? "the demo" : "this machine"} holds it today, and what each reader makes of it.
         </>
       }
@@ -424,4 +433,3 @@ function PageTypes() {
     </div>
   );
 }
-
