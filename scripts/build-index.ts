@@ -19,9 +19,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import zlib from "node:zlib";
+import { agentTool, AGENTS_CATEGORY, isAgentFolderName, realmOf, toolCategory } from "../lib/agents";
 import { MEDIA_EXT, normalizeIndex, SECRET_NAME, utc } from "../lib/normalize";
 import { cleanLine, firstParagraph, markdownToText, readsAsInstructions, redactSecrets } from "../lib/text";
-import type { Commit, GitInfo, IndexMeta, LogoSurface, Manifest, Page, PageKind, SiteIndex } from "../lib/types";
+import type { AgentFile, AgentInfo, AgentSession, Commit, GitInfo, IndexMeta, LogoSurface, Manifest, Page, PageKind, SiteIndex } from "../lib/types";
 
 const started = Date.now();
 const projectDir = path.resolve(__dirname, "..");
@@ -44,7 +45,7 @@ const PRUNE = new Set([
   ".next", ".nuxt", ".svelte-kit", ".turbo", ".vercel", ".cache", ".parcel-cache", ".output",
   "dist", "build", "out", "coverage", "target", "DerivedData", "Pods",
   "__pycache__", "venv", ".venv", "site-packages", ".mypy_cache", ".pytest_cache", ".ruff_cache",
-  ".gradle", ".dart_tool", ".idea", ".vscode", ".expo", "storybook-static",
+  ".gradle", ".dart_tool", ".idea", ".expo", "storybook-static",
 ]);
 
 const SECRET_DIR = /cred|secret|private|keys?$/i;
@@ -102,8 +103,16 @@ const extOf = (f: string) => {
   const i = f.lastIndexOf(".");
   return i > 0 ? f.slice(i + 1).toLowerCase() : "";
 };
+// Dot folders are agents' and are read like any other (lib/agents.ts), except those a
+// tool generates and those that hold credentials. An agent's worktrees are checkouts
+// of projects indexed elsewhere, so they are skipped too.
 const pruned = (dir: string, name: string) =>
-  PRUNE.has(name) || name.startsWith(".") || name.endsWith(".app") || name.endsWith(".xcassets") || path.join(dir, name) === ownData;
+  PRUNE.has(name) ||
+  (name.startsWith(".") && !isAgentFolderName(name)) ||
+  (name === "worktrees" && isAgentFolderName(path.basename(dir))) ||
+  name.endsWith(".app") ||
+  name.endsWith(".xcassets") ||
+  path.join(dir, name) === ownData;
 
 function readText(file: string, max = 14_000): string | null {
   try {
@@ -688,6 +697,173 @@ function dropSharedDefaults(pages: Page[]): number {
 
 // ---------------------------------------------------------------- crawl
 
+// ---------------------------------------------------------------- agents
+
+// What an agent's folder holds, read once per agent: the instruction and memory files it
+// reads (their text, trimmed and redacted, like a README), and its sessions and activity,
+// known only by file names, sizes and dates. Session and log contents are never read.
+
+/** Instruction files, by name, in the order they are shown. */
+const INSTRUCTION_FILES = [
+  "claude.md", "agents.md", "agent.md", "gemini.md", "soul.md", "identity.md", "user.md", "tools.md",
+  "memory.md", "heartbeat.md", "bootstrap.md", "copilot-instructions.md", "instructions.md", "persona.md", "rules.md",
+];
+const RULE_DIRS = /^(rules|instructions)$/i; // .cursor/rules/*.mdc, .github/instructions/*.md
+const MEMORY_DIRS = /^(memory|memories|agent-memory)$/i;
+/** What an agent installs or defines rather than reads: skills, plugins, subagents. Their
+ * own rules and notes belong to them, not to the agent's instructions. */
+const NOT_INSTRUCTIONS = /^(skills|plugins|commands|agents|extensions|cache|node_modules|vendor)$/i;
+const SESSION_DIRS = /^(sessions?|transcripts?|conversations?|chats?|runs|threads)$/i;
+const LOG_FILE = /^(history|timeline|events|activity|audit)\.(jsonl|ndjson|json|log)$/i;
+/** A name that is an id: a UUID, a ULID, a timestamp. */
+const ID_NAME = /^(?=[^.]*\d)[0-9a-z][0-9a-z_-]{15,}$/i;
+const AGENT_TEXT_MAX = 8_000; // characters per file
+const AGENT_TEXT_TOTAL = 32_000; // characters per agent
+const AGENT_FILES_MAX = 10;
+const AGENT_SCAN_DEPTH = 8; // levels below the agent's folder
+const AGENT_SCAN_BUDGET = 60_000; // files per agent
+
+const monthKey = (ms: number) => {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
+
+/** The last 24 months, oldest first, counted from a map of month keys. */
+function last24(counts: Map<string, number>): { month: string; count: number }[] {
+  const months: { month: string; count: number }[] = [];
+  for (let i = 23; i >= 0; i--) {
+    const key = monthKey(new Date(now.getFullYear(), now.getMonth() - i, 1).getTime());
+    months.push({ month: key, count: counts.get(key) ?? 0 });
+  }
+  return months;
+}
+
+function agentInfo(dir: string, name: string): AgentInfo {
+  type Found = { path: string; mtime: number; birth: number; bytes: number };
+  const candidates: (Found & { order: number })[] = [];
+  const sessions: Found[] = [];
+  const logs: Found[] = [];
+  const activity = new Map<string, number>();
+  const cutoff = now.getTime() - 30 * 86_400_000;
+  let files = 0;
+  let last = 0;
+  let recent = 0;
+  let budget = AGENT_SCAN_BUDGET;
+
+  const stack: { dir: string; rel: string[] }[] = [{ dir, rel: [] }];
+  while (stack.length && budget > 0) {
+    const { dir: d, rel } = stack.pop()!;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(d, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    // Where this folder sits: directly in a sessions folder, inside one session's own
+    // folder, in memory, in a rules folder, or somewhere secret-looking.
+    const sessionAt = rel.findLastIndex((seg) => SESSION_DIRS.test(seg));
+    const inSessions = sessionAt >= 0 && sessionAt === rel.length - 1;
+    const inOneSession = sessionAt >= 0 && sessionAt < rel.length - 1;
+    const inMemory = rel.some((seg) => MEMORY_DIRS.test(seg));
+    const inRules = rel.length === 1 && RULE_DIRS.test(rel[0]); // <agent>/rules, never a skill's
+    const installed = rel.some((seg) => NOT_INSTRUCTIONS.test(seg));
+    const secret = rel.some((seg) => SECRET_DIR.test(seg)) || SECRET_DIR.test(name);
+    const claudeProjects = rel.length >= 2 && rel[rel.length - 2] === "projects"; // projects/<folder>/<session>.jsonl
+
+    for (const e of entries) {
+      if (e.isSymbolicLink() || e.name.startsWith(".")) continue;
+      const abs = path.join(d, e.name);
+      const relPath = [...rel, e.name].join("/");
+      if (e.isDirectory()) {
+        if (pruned(d, e.name)) continue;
+        // A folder per session counts as one session.
+        if (inSessions) {
+          try {
+            const st = fs.statSync(abs);
+            sessions.push({ path: relPath, mtime: st.mtimeMs, birth: st.birthtimeMs, bytes: 0 });
+          } catch {
+            /* unreadable */
+          }
+        }
+        if (rel.length < AGENT_SCAN_DEPTH) stack.push({ dir: abs, rel: [...rel, e.name] });
+        continue;
+      }
+      if (!e.isFile()) continue;
+      budget--;
+      let st: fs.Stats;
+      try {
+        st = fs.statSync(abs);
+      } catch {
+        continue;
+      }
+      files++;
+      last = Math.max(last, st.mtimeMs);
+      if (st.mtimeMs >= cutoff) recent++;
+      activity.set(monthKey(st.mtimeMs), (activity.get(monthKey(st.mtimeMs)) ?? 0) + 1);
+
+      const ext = extOf(e.name);
+      const stem = e.name.slice(0, e.name.length - ext.length - 1);
+      const found: Found = { path: relPath, mtime: st.mtimeMs, birth: st.birthtimeMs, bytes: st.size };
+      if (LOG_FILE.test(e.name)) logs.push(found);
+      else if (!inOneSession && (ext === "jsonl" || ext === "ndjson") && (inSessions || claudeProjects || ID_NAME.test(stem))) sessions.push(found);
+      else if (inSessions && (ext === "json" || ext === "md") && ID_NAME.test(stem)) sessions.push(found);
+
+      // Instructions and memory: never inside sessions, a secret-looking folder or name.
+      if (secret || installed || sessionAt >= 0 || rel.length > 4 || SECRET_NAME.some((re) => re.test(e.name))) continue;
+      const named = INSTRUCTION_FILES.indexOf(e.name.toLowerCase());
+      const prose = ext === "md" || ext === "mdx" || ext === "mdc" || ext === "txt";
+      // Named files near the top only: deeper ones belong to projects the agent keeps.
+      if (named >= 0 && rel.length <= 2) candidates.push({ ...found, order: named });
+      else if (inRules && prose) candidates.push({ ...found, order: 50 });
+      else if (inMemory && prose) candidates.push({ ...found, order: 100 });
+    }
+  }
+
+  // Instructions and rules first, shallowest first and then in the order of the list;
+  // memory after them, newest first.
+  const depthOf = (c: { path: string }) => c.path.split("/").length;
+  const memory = (c: { order: number }) => (c.order >= 100 ? 1 : 0);
+  candidates.sort((a, b) => memory(a) - memory(b) || (memory(a) ? b.mtime - a.mtime : depthOf(a) - depthOf(b) || a.order - b.order || a.path.localeCompare(b.path)));
+  const instructions: AgentFile[] = [];
+  let room = AGENT_TEXT_TOTAL;
+  for (const c of candidates) {
+    if (instructions.length >= AGENT_FILES_MAX || room < 400) break;
+    const raw = readText(path.join(dir, c.path), Math.min(AGENT_TEXT_MAX, room));
+    const text = raw ? redactSecrets(raw.replace(/\r\n/g, "\n").trim()) : "";
+    if (!text) continue;
+    room -= text.length;
+    instructions.push({ path: c.path, text, words: markdownToText(text).split(" ").filter(Boolean).length, modified: iso(c.mtime) });
+  }
+
+  const asSession = (f: Found): AgentSession => ({ path: f.path, date: iso(f.mtime) ?? "", bytes: f.bytes });
+  const byNewest = (a: Found, b: Found) => b.mtime - a.mtime;
+  const sessionMonths = new Map<string, number>();
+  for (const f of sessions) sessionMonths.set(monthKey(f.mtime), (sessionMonths.get(monthKey(f.mtime)) ?? 0) + 1);
+  const firstMs = sessions.reduce((m, f) => Math.min(m, f.birth > 0 ? Math.min(f.birth, f.mtime) : f.mtime), Infinity);
+
+  return {
+    tool: agentTool(name),
+    instructions,
+    sessions: sessions.length
+      ? {
+          count: sessions.length,
+          bytes: sessions.reduce((n, f) => n + f.bytes, 0),
+          first: iso(Number.isFinite(firstMs) ? firstMs : null),
+          last: iso(Math.max(...sessions.map((f) => f.mtime))),
+          monthly: last24(sessionMonths),
+          recent: [...sessions].sort(byNewest).slice(0, 8).map(asSession),
+        }
+      : null,
+    activity: {
+      files,
+      last: iso(last || null),
+      recent,
+      monthly: last24(activity),
+      logs: [...logs].sort(byNewest).slice(0, 5).map(asSession),
+    },
+  };
+}
+
 interface Raw {
   page: Page;
   langCounts: Map<string, number>;
@@ -827,6 +1003,10 @@ function crawl(dir: string, rootLabel: string, rootPath: string, depth: number, 
   if (fileSet.has("foundry.toml")) frameworks.add("Foundry");
 
   const relPath = path.relative(rootPath, dir);
+  // Projects or agents: a dot folder outside any other is an agent's own folder, and
+  // everything inside it is the agent's too.
+  const realm = realmOf({ relPath, root: rootLabel, depth, name });
+  const agentRoot = realm === "agent" && !ancestors.some(isAgentFolderName) && (depth > 0 || isAgentFolderName(name));
   const page: Page = {
     slug: "",
     name,
@@ -836,6 +1016,7 @@ function crawl(dir: string, rootLabel: string, rootPath: string, depth: number, 
     root: rootLabel,
     depth,
     kind: "folder",
+    realm,
     isArticle: false,
     parent: null,
     partOf: null,
@@ -914,7 +1095,10 @@ function crawl(dir: string, rootLabel: string, rootPath: string, depth: number, 
   else if ((direct >= 3 && share(MEDIA_EXT) >= 0.6) || (direct > 0 && !subdirs.length && share(MEDIA_EXT) === 1)) page.kind = "assets";
   else if (CODE_DIR_NAMES.has(name.toLowerCase()) || (direct > 0 && fileNames.filter((f) => LANG[extOf(f)] && !NON_CODE_LANGS.has(LANG[extOf(f)])).length / direct >= 0.5)) page.kind = "code";
   if (agentNotes && page.kind !== "repo") page.kind = "project";
-  page.isArticle = depth === 0 || page.kind === "repo" || page.kind === "project" || (page.kind === "docs" && direct >= 4) || !!agentNotes;
+  // An agent's own folder is an article about that agent, whatever it holds.
+  if (agentRoot && page.kind !== "repo") page.kind = "agent";
+  page.isArticle = depth === 0 || agentRoot || page.kind === "repo" || page.kind === "project" || (page.kind === "docs" && direct >= 4) || !!agentNotes;
+  if (agentRoot) page.agent = agentInfo(dir, name);
 
   // The project's own logo. Not for a secret-looking folder, nor anything inside one.
   if (page.isArticle && (page.kind === "repo" || page.kind === "project") && !secretDir && !ancestors.some((a) => SECRET_DIR.test(a))) {
@@ -1027,6 +1211,7 @@ for (const r of raws) articleChildCount.set(r, r.childRaws.filter((c) => c.page.
 const titleBySlug = new Map(raws.map((r) => [r.page.slug, r.page.title]));
 const isCollection = (r: Raw) =>
   r.page.depth > 0 &&
+  r.page.realm === "project" &&
   (articleChildCount.get(r) ?? 0) >= 3 &&
   !CODE_DIR_NAMES.has(r.page.name.toLowerCase()) &&
   !r.page.partOf &&
@@ -1035,6 +1220,15 @@ for (const r of raws) {
   const p = r.page;
   if (!p.isArticle) continue;
   const cats = new Set<string>();
+  // An agent's own folder: the agents, and the folders of its tool. Nothing else; it is
+  // no project, and no part of one.
+  if (p.kind === "agent" || (p.agent && p.realm === "agent")) {
+    cats.add(AGENTS_CATEGORY);
+    cats.add(toolCategory(p.agent?.tool ?? agentTool(p.name)));
+    if (p.kind === "repo") cats.add("Git repositories");
+    p.categories = [...cats];
+    continue;
+  }
   // Collections: any ancestor folder holding three or more articles.
   let dir = path.dirname(p.path);
   while (rawByPath.has(dir)) {
@@ -1050,8 +1244,8 @@ for (const r of raws) {
   const year = p.created?.slice(0, 4);
   if (year && p.kind !== "folder") cats.add(`Started in ${year}`);
   if (p.markers.includes("CLAUDE.md") || p.markers.includes("AGENTS.md")) cats.add("Agent-ready projects");
-  if (!p.readme) cats.add("Articles lacking a README");
-  if (p.partOf) cats.add(`Parts of ${titleBySlug.get(p.partOf) ?? p.partOf}`);
+  if (!p.readme && p.realm === "project") cats.add("Articles lacking a README");
+  if (p.partOf && p.realm === "project") cats.add(`Parts of ${titleBySlug.get(p.partOf) ?? p.partOf}`);
   p.categories = [...cats];
 }
 
@@ -1070,7 +1264,9 @@ for (const a of articles) {
   const fa = features.get(a)!;
   const scored: { slug: string; score: number }[] = [];
   for (const b of articles) {
-    if (a === b || a.page.path.startsWith(b.page.path + path.sep) || b.page.path.startsWith(a.page.path + path.sep)) continue;
+    // Projects see projects and agents see agents: a shared word in their names says
+    // little across the two.
+    if (a === b || a.page.realm !== b.page.realm || a.page.path.startsWith(b.page.path + path.sep) || b.page.path.startsWith(a.page.path + path.sep)) continue;
     const fb = features.get(b)!;
     let inter = 0;
     for (const x of fa) if (fb.has(x)) inter += x.startsWith("tok:") ? 2 : x.startsWith("fw:") ? 1.5 : 1;
@@ -1109,7 +1305,7 @@ fs.writeFileSync(tmpFile, JSON.stringify(index));
 fs.renameSync(tmpFile, outFile);
 const projects = index.pages.filter((p) => p.isArticle && (p.kind === "repo" || p.kind === "project"));
 console.log(
-  `indexed ${meta.counts.pages} folders (${meta.counts.articles} articles, ${meta.counts.repos} repos, ${meta.counts.categories} categories) from ${roots.map((r) => r.label).join(", ")} in ${meta.durationMs} ms` +
+  `indexed ${meta.counts.pages} folders (${meta.counts.articles} articles, ${meta.counts.repos} repos, ${index.meta.counts.agents ?? 0} agents, ${meta.counts.categories} categories) from ${roots.map((r) => r.label).join(", ")} in ${meta.durationMs} ms` +
     `\n  logos: ${projects.filter((p) => p.logo).length} of ${projects.length} repositories and projects` +
     (unbranded ? ` (${unbranded} more wore a shared template icon, left out)` : ""),
 );

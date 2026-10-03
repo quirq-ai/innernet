@@ -25,6 +25,10 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
       <>
         A project&apos;s own logo, found by its name (<C>logo</C>, <C>icon</C>, <C>mark</C>, <C>favicon</C>), within 64 KB for SVG and 96 KB for an image.
       </>,
+      <>
+        In an agent&apos;s own dot folder (<C>.claude</C>, <C>.codex</C>, <C>.xo</C>...), its instructions and memory: <C>CLAUDE.md</C>, <C>AGENTS.md</C>,{" "}
+        <C>SOUL.md</C>, its rules and its <C>memory</C> notes, the first 8,000 characters of each, ten files at most.
+      </>,
     ],
   },
   {
@@ -33,8 +37,10 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
     items: [
       <>Every other file: its size, its dates and its extension, which becomes a language.</>,
       <>Source code, configuration, Dockerfiles, documents, and every image but a logo.</>,
+      <>An agent&apos;s sessions, transcripts and logs: known by name, size and date, never opened.</>,
       <>
-        Dotfiles such as <C>.env</C>: not even counted, only noticed when one is <C>.git</C>.
+        Dotfiles such as <C>.env</C>: not even counted, only noticed when one is <C>.git</C>. Dot folders a tool generates (<C>.next</C>, <C>.turbo</C>,{" "}
+        <C>.venv</C>) are skipped, and those that hold credentials (<C>.ssh</C>, <C>.aws</C>, <C>.clerk</C>) are never entered.
       </>,
       <>Symlinks and Python virtualenvs: never followed.</>,
     ],

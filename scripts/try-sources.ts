@@ -11,7 +11,7 @@ import type { Page, SiteIndex } from "../lib/types";
 function page(slug: string, changes: Partial<Page> = {}): Page {
   return {
     slug, name: slug, title: slug, path: `/local/${slug}`, relPath: slug, root: "/local", depth: 0,
-    kind: "project", isArticle: true, parent: null, partOf: null, children: [], hiddenChildren: [],
+    kind: "project", realm: "project", isArticle: true, parent: null, partOf: null, children: [], hiddenChildren: [],
     files: [], fileCount: 0, totalFiles: 0, bytes: 0, totalBytes: 0, created: null, modified: null,
     languages: [], markers: [], frameworks: [], manifest: null, summary: null, readme: null,
     readmeFile: null, agentNotes: null, git: null, categories: ["Shared category"], related: [], words: 0,

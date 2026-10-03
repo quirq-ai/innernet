@@ -4,9 +4,10 @@ import { sigilGradient } from "@/components/sigil";
 import { ancestors, getIndex } from "@/lib/data";
 import { bytes, longDate, num, plural, timeAgo } from "@/lib/format";
 import { langColor } from "@/lib/lang-colors";
+import { toolCategory } from "@/lib/agents";
 import { categoryHref, wikiHref } from "@/lib/links";
 import type { Page } from "@/lib/types";
-import { beyond, codeLanguages, descendants, remoteLink, splitTitle, typeLabel } from "./lead";
+import { agentsOf, beyond, codeLanguages, descendants, remoteLink, splitTitle, toolOf, typeLabel } from "./lead";
 import { LABEL } from "./parts";
 
 // The infobox: a sigil on a wash of its own colours, then the facts in label/value
@@ -48,8 +49,17 @@ function Languages({ page }: { page: Page }) {
   );
 }
 
+/** The project an agent's folder belongs to: its nearest ancestor among projects. */
+function owner(page: Page): Page | null {
+  return [...ancestors(page)].reverse().find((a) => a.realm === "project" && a.depth > 0) ?? null;
+}
+
 export function Infobox({ page, compact = false, className = "" }: { page: Page; compact?: boolean; className?: string }) {
   const { categories } = getIndex();
+  const agent = page.agent ?? null;
+  const tool = page.kind === "agent" || agent ? toolOf(page) : null;
+  const project = tool ? owner(page) : null;
+  const kept = page.realm === "project" ? agentsOf(page) : [];
   const [name, qualifier] = splitTitle(page.title);
   const m = page.manifest;
   const g = page.git;
@@ -62,6 +72,22 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
       rows: [
         { label: "Type", value: typeLabel(page) },
         !compact && page.depth > 0 && { label: "Location", value: <Location page={page} /> },
+        kept.length > 0 && {
+          label: kept.length === 1 ? "Agent" : "Agents",
+          value: (
+            <span>
+              {kept.slice(0, 6).map((a, i) => (
+                <span key={a.slug}>
+                  {i > 0 && ", "}
+                  <Link href={wikiHref(a.slug)} className="link">
+                    {toolOf(a)}
+                  </Link>
+                </span>
+              ))}
+              {kept.length > 6 && <span className="text-muted"> and {kept.length - 6} more</span>}
+            </span>
+          ),
+        },
         page.languages.length > 0 && { label: page.languages.length > 1 && codeLanguages(page).length > 1 ? "Languages" : "Language", value: <Languages page={page} /> },
         !compact &&
           page.frameworks.length > 0 && {
@@ -84,6 +110,41 @@ export function Infobox({ page, compact = false, className = "" }: { page: Page;
             ),
           },
       ],
+    },
+    {
+      head: "Agent",
+      rows: tool
+        ? [
+            {
+              label: "Tool",
+              value: categories.has(toolCategory(tool)) ? (
+                <Link href={categoryHref(toolCategory(tool))} className="link">
+                  {tool}
+                </Link>
+              ) : (
+                tool
+              ),
+            },
+            project && {
+              label: "Project",
+              value: (
+                <Link href={wikiHref(project.slug)} className="link [overflow-wrap:anywhere]">
+                  {project.title}
+                </Link>
+              ),
+            },
+            agent && agent.instructions.length > 0 && { label: "Instructions", value: <span className="tabular-nums">{plural(agent.instructions.length, "file")}</span> },
+            agent?.sessions && {
+              label: "Sessions",
+              value: (
+                <span>
+                  <span className="tabular-nums">{num(agent.sessions.count)}</span>
+                  {agent.sessions.last && <span className="block text-[12px] text-muted">latest {timeAgo(agent.sessions.last)}</span>}
+                </span>
+              ),
+            },
+          ]
+        : [],
     },
     {
       head: "Package",

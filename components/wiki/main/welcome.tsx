@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PageSigil } from "@/components/page-sigil";
 import { Globe, type GlobeTile } from "@/components/wiki/main/globe";
 import { allCategories, cap, globeTiles, gloss, indexTime, type CategoryInfo } from "@/components/wiki/main/insights";
+import { AGENTS_CATEGORY } from "@/lib/agents";
 import { getIndex } from "@/lib/data";
 import { logoSrc } from "@/lib/logo";
 import { longDate, num, timeAgo } from "@/lib/format";
@@ -22,6 +23,7 @@ export function Welcome() {
   // demo is one organization's repositories), the most substantial repositories.
   const collections = cats.filter((c) => c.kind === "collection" && c.page).slice(0, 4);
   const languages = cats.filter((c) => c.kind === "language").slice(0, 4);
+  const agents = cats.filter((c) => c.kind === "agent" && c.name !== AGENTS_CATEGORY).slice(0, 4);
   const repos = collections.length >= 2 ? [] : globeTiles(TILES).filter((p) => p.kind === "repo" && p.depth === 1).slice(0, 5);
   const withHistory = index.pages.filter((p) => p.git && p.git.commitCount > 0).length;
 
@@ -56,7 +58,16 @@ export function Welcome() {
             <Link href={wikiHref("Special:Statistics")} className="link tabular-nums">
               {num(counts.pages)} folders
             </Link>
-            , <span className="tabular-nums">{num(withHistory)}</span> of them with a history in Git.
+            , <span className="tabular-nums">{num(withHistory)}</span> of them with a history in Git
+            {counts.agents ? (
+              <>
+                , and{" "}
+                <Link href={categoryHref(AGENTS_CATEGORY)} className="link tabular-nums">
+                  {num(counts.agents)} {counts.agents === 1 ? "agent" : "agents"}
+                </Link>
+              </>
+            ) : null}
+            .
           </p>
           <p className="rise mt-1 text-[13px] text-muted" style={{ animationDelay: "90ms" }}>
             Written from{" "}
@@ -81,6 +92,7 @@ export function Welcome() {
             ) : (
               <Portal label="Collections" items={collections} />
             )}
+            <Portal label="Agents" items={agents} />
             <Portal label="Languages" items={languages} dots />
           </nav>
         </div>

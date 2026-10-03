@@ -1,7 +1,7 @@
 // Shared by the folder recipe (a client component) and the server code that feeds it:
 // the names the recipe offers, and the shape of what the server tells it about them.
 
-export const RECIPE_NAMES = ["weather-station", "src", "private-notes", "build", ".weather-station"] as const;
+export const RECIPE_NAMES = ["weather-station", "src", "private-notes", "build", ".claude", ".next"] as const;
 export type RecipeName = (typeof RECIPE_NAMES)[number];
 
 /** What the index already holds under each name, so the slug comes out as it would. */

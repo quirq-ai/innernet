@@ -1,5 +1,6 @@
 import "server-only";
 
+import { agentTool } from "@/lib/agents";
 import { getPage } from "@/lib/data";
 import { search, type ParsedQuery, type SearchResponse, type Tab } from "@/lib/search";
 import type { Page } from "@/lib/types";
@@ -69,6 +70,7 @@ const APP_FRAMEWORKS: Record<string, string> = {
 const NOUN: Record<Page["kind"], string> = {
   repo: "repository",
   project: "project",
+  agent: "agent folder",
   docs: "document collection",
   assets: "media folder",
   code: "source folder",
@@ -95,6 +97,7 @@ export const appFramework = (p: Page) => p.frameworks.find((f) => APP_FRAMEWORKS
 
 /** "Next.js application", "Rust project", "Source folder". */
 export function kindLabel(p: Page): string {
+  if (p.kind === "agent") return `${p.agent?.tool ?? agentTool(p.name)} agent`;
   const app = appFramework(p);
   const lang = p.languages.find((l) => !PROSE_LANGS.has(l.name))?.name;
   const noun = NOUN[p.kind];

@@ -10,7 +10,8 @@ import type { Page } from "@/lib/types";
 // the project where the work actually happened.
 
 export function recentlyTouched(articles: Page[], limit = 8): Page[] {
-  const candidates = articles.filter((p) => p.depth > 0 && !p.partOf && p.modified);
+  // Projects only: agents write to their folders all day, and have a tab of their own.
+  const candidates = articles.filter((p) => p.depth > 0 && !p.partOf && p.modified && p.realm === "project");
   const byModified = new Map<string, Page[]>();
   for (const p of candidates) byModified.set(p.modified!, [...(byModified.get(p.modified!) ?? []), p]);
 

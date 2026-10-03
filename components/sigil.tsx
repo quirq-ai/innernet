@@ -2,7 +2,7 @@ import type { LogoSurface, PageKind } from "@/lib/types";
 
 // Every folder gets a deterministic "sigil": a small aurora of three hues derived from
 // its slug, with its initial set in the display serif. Repos are round, projects are
-// soft squares, plain folders are muted. The same sigil appears in search results,
+// soft squares, agents' folders are octagons, plain folders are muted. The same sigil appears in search results,
 // suggestions, the knowledge panel and the article infobox, so a project is
 // recognisable by colour before its name is read.
 //
@@ -44,7 +44,7 @@ export function sigilGradient(seed: string, muted = false): string {
  * thousand gradients. Returns the class and style to put on the entry itself. */
 export function sigilDot(seed: string, kind: PageKind, muted = false): { className: string; style: React.CSSProperties } {
   const [a, b, c] = sigilHues(seed);
-  const shape = kind === "repo" ? " is-repo" : kind === "project" || kind === "docs" ? " is-proj" : "";
+  const shape = kind === "repo" ? " is-repo" : kind === "project" || kind === "docs" ? " is-proj" : kind === "agent" ? " is-agent" : "";
   return { className: `${shape}${muted ? " sigil-muted" : ""}`, style: { "--a": a, "--b": b, "--c": c } as React.CSSProperties };
 }
 
@@ -59,7 +59,11 @@ const LOGO_TILE: Record<LogoSurface | "quiet", string> = {
 };
 
 export const sigilRadius = (kind: PageKind, size: number) =>
-  kind === "repo" ? "9999px" : kind === "project" || kind === "docs" ? `${Math.round(size * 0.3)}px` : `${Math.round(size * 0.18)}px`;
+  kind === "repo" ? "9999px" : kind === "project" || kind === "docs" ? `${Math.round(size * 0.3)}px` : kind === "agent" ? "0px" : `${Math.round(size * 0.18)}px`;
+
+/** An agent's folder is an octagon: neither a project's square nor a repository's circle. */
+export const AGENT_CLIP = "polygon(29% 0, 71% 0, 100% 29%, 100% 71%, 71% 100%, 29% 100%, 0 71%, 0 29%)";
+const clipFor = (kind: PageKind) => (kind === "agent" ? AGENT_CLIP : undefined);
 
 export function Sigil({
   seed,
@@ -92,7 +96,7 @@ export function Sigil({
       <span
         aria-hidden
         className={`sigil relative inline-grid shrink-0 place-items-center overflow-hidden ${className}`}
-        style={{ width: size, height: size, borderRadius: radius, background: LOGO_TILE[logoSurface ?? "quiet"] }}
+        style={{ width: size, height: size, borderRadius: radius, clipPath: clipFor(kind), background: LOGO_TILE[logoSurface ?? "quiet"] }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- a small same-origin logo, cached for good: nothing to optimise */}
         <img
@@ -118,6 +122,7 @@ export function Sigil({
         width: size,
         height: size,
         borderRadius: radius,
+        clipPath: clipFor(kind),
         background: sigilGradient(seed, muted),
       }}
     >

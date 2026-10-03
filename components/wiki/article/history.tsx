@@ -8,7 +8,7 @@ import { LABEL, Sub } from "./parts";
 
 const monthName = (key: string) => monthYear(`${key}-15T12:00:00Z`);
 
-function Figure({ value, label }: { value: string; label: string }) {
+export function Figure({ value, label }: { value: string; label: string }) {
   return (
     <div className="min-w-0">
       <div className="truncate font-display text-[30px] leading-none tracking-[-0.01em] text-ink tabular-nums">{value}</div>
@@ -17,13 +17,14 @@ function Figure({ value, label }: { value: string; label: string }) {
   );
 }
 
-function shortDate(iso: string | null): string {
+export function shortDate(iso: string | null): string {
   if (!iso) return "unknown";
   return `${shortMonth(iso.slice(0, 7))} ${iso.slice(0, 4)}`;
 }
 
-function Sparkline({ git }: { git: GitInfo }) {
-  const months = git.monthly;
+/** Counts per month as a quiet bar chart, the busiest month inked. `per` names the
+ * chart ("Commits per month"), `noun` one of the things counted ("commit"). */
+export function MonthBars({ months, per, noun, note }: { months: { month: string; count: number }[]; per: string; noun: string; note?: string | null }) {
   const max = Math.max(...months.map((m) => m.count));
   const W = 600;
   const H = 72;
@@ -32,11 +33,10 @@ function Sparkline({ git }: { git: GitInfo }) {
   const peak = months.reduce((a, b) => (b.count > a.count ? b : a), months[0]);
   const first = months[0]?.month;
   const last = months[months.length - 1]?.month;
-  const older = git.firstCommit && first && git.firstCommit.slice(0, 7) < first;
 
   return (
     <figure>
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full overflow-visible" role="img" aria-label={`Commits per month from ${monthName(first)} to ${monthName(last)}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full overflow-visible" role="img" aria-label={`${per} from ${monthName(first)} to ${monthName(last)}`}>
         <line x1="0" x2={W} y1={H - 0.5} y2={H - 0.5} className="stroke-line-strong" strokeWidth="1" />
         {months.map((m, i) => {
           const h = m.count ? Math.max(3, (m.count / max) * (H - 4)) : 1.5;
@@ -51,7 +51,7 @@ function Sparkline({ git }: { git: GitInfo }) {
               rx={Math.min(3, bw / 4)}
               className={isPeak ? "fill-ink" : m.count ? "fill-muted/45" : "fill-faint/40"}
             >
-              <title>{`${monthName(m.month)}: ${plural(m.count, "commit")}`}</title>
+              <title>{`${monthName(m.month)}: ${plural(m.count, noun)}`}</title>
             </rect>
           );
         })}
@@ -70,14 +70,14 @@ function Sparkline({ git }: { git: GitInfo }) {
         })}
       </div>
       <figcaption className="mt-2 text-[12.5px] leading-relaxed text-muted">
-        Commits per month, {monthName(first)} to {monthName(last)}.
+        {per}, {monthName(first)} to {monthName(last)}.
         {peak.count > 0 && (
           <>
             {" "}
-            Busiest: {monthName(peak.month)}, with {plural(peak.count, "commit")}.
+            Busiest: {monthName(peak.month)}, with {plural(peak.count, noun)}.
           </>
         )}
-        {older && " Earlier commits fall outside the chart."}
+        {note && ` ${note}`}
       </figcaption>
     </figure>
   );
@@ -142,7 +142,12 @@ export function History({ git }: { git: GitInfo }) {
       </div>
       {active >= 2 && (
         <Sub label="Activity" className="mt-10">
-          <Sparkline git={git} />
+          <MonthBars
+            months={git.monthly}
+            per="Commits per month"
+            noun="commit"
+            note={git.firstCommit && git.monthly[0] && git.firstCommit.slice(0, 7) < git.monthly[0].month ? "Earlier commits fall outside the chart." : null}
+          />
         </Sub>
       )}
       {git.authors.length > 1 && (

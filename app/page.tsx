@@ -83,6 +83,7 @@ export default function Home() {
                     <span className="block sm:inline">{DEMO ? `The open-source repos of ${DEMO_ORG}` : "Your personal internet"}</span>
                     <Count n={counts.pages} label="folders" href={wikiHref("Special:Statistics")} first />
                     <Count n={counts.articles} label="articles" href={wikiHref("Special:AllPages")} />
+                    {counts.agents ? <Count n={counts.agents} label="agents" href={searchHref("is:agent", { t: "agents" })} /> : null}
                     <Count n={counts.repos} label="repositories" href={searchHref("kind:repo")} className="hidden sm:inline" />
                   </>
                 )}

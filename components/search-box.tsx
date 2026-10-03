@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { Sigil, sigilGradient } from "@/components/sigil";
+import { AGENT_CLIP, Sigil, sigilGradient } from "@/components/sigil";
 import { wikiHref } from "@/lib/links";
 import type { Suggestion } from "@/lib/search";
 
@@ -207,7 +207,7 @@ export function SearchBox({
                 <span
                   aria-hidden
                   className="size-5 shrink-0"
-                  style={{ borderRadius: s.kind === "repo" ? 999 : 6, background: sigilGradient(s.slug, !s.isArticle) }}
+                  style={{ borderRadius: s.kind === "repo" ? 999 : s.kind === "agent" ? 0 : 6, clipPath: s.kind === "agent" ? AGENT_CLIP : undefined, background: sigilGradient(s.slug, !s.isArticle) }}
                 />
               )}
               <span className="min-w-0 flex-1 truncate">

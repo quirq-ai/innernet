@@ -1,6 +1,7 @@
 import "server-only";
 
 import MiniSearch, { type SearchResult as MiniHit } from "minisearch";
+import { agentTool } from "./agents";
 import { getIndex, getPage } from "./data";
 import { logoSrc } from "./logo";
 import { isListableName, markdownToText, readsAsInstructions, undash } from "./text";
@@ -9,10 +10,11 @@ import type { Page } from "./types";
 // Server-side full-text search over the index. The engine is rebuilt only when the
 // index file changes.
 
-export type Tab = "all" | "articles" | "repos" | "folders" | "docs";
+export type Tab = "all" | "articles" | "agents" | "repos" | "folders" | "docs";
 export const TABS: { id: Tab; label: string }[] = [
   { id: "all", label: "All" },
   { id: "articles", label: "Projects" },
+  { id: "agents", label: "Agents" },
   { id: "repos", label: "Repositories" },
   { id: "docs", label: "Documents" },
   { id: "folders", label: "Folders" },
@@ -117,7 +119,8 @@ function getEngine() {
     cats: p.categories.join(" "),
     langs: p.languages.map((l) => l.name).join(" "),
     fws: p.frameworks.join(" "),
-    agent: p.agentNotes ?? "",
+    // An agent's tool and what it reads, so "openclaw" or a line of its SOUL.md finds it.
+    agent: [p.agentNotes ?? "", p.agent?.tool ?? "", ...(p.agent?.instructions.map((f) => plain(f.text, 1500)) ?? [])].join(" ").slice(0, 6000),
   }));
   ms.addAll(docs);
   const terms = new Set<string>();
@@ -155,13 +158,17 @@ function matchesFilters(p: Page, f: ParsedQuery["filters"]): boolean {
   if (f.fw && !p.frameworks.some((x) => x.toLowerCase().replace(/[.\s]/g, "").includes(f.fw!.replace(/[.\s]/g, "")))) return false;
   if (f.is === "article" && !p.isArticle) return false;
   if (f.is === "stub" && p.isArticle) return false;
+  if (f.is === "agent" && p.realm !== "agent") return false;
+  if (f.is === "project" && p.realm !== "project") return false;
   return true;
 }
 
 function inTab(p: Page, tab: Tab): boolean {
   switch (tab) {
     case "articles":
-      return p.isArticle && p.kind !== "docs";
+      return p.isArticle && p.kind !== "docs" && p.realm === "project";
+    case "agents":
+      return p.isArticle && p.realm === "agent";
     case "repos":
       return p.kind === "repo";
     case "docs":
@@ -179,6 +186,8 @@ function prior(p: Page): number {
   if (p.kind === "repo") w *= 1.25;
   if (p.kind === "code" && !p.isArticle) w *= 0.55;
   if (p.partOf) w *= 0.8;
+  // A word shared with a hundred .xo folders should not bury the project it names.
+  if (p.realm === "agent") w *= p.kind === "agent" ? 0.7 : 0.5;
   w *= 1 / (1 + 0.05 * p.depth);
   if (p.modified) {
     const days = (Date.now() - Date.parse(p.modified)) / 86_400_000;
@@ -313,21 +322,33 @@ export function displayPath(p: Page): string {
 
 /** Description used when a folder has no README or manifest text. */
 export function fallbackDescription(p: Page): string {
-  const bits: string[] = [];
-  bits.push(`A ${p.kind === "code" ? "source folder" : p.kind === "assets" ? "media folder" : p.kind === "docs" ? "folder of documents" : "folder"}`);
-  if (p.partOf) bits.push(`inside ${getPage(p.partOf)?.title ?? p.partOf}`);
   const contents: string[] = [];
   if (p.children.length) contents.push(`${p.children.length} subfolder${p.children.length === 1 ? "" : "s"}`);
   if (p.fileCount) contents.push(`${p.fileCount} file${p.fileCount === 1 ? "" : "s"}`);
-  let s = bits.join(" ") + (contents.length ? ` holding ${contents.join(" and ")}` : "");
   const files = p.files.filter(isListableName);
-  if (files.length) s += `, including ${files.slice(0, 4).join(", ")}`;
-  return s + ".";
+  const including = files.length ? `, including ${files.slice(0, 4).join(", ")}` : "";
+
+  // "The Claude Code folder of quirq, holding 2 files, including launch.json."
+  if (p.kind === "agent") {
+    const owner = getPage(p.parent);
+    let s = `The ${p.agent?.tool ?? agentTool(p.name)} folder${owner ? ` of ${owner.title}` : ""}`;
+    if (contents.length) s += `, holding ${contents.join(" and ")}`;
+    s += `${including}.`;
+    const sessions = p.agent?.sessions?.count ?? 0;
+    if (sessions) s += ` ${sessions === 1 ? "One session" : `${sessions.toLocaleString("en-US")} sessions`} on record.`;
+    return s;
+  }
+
+  const bits: string[] = [];
+  bits.push(`A ${p.kind === "code" ? "source folder" : p.kind === "assets" ? "media folder" : p.kind === "docs" ? "folder of documents" : "folder"}`);
+  if (p.partOf) bits.push(`inside ${getPage(p.partOf)?.title ?? p.partOf}`);
+  return bits.join(" ") + (contents.length ? ` holding ${contents.join(" and ")}` : "") + `${including}.`;
 }
 
 function snippet(p: Page, terms: string[], width = 230): Segment[] {
   const notes = p.agentNotes && !readsAsInstructions(p.agentNotes) ? p.agentNotes : null;
-  const source = pageSummary(p) || plain(p.readme, 2400) || notes || fallbackDescription(p);
+  const told = p.agent?.instructions[0] ? plain(p.agent.instructions[0].text.replace(/^---[\s\S]*?\n---\n?/, ""), 2400) : "";
+  const source = pageSummary(p) || plain(p.readme, 2400) || notes || told || fallbackDescription(p);
   const words = [...new Set(terms.map((t) => t.toLowerCase()).filter((t) => t.length >= 2))];
   if (!words.length) return [{ text: clipText(source, width) }];
   const re = new RegExp(`\\b(${words.map(escapeRe).join("|")})[\\w-]*`, "gi");

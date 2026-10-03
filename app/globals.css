@@ -277,6 +277,10 @@
 .ix-entry.is-repo::before {
   border-radius: 9999px;
 }
+.ix-entry.is-agent::before {
+  border-radius: 0;
+  clip-path: polygon(29% 0, 71% 0, 100% 29%, 100% 71%, 71% 100%, 29% 100%, 0 71%, 0 29%);
+}
 .ix-entry.sigil-muted {
   --k: 0.035;
 }

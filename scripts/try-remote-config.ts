@@ -46,7 +46,7 @@ function snapshot(owner: string, slug: string): SiteIndex {
   const root = `https://github.com/${owner}`;
   const page: Page = {
     slug, name: slug, title: slug, path: `${root}/${slug}`, relPath: slug, root, depth: 0,
-    kind: "project", isArticle: true, parent: null, partOf: null, children: [], hiddenChildren: [],
+    kind: "project", realm: "project", isArticle: true, parent: null, partOf: null, children: [], hiddenChildren: [],
     files: [], fileCount: 0, totalFiles: 0, bytes: 0, totalBytes: 0, created: null, modified: null,
     languages: [], markers: [], frameworks: [], manifest: null, summary: null, readme: `${slug} fixture repository`,
     readmeFile: null, agentNotes: null, git: null, categories: [], related: [], words: 3,
