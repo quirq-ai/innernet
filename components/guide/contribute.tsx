@@ -48,7 +48,8 @@ const MAP: { group: string; dir: string; items: { path: string; role: string; di
       { path: "app/wiki/[slug]/page.tsx", role: "Every Innerpedia page but the Main page, through resolveSlug." },
       { path: "app/api/suggest/route.ts", role: "Suggestions for the search box, as you type." },
       { path: "app/api/activity/route.ts", role: "Writes the history: to this machine's folders, or on a demo with a database, to Neon for 30 days. Same origin only." },
-      { path: "app/api/sources", role: "Local source inspection, selection, sync and named storage actions. Same origin only.", dir: true },
+      { path: "app/api/sources", role: "Local source inspection, selection, sync and named locations. Same origin only.", dir: true },
+      { path: "app/api/storage/route.ts", role: "Tests the remote database and switches the storage, copying the index and history. Same origin only." },
       { path: "app/api/db/store/route.ts", role: "Store now, from the history page: the index and the history into this machine's database." },
       { path: "app/globals.css", role: "The tokens, both themes, the aurora, prose." },
     ],
@@ -366,9 +367,9 @@ const CONVENTIONS: { title: string; text: React.ReactNode }[] = [
       <>
         Pages are Server Components. The browser asks only this app: the search box asks <C>/api/suggest</C>, the history posts each page to{" "}
         <C>/api/activity</C> (on a demo with a database, its history page also reads and clears the visitor&apos;s own sessions there), and the local Sources page
-        uses <C>/api/sources</C>, <C>/api/sources/sync</C> and <C>/api/sources/open</C>. These routes inspect or save choices, refresh selected providers, and open
-        named storage locations on this machine. Remote sync downloads public GitHub content from the saved account and optional repository list; local content
-        and activity stay here. A new client component needs a reason only the browser can satisfy.
+        uses <C>/api/sources</C>, <C>/api/sources/sync</C>, <C>/api/sources/open</C> and <C>/api/storage</C>. These routes inspect or save choices, refresh the
+        selected sources, open named locations on this machine, and test or switch the storage. Remote sync downloads only the public repositories listed; the
+        index and history leave this machine only when the storage is switched to remote. A new client component needs a reason only the browser can satisfy.
       </>
     ),
   },

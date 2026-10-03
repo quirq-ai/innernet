@@ -128,29 +128,23 @@ Both `pnpm dev` and `pnpm start` bind to `127.0.0.1`.
 The first dev run or build needs network access to fetch fonts. Afterward, the fonts
 are served locally.
 
-### Choose and sync sources
+### Sources: input, generated data, storage
 
-Open **Sources** next to **Guide** to visit the `/sources` page. Check **Local** for the folders configured in
-`innernet.config.json`, **Remote** for public GitHub repositories, or both to search
-and browse them together. At least one source must be selected. Under Remote, enter
-a GitHub username or organization, as a name or account URL. The default is
-`quirq-ai`. Optionally list repository names or repository URLs belonging to that
-account, one per line; an empty list means all its public repositories. **Save
-sources** applies these choices and saves them in `data/sources.json` across tabs
-and restarts. Then use **Sync now** to fetch the selected repositories.
+Open **Sources** next to **Guide** to visit `/sources`. It reads top to bottom, the way
+data flows: what Innernet reads, what it makes from it, and where the copy is kept.
 
-**Sync now** rebuilds the saved selection and refreshes the page. Local runs the same
-crawler as `pnpm index` and writes `data/index.json`. Remote anonymously downloads
-public repositories into `.github-cache`. The default `quirq-ai` account with an empty
-repository list uses `data/github.json` and, before its first sync, the included
-`data/demo/index.json` snapshot. Other account or repository selections each use a
-separate `data/github-<hash>.json` snapshot, so changing Remote never shows pages from
-the previous selection. A new selection has no remote pages until synced. Both
-selected means both are refreshed. Progress and the
-outcome appear on the page, and source changes and syncs are recorded in the current
-tab's activity session. Only one button-triggered sync runs at a time. Sources is
-available locally; the public demo cannot change or sync sources. A command-line
-rebuild is picked up on the next request without a restart.
+**Input.** Check **Local** for the folders in `innernet.config.json` (**Edit folders**
+opens it), **Remote** for GitHub repositories, or both to search and browse them
+together. Remote takes a collection of public repositories from any account, one link
+per line (`https://github.com/owner/name`, or `owner/name`), up to 50; there is no
+whole-account mode, so a sync fetches exactly what you list. **Save** keeps the choices
+in `data/sources.json`, and **Sync now** rebuilds them: Local runs the same crawler as
+`pnpm index` and writes `data/index.json`; Remote downloads the listed repositories
+anonymously into `.github-cache` and writes a snapshot of its own, `data/github-<hash>.json`,
+one per distinct list, so a changed list never shows another list's pages. A list has no
+remote pages until it is synced. Saves and syncs are recorded in the tab's history; only
+one sync runs at a time. Sources is local only: the public demo cannot change or sync
+sources. A command-line rebuild is picked up on the next request without a restart.
 
 For a single run, override the configured roots and depth:
 
@@ -168,32 +162,24 @@ The app reads the selected indexes from its project folder. `INNERNET_OUT` only 
 where the command-line local crawler writes; it does not change the app's index paths.
 The local part of **Sync now** always updates `data/index.json`.
 
-### Find and edit stored data
+**Generated data.** One row for everything the input makes, with its path relative to
+the app or to your home folder, its size and when it last changed. Each row can copy its
+path or open its folder; this tab's history file opens in a text editor.
 
-The **Where your data lives** section below the source choices shows the exact paths
-used by this installation, including environment overrides. **Copy path** copies a
-location, **Open folder** opens it in the file manager, and **Edit file** opens the
-current tab's activity file, local folder configuration or saved source choices in a
-text editor when the file exists.
-
-| Data | Default location | How to change it |
+| Data | Path | Notes |
 | --- | --- | --- |
-| This tab's activity | `~/.innernet/history/<session>/innernet.jsonl` | Edit or remove JSON lines, then reload History. Keep `at`, `app` and `kind` on each event. |
-| All activity | `~/.innernet/history/` | Each session is a folder; other apps can add their own JSONL files. |
-| Generated local pages | `data/index.json` | Edit the original folders, then sync Local. |
-| Generated GitHub pages | `data/github-<hash>.json` per account/repository selection; `data/github.json` for the default | Sync Remote to download a fresh public snapshot. Only the default `quirq-ai` selection falls back to `data/demo/index.json`. |
-| Source choices | `data/sources.json` | Edit the Local/Remote choices, GitHub account and optional repositories on Sources, then save. |
-| Local roots and depth | `innernet.config.json` | Edit `roots` and `maxDepth`, then sync Local. |
-| Database copy | `~/.innernet/db/` | Use the database tools below; edit history files rather than database internals. |
-| Downloaded repositories | `.github-cache/` | Disposable clones used by remote sync. |
-| App build files and traces | `.next/`, or the configured build directory | Regenerated by Next.js. |
+| Local index | `data/index.json` | Rebuilt by a Local sync. Pages are rendered from it; there is no HTML file per page. |
+| GitHub snapshot | `data/github-<hash>.json` | One per repository list, rebuilt by a Remote sync. |
+| History | `~/.innernet/history/` | A folder per tab; other apps can add their own JSONL files. |
+| This tab | `~/.innernet/history/<session>/innernet.jsonl` | Edit or remove lines, then reload History. Keep `at`, `app` and `kind`. |
+| Local database | `~/.innernet/db/` | The copy, when storage is on this machine. |
+| GitHub clones | `.github-cache/` | Used by sync; safe to delete. |
+| This browser | `sessionStorage`, `localStorage` | The tab's session and trail; the theme. |
 
-Search results and Innerpedia pages are rendered from the JSON indexes; there is no
-separate HTML file to edit for each generated page. The Sources page also identifies the app
-folder and browser storage: the session ID and navigation trail in `sessionStorage`,
-and the theme preference in `localStorage`. Activity and the database stay on this
-machine with Local, Remote, or both selected. Remote chooses public content to read;
-it does not switch this installation to the hosted demo.
+**Storage.** Where the copy of the local index and history is kept: **This machine**
+(PGlite in `~/.innernet/db`) or **Remote** (your own Neon database). See
+[Storage: this machine or remote](#storage-this-machine-or-remote). Remote chooses where
+a copy goes; it never connects this installation to the hosted demo.
 
 ## Search your folders
 
@@ -327,12 +313,38 @@ alone unless you pass `--force`.
 | `INNERNET_DB_DIR` | Where the database lives (default `~/.innernet/db`). |
 | `INNERNET_DB=off` | No database: Innernet reads and writes its files alone. |
 | `INNERNET_HISTORY_DIR` | Where the history folders live (default `~/.innernet/history`). |
+| `INNERNET_STORAGE` | `local` or `remote`, overriding the choice saved on Sources. |
+| `INNERNET_REMOTE_DATABASE_URL` | The remote database, overriding `~/.innernet/remote.json`. |
+| `INNERNET_HOME` | Where `storage.json` and `remote.json` live (default `~/.innernet`). |
+
+### Storage: this machine or remote
+
+The copy described above can live in your own remote database instead of PGlite. On
+**Sources**, under **Storage**, **Switch to remote** asks once to confirm, then copies
+the local index (folder paths, README text, agent instructions) and every history folder
+into it, and keeps storing there: each new index, each new history line. **Switch to this
+machine** copies everything back into `~/.innernet/db`. The files stay the record either
+way, and **Test** reaches the remote database without switching.
+
+Both settings live outside the project, beside the history, so neither git nor a deploy
+carries them: `~/.innernet/storage.json` holds the choice (`{"target": "remote"}`), and
+`~/.innernet/remote.json` (mode 600) holds the remote database's URL, which is never
+logged or shown on a page. The remote database is a Neon Postgres made for this through
+the Vercel Marketplace, separate from the demo's and connected to no Vercel project; any
+Postgres works, with its URL in `remote.json` or `INNERNET_REMOTE_DATABASE_URL`. Innernet
+refuses a remote database that is the demo's.
+
+The commands follow the choice: `pnpm db:status` describes whichever is in use, and
+`--local` or `--remote` picks one for a single command, so on another machine with the
+same `remote.json`, `pnpm db:load --remote` writes the stored index and history back out
+as files. Switching back leaves the remote copy in place; delete it from Neon when you no
+longer want it there.
 
 ### The demo's database
 
 The public demo uses [Neon](https://neon.tech) serverless Postgres instead, in US East,
-through the `DATABASE_URL` that the Vercel Marketplace sets. Local mode refuses to connect
-to it, or to any remote database, whatever is set. It holds two things.
+through the `DATABASE_URL` that the Vercel Marketplace sets. Local mode never connects to
+it, whatever is set; your own remote database (above) is a different one. It holds two things.
 
 **The demo index.** On first use, then at most every five minutes, the demo looks for an
 index newer than the bundled `data/demo/index.json` and serves it once it passes the same
@@ -416,13 +428,18 @@ Innernet is built to read and serve your project context on your machine.
   `.env`, key files, settings files or arbitrary source and document contents. Dot
   folders that hold credentials (`.ssh`, `.aws`, `.clerk`...) are never entered. The
   Documents tab classifies folders by file names and types.
-- **Local database.** The copy in `~/.innernet/db` (PGlite, folder mode 700) stays on
-  this machine, and local mode never connects to a remote database. It follows the
-  history folders: a session you delete there is forgotten in the database too. Only a
-  history folder lost or replaced whole has its sessions kept, for `pnpm db:load`.
-- **Remote sources.** Remote sync makes anonymous HTTPS requests to GitHub for
-  public repositories from the selected account. Their downloaded index and clones stay in this
-  project; local folder contents, activity and the database are not uploaded.
+- **Local database.** By default the copy is in `~/.innernet/db` (PGlite, folder mode
+  700) and stays on this machine. It follows the history folders: a session you delete
+  there is forgotten in the database too. Only a history folder lost or replaced whole
+  has its sessions kept, for `pnpm db:load`.
+- **Remote storage, only when you choose it.** Switching storage to remote on Sources,
+  after a confirmation, copies the local index (folder paths, README text, agent
+  instructions) and the history to your own remote database, and keeps storing there
+  until you switch back. Its URL stays in `~/.innernet/remote.json` (mode 600) and never
+  reaches a page or a log; the demo's database is refused as a target.
+- **Remote sources.** Remote sync makes anonymous HTTPS requests to GitHub for the
+  public repositories you list. Their snapshot and clones stay in this project; local
+  folder contents, activity and the database are not uploaded by a sync.
 - **Redaction.** Secret-looking file names are hidden, credentials are stripped from
   Git remotes, and credential-shaped text becomes `[redacted]` during indexing and
   when an older index is loaded.
@@ -468,7 +485,7 @@ pnpm -s typecheck
 | [`innernet.config.json`](innernet.config.json) | Set roots and maximum depth. |
 | `data/index.json` | Local, generated index. Rebuild with `pnpm index`; never commit it. |
 | `data/sources.json` · `data/github*.json` · `.github-cache/` | Saved source choices and remote configuration, public GitHub snapshots and disposable remote clones. All local and gitignored. |
-| [`lib/sources.ts`](lib/sources.ts) · [`lib/source-storage.ts`](lib/source-storage.ts) | Source selection, index locations and the named files and folders shown in Sources. |
+| [`lib/sources.ts`](lib/sources.ts) · [`lib/source-storage.ts`](lib/source-storage.ts) · [`lib/remote-config.ts`](lib/remote-config.ts) · [`lib/storage.ts`](lib/storage.ts) | Source selection and the repository collection, the generated data Sources lists, and where its copy is stored (this machine or remote). |
 | [`lib/search.ts`](lib/search.ts) | MiniSearch, operators, ranking, snippets and suggestions. |
 | [`lib/data.ts`](lib/data.ts) | Load the index and resolve articles, stubs, categories and other pages. |
 | [`lib/text.ts`](lib/text.ts) · [`lib/normalize.ts`](lib/normalize.ts) | Clean and redact text; bring older indexes up to current rules. |
@@ -476,7 +493,7 @@ pnpm -s typecheck
 | [`lib/activity.ts`](lib/activity.ts) | Read and append the history: one folder per session, one JSON Lines file per app. |
 | [`lib/db/`](lib/db) | The database: PGlite on this machine, Neon on the demo, one adapter and the same SQL for both. `ingest.ts` keeps this machine's history in step with its folders; `demo-history.ts` keeps the demo visitors' history. |
 | [`scripts/db.ts`](scripts/db.ts) · [`lib/demo-check.ts`](lib/demo-check.ts) | `pnpm db:status`, `db:store` and `db:load`; the demo's leak checks. |
-| [`app/`](app) · [`components/`](components) | Search, Innerpedia, the field guide and the history. `app/api/activity` writes the history; `app/api/db/store` is Store now; `app/api/sources` inspects and saves source choices, `sources/sync` refreshes them, and `sources/open` opens named storage locations. |
+| [`app/`](app) · [`components/`](components) | Search, Innerpedia, the field guide and the history. `app/api/activity` writes the history; `app/api/db/store` is Store now; `app/api/sources` inspects and saves source choices, `sources/sync` refreshes them, `sources/open` opens named locations, and `app/api/storage` tests and switches the storage. |
 | [`proxy.ts`](proxy.ts) · [`next.config.ts`](next.config.ts) | Localhost checks and browser security headers. |
 | [`scripts/shot.sh`](scripts/shot.sh) | Capture settled app screenshots and report horizontal overflow. |
 

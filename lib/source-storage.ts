@@ -4,93 +4,237 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { SESSION_RE } from "@/components/activity/shared";
-import { HISTORY_DIR } from "./activity";
+import { HISTORY_DIR, sessionIds } from "./activity";
 import { resolveDbDir } from "./db/pglite";
-import { BASE_PATH } from "./base-path";
 import { PROJECT_ROOT } from "./project-root";
-import { isDefaultRemote, type RemoteConfig } from "./remote-config";
-import { localSourceConfig, LOCAL_INDEX_FILE, readRemoteConfig, readSourceSelection, remoteIndexFile, REMOTE_CACHE_DIR, REMOTE_INDEX_FILE, SOURCE_CONFIG_FILE, SOURCE_SETTINGS_FILE } from "./sources";
+import { remoteActivityFields, type RemoteConfig } from "./remote-config";
+import { homeLabel, remoteDatabase, remoteLabel, storageTarget } from "./storage";
+import { localSourceConfig, LOCAL_INDEX_FILE, readRemoteConfig, readSourceSelection, remoteIndexFile, REMOTE_CACHE_DIR, SOURCE_CONFIG_FILE } from "./sources";
 
-export interface StorageLocation {
+// What Sources shows: the input (local folders, GitHub repositories), everything that
+// input generates, one short row each with a relative path, its size and when it last
+// changed, and the storage the copy of it goes to.
+
+export interface GeneratedItem {
   id: string;
   label: string;
-  path: string;
-  description: string;
-  kind: "file" | "directory";
+  path: string; // as a person reads it: relative to the app ("data/index.json") or to home ("~/.innernet/db")
+  kind: "file" | "directory" | "browser";
   exists: boolean;
+  bytes: number | null;
+  /** True when the size stopped counting at the walk's budget: "at least". */
+  more: boolean;
+  modified: string | null; // ISO
+  /** A few words: "12 sessions", "in use". */
+  detail: string | null;
   editable: boolean;
 }
 
-export function storageLocations(session: string): StorageLocation[] {
-  if (!SESSION_RE.test(session)) throw new Error("Bad session id.");
-  let remote: RemoteConfig | null = null;
-  try { remote = readRemoteConfig(); } catch { /* Keep repair controls available. */ }
-  const locations: Omit<StorageLocation, "exists">[] = [
-    { id: "session", label: "This tab's activity file", path: path.join(HISTORY_DIR, session, "innernet.jsonl"), kind: "file", editable: true,
-      description: "One JSON object per line. Edit or remove lines in a text editor, then reload History. Keep the at, app and kind fields. Other apps may have their own files beside this one." },
-    { id: "history", label: "All activity and sessions", path: HISTORY_DIR, kind: "directory", editable: false,
-      description: "Each session is a folder. Open one to find its activity files. Changes are picked up the next time you open History." },
-    { id: "local-index", label: "Generated local pages", path: LOCAL_INDEX_FILE, kind: "file", editable: false,
-      description: "Search and Innerpedia render pages from this JSON index. There is no separate HTML file per page. Edit your source folders, then sync; a sync replaces this file." },
-    { id: "remote-index", label: "Generated GitHub pages", path: remote ? remoteIndexFile(remote) : path.dirname(REMOTE_INDEX_FILE), kind: remote ? "file" : "directory", editable: false,
-      description: remote ? `A local snapshot of ${remote.owner}'s ${remote.repositories.length ? "selected" : "public"} GitHub repositories. Each saved account and repository list has its own snapshot.${isDefaultRemote(remote) ? " Before your first sync, the included quirq-ai snapshot is used." : " Sync Remote to generate these pages."}` : "GitHub snapshots are in this folder. Repair the saved GitHub configuration to find the active snapshot." },
-    { id: "selection", label: "Your source choices", path: SOURCE_SETTINGS_FILE, kind: "file", editable: true,
-      description: "Your Local and Remote choices, GitHub account and repository list. These settings are shared by this Innernet installation and survive restarts." },
-    { id: "config", label: "Local folder configuration", path: SOURCE_CONFIG_FILE, kind: "file", editable: true,
-      description: "Edit roots and maxDepth to choose folders and crawl depth. INNERNET_ROOTS and INNERNET_MAX_DEPTH, when set on the server, override this file." },
-    { id: "database", label: "Database copy", path: resolveDbDir(), kind: "directory", editable: false,
-      description: process.env.INNERNET_DB?.toLowerCase() === "off" ? "The database is currently off. The app is using its JSON and activity files." : "PGlite keeps a copy of the local index and activity here. Edit the activity files rather than database internals; use db:store and db:load to store or restore copies." },
-    { id: "remote-cache", label: "GitHub download cache", path: REMOTE_CACHE_DIR, kind: "directory", editable: false,
-      description: "Public repository clones used during remote sync. Downloaded copies may be replaced on the next sync; make lasting changes in the original repositories." },
-    { id: "app-cache", label: "App build cache", path: path.join(/*turbopackIgnore: true*/ PROJECT_ROOT, process.env.INNERNET_DIST_DIR || process.env.QUIRQ_DIST_DIR || ".next"), kind: "directory", editable: false,
-      description: "Compiled app files, development traces and caches. These are regenerated by Next.js, independently of your source index and activity." },
-    { id: "app", label: "App files", path: PROJECT_ROOT, kind: "directory", editable: false,
-      description: "Innernet's source code, styles, bundled images, guide media and installed dependencies. Your indexed folders stay in their original locations above." },
-  ];
-  return locations.map((item) => ({ ...item, exists: fs.existsSync(item.path) }));
+/** The locations the open route may act on, by id; never a path from a request. */
+interface Location {
+  id: string;
+  abs: string;
+  kind: "file" | "directory";
+  editable: boolean;
 }
 
+/** A path as Sources shows it: inside the app, relative to it; under home, from ~. */
+export function shownPath(abs: string): string {
+  const rel = path.relative(PROJECT_ROOT, abs);
+  if (rel && !rel.startsWith("..") && !path.isAbsolute(rel)) return rel.split(path.sep).join("/");
+  return homeLabel(abs);
+}
+
+/** Size, file count and newest change of a file or folder, never through a link, and
+ * never more than `budget` entries (a clone cache can be large). */
+function measure(abs: string, budget = 40_000): { exists: boolean; bytes: number; more: boolean; newest: number } {
+  let st: fs.Stats;
+  try {
+    st = fs.lstatSync(abs);
+  } catch {
+    return { exists: false, bytes: 0, more: false, newest: 0 };
+  }
+  if (st.isFile()) return { exists: true, bytes: st.size, more: false, newest: st.mtimeMs };
+  if (!st.isDirectory()) return { exists: true, bytes: 0, more: false, newest: 0 };
+  let bytes = 0;
+  let newest = st.mtimeMs;
+  let left = budget;
+  const stack = [abs];
+  while (stack.length && left > 0) {
+    const dir = stack.pop()!;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const e of entries) {
+      if (--left <= 0) break;
+      if (e.isSymbolicLink()) continue;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) stack.push(p);
+      else if (e.isFile()) {
+        try {
+          const f = fs.statSync(p);
+          bytes += f.size;
+          newest = Math.max(newest, f.mtimeMs);
+        } catch {
+          /* gone */
+        }
+      }
+    }
+  }
+  return { exists: true, bytes, more: left <= 0, newest };
+}
+
+const iso = (ms: number) => (ms > 0 ? new Date(ms).toISOString() : null);
+const plural = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
+
+function locations(session: string): Location[] {
+  if (!SESSION_RE.test(session)) throw new Error("Bad session id.");
+  let remote: RemoteConfig | null = null;
+  try {
+    remote = readRemoteConfig();
+  } catch {
+    /* repairable on the page */
+  }
+  const snapshot = remote ? remoteIndexFile(remote) : null;
+  const out: Location[] = [
+    { id: "local-index", abs: LOCAL_INDEX_FILE, kind: "file", editable: false },
+    { id: "history", abs: HISTORY_DIR, kind: "directory", editable: false },
+    { id: "session", abs: path.join(HISTORY_DIR, session, "innernet.jsonl"), kind: "file", editable: true },
+    { id: "database", abs: resolveDbDir(), kind: "directory", editable: false },
+    { id: "remote-cache", abs: REMOTE_CACHE_DIR, kind: "directory", editable: false },
+    { id: "config", abs: SOURCE_CONFIG_FILE, kind: "file", editable: true },
+  ];
+  if (snapshot) out.splice(1, 0, { id: "remote-index", abs: snapshot, kind: "file", editable: false });
+  return out;
+}
+
+/** Everything the input generates, in the order it is made. */
+export function generatedData(session: string): GeneratedItem[] {
+  const target = storageTarget();
+  const items: GeneratedItem[] = [];
+  for (const loc of locations(session)) {
+    if (loc.id === "config") continue; // input, shown with the folders it names
+    const m = measure(loc.abs);
+    let label = "";
+    let detail: string | null = null;
+    switch (loc.id) {
+      case "local-index":
+        label = "Local index";
+        detail = "pages from your folders";
+        break;
+      case "remote-index":
+        label = "GitHub snapshot";
+        detail = m.exists ? "pages from your repositories" : "made by the next sync";
+        break;
+      case "history": {
+        label = "History";
+        const n = m.exists ? sessionIds().length : 0;
+        detail = n ? plural(n, "session") : "one folder per tab";
+        break;
+      }
+      case "session":
+        label = "This tab";
+        detail = "its history file";
+        break;
+      case "database":
+        label = "Local database";
+        detail = target === "local" ? "in use" : "not in use";
+        break;
+      case "remote-cache":
+        label = "GitHub clones";
+        detail = "used by sync";
+        break;
+    }
+    items.push({
+      id: loc.id,
+      label,
+      path: shownPath(loc.abs),
+      kind: loc.kind,
+      exists: m.exists,
+      bytes: m.exists ? m.bytes : null,
+      more: m.more,
+      modified: m.exists ? iso(m.newest) : null,
+      detail,
+      editable: loc.editable,
+    });
+  }
+  items.push({
+    id: "browser",
+    label: "This browser",
+    path: "sessionStorage, localStorage",
+    kind: "browser",
+    exists: true,
+    bytes: null,
+    more: false,
+    modified: null,
+    detail: "session, trail, theme",
+    editable: false,
+  });
+  return items;
+}
+
+/** The Input and Storage sections, and the generated data between them. */
 export function sourceInfo(session: string) {
   let remote: RemoteConfig | null = null;
-  try { remote = readRemoteConfig(); } catch { /* The form can save a repaired configuration. */ }
-  const indexPath = remote ? remoteIndexFile(remote) : "";
-  let generatedAt: string | null = null;
-  try { generatedAt = JSON.parse(fs.readFileSync(indexPath, "utf8")).meta.generatedAt ?? null; } catch { /* no snapshot yet */ }
-  let local: { roots: string[]; maxDepth: number | null; error?: string };
+  let remoteError: string | undefined;
   try {
-    local = localSourceConfig();
-  } catch {
-    local = { roots: [], maxDepth: null, error: "Local folder configuration could not be read. Open its file below to fix the roots and maxDepth, then reload Sources. Remote is still available." };
+    remote = readRemoteConfig();
+  } catch (error) {
+    remoteError = error instanceof Error ? error.message : "The saved repositories could not be read. Enter them again and save.";
   }
+  const snapshot = remote ? remoteIndexFile(remote) : null;
+  let generatedAt: string | null = null;
+  try {
+    if (snapshot) generatedAt = JSON.parse(fs.readFileSync(snapshot, "utf8")).meta.generatedAt ?? null;
+  } catch {
+    /* not synced yet */
+  }
+  let local: { roots: string[]; maxDepth: number | null; config: string; error?: string };
+  try {
+    const config = localSourceConfig();
+    local = { roots: config.roots.map(homeLabel), maxDepth: config.maxDepth, config: shownPath(SOURCE_CONFIG_FILE) };
+  } catch {
+    local = { roots: [], maxDepth: null, config: shownPath(SOURCE_CONFIG_FILE), error: "The folder settings could not be read. Edit them, then reload." };
+  }
+  const db = remoteDatabase();
   return {
     selection: readSourceSelection(),
     local,
     remote: {
-      ...(remote ?? { owner: "", repositories: [] }),
-      label: remote ? `${remote.owner} ${remote.repositories.length ? "selected" : "public"} repositories` : "GitHub configuration needs attention",
-      url: remote ? `https://github.com/${remote.owner}` : "https://github.com",
-      indexPath, generatedAt, needsSync: !generatedAt,
-      ...(!remote ? { error: "Saved GitHub settings are invalid. Enter the account and repositories below and save, or edit the source choices file to repair them." } : {}),
+      repositories: remote?.repositories ?? [],
+      legacyAccount: remote?.legacyAccount ?? null,
+      snapshot: snapshot ? shownPath(snapshot) : null,
+      generatedAt,
+      needsSync: !!snapshot && !generatedAt,
+      ...(remoteError ? { error: remoteError } : {}),
     },
-    storage: storageLocations(session),
-    browserStorage: [
-      { label: "This tab", location: "sessionStorage: innernet-session, innernet-trail", description: `Your session ID and back/forward trail live in this browser tab. Inspect them in browser developer tools under Application > Session storage${BASE_PATH ? ` for this site's origin` : ""}. Activity itself is in the file above.` },
-      { label: "Appearance", location: "localStorage: innernet-theme", description: "Your light/dark preference stays in this browser. Inspect it under Application > Local storage in browser developer tools." },
-    ],
+    generated: generatedData(session),
+    storage: {
+      target: storageTarget(),
+      local: { path: shownPath(resolveDbDir()) },
+      remote: db ? { label: remoteLabel(db), ready: true } : { label: "Not set up", ready: false },
+    },
   };
 }
 
+/** For activity lines about the remote input. */
+export const remoteSummary = (remote: RemoteConfig) => remoteActivityFields(remote);
+
 /** Only named app locations may be opened, never a caller-supplied path or command. */
 export async function openStorageLocation(session: string, target: string, action: "reveal" | "edit"): Promise<void> {
-  const item = storageLocations(session).find((entry) => entry.id === target);
+  const item = locations(session).find((entry) => entry.id === target);
   if (!item) throw new Error("Unknown storage location.");
-  if (action === "edit" && (!item.editable || item.kind !== "file" || !item.exists)) throw new Error("This file is not available to edit. Open its folder instead.");
-  if (target === "session" && item.exists) {
+  const exists = fs.existsSync(item.abs);
+  if (action === "edit" && (!item.editable || item.kind !== "file" || !exists)) throw new Error("This file is not available to edit. Open its folder instead.");
+  if (target === "session" && exists) {
     const root = fs.realpathSync(HISTORY_DIR);
-    const file = fs.realpathSync(item.path);
+    const file = fs.realpathSync(item.abs);
     if (!file.startsWith(root + path.sep)) throw new Error("The activity file is outside the history folder.");
   }
-  let destination = action === "edit" ? item.path : item.kind === "file" ? path.dirname(item.path) : item.path;
+  let destination = action === "edit" ? item.abs : item.kind === "file" ? path.dirname(item.abs) : item.abs;
   if (action === "reveal") {
     while (!fs.existsSync(destination)) {
       const parent = path.dirname(destination);
@@ -105,6 +249,9 @@ export async function openStorageLocation(session: string, target: string, actio
     // This is a visible editor or folder window explicitly requested by its button.
     const child = spawn(command, args, { shell: false, stdio: "ignore", detached: true, windowsHide: false });
     child.once("error", reject);
-    child.once("spawn", () => { child.unref(); resolve(); });
+    child.once("spawn", () => {
+      child.unref();
+      resolve();
+    });
   });
 }

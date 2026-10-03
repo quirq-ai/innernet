@@ -58,11 +58,10 @@ export function HowItWorks() {
           </p>
           {!DEMO && (
             <p>
-              Sources, next to Guide, lets you select Local, Remote, or both. Remote accepts a GitHub account and an optional repository list; leave the list
-              empty for all that account&apos;s public repositories. Save, then sync to download them into <C>.github-cache</C> and write a separate{" "}
-              <C>data/github-&lt;hash&gt;.json</C> snapshot for that selection. The default quirq-ai account with no filter uses <C>data/github.json</C> and can
-              use the bundled demo snapshot before its first sync. Selecting both combines their records for search and
-              Innerpedia. Articles are rendered from these records, not saved as separate HTML files. Sources also shows where each index and your activity files live.
+              Sources, next to Guide, lets you select Local, Remote, or both. Remote takes a list of public GitHub repositories from any account, one link per
+              line. Save, then sync to download them into <C>.github-cache</C> and write a <C>data/github-&lt;hash&gt;.json</C> snapshot of its own for that list.
+              Selecting both combines their records for search and Innerpedia. Articles are rendered from these records, not saved as separate HTML files. Sources
+              also lists everything generated, with relative paths, and where its copy is stored: on this machine, or in your own remote database.
             </p>
           )}
         </Prose>

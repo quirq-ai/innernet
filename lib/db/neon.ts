@@ -1,27 +1,28 @@
 import "server-only";
 
 import { DEMO } from "../mode";
-import type { Db, Row } from "./types";
+import type { RemoteDatabase } from "../storage";
+import type { Db, DbKind, Row } from "./types";
 
-// The demo's database: Neon serverless Postgres over HTTPS, through DATABASE_URL, which
-// the Vercel Marketplace sets on the demo's project. Every query is one HTTPS request
-// with nothing kept open, which suits short-lived server functions.
+// Neon serverless Postgres over HTTPS: every query is one request with nothing kept
+// open, which suits short-lived server functions. Two databases come through here, and
+// they never mix:
 //
-// Only the demo may come here. This machine's folders never go to a server, so local
-// mode refuses before any client exists, whatever variables happen to be set.
+//   the demo's   DATABASE_URL, set by the Vercel Marketplace on the demo's project. Only
+//                the demo opens it; local mode refuses, whatever variables are set.
+//   yours        the remote database Sources can switch this machine's storage to
+//                (lib/storage.ts, ~/.innernet/remote.json). Only local mode opens it, and
+//                never when it is the demo's.
 
 const TIMEOUT_MS = 15_000;
 
-export async function openNeon(): Promise<Db> {
-  if (!DEMO) throw new Error("local mode never connects to Neon: this machine's data stays on this machine");
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
+async function client(url: string, kind: DbKind, label: string): Promise<Db> {
   const { neon } = await import("@neondatabase/serverless");
   const sql = neon(url);
   const signal = () => ({ fetchOptions: { signal: AbortSignal.timeout(TIMEOUT_MS) } });
   return {
-    kind: "neon",
-    label: "Neon Postgres",
+    kind,
+    label,
     async query<T extends Row = Row>(text: string, params: unknown[] = []) {
       return (await sql.query(text, params, signal())) as T[];
     },
@@ -34,4 +35,20 @@ export async function openNeon(): Promise<Db> {
       /* nothing is held open between queries */
     },
   };
+}
+
+/** The demo's database. */
+export async function openNeon(): Promise<Db> {
+  if (!DEMO) throw new Error("local mode never connects to the demo's database: this machine's data stays out of it");
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
+  return client(url, "neon", "Neon Postgres");
+}
+
+/** Your remote database, chosen on Sources. */
+export async function openRemote(remote: RemoteDatabase, label: string): Promise<Db> {
+  if (DEMO) throw new Error("the demo never opens a personal database");
+  const demo = process.env.DATABASE_URL?.trim();
+  if (demo && remote.url === demo) throw new Error("the remote database is the demo's, and this machine's data never goes there");
+  return client(remote.url, "remote", label);
 }

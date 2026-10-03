@@ -5,6 +5,10 @@
 //                             its folders (the history page's Store now does the same)
 //   pnpm db:load              write the stored index and history back out as files
 //
+// These three use the storage Sources has chosen (lib/storage.ts): this machine's
+// database, or your remote one. --local or --remote picks one for a single command, so
+// `pnpm db:load --remote` writes a remote copy back to the files of another machine.
+//
 //   pnpm db:status --demo     the same three for the demo's Neon database, which holds
 //   pnpm db:store --demo      data/demo/index.json and nothing else; storing runs the
 //   pnpm db:load --demo       demo's leak checks first, loading writes data/demo/index.json
@@ -26,8 +30,9 @@ const args = process.argv.slice(2);
 const command = args.find((a) => !a.startsWith("-")) ?? "status";
 const demo = args.includes("--demo");
 const force = args.includes("--force");
+const pick = args.includes("--remote") ? "remote" : args.includes("--local") ? "local" : null;
 
-const USAGE = "Usage: pnpm db:status | db:store | db:load  [--demo] [--force]";
+const USAGE = "Usage: pnpm db:status | db:store | db:load  [--local | --remote | --demo] [--force]";
 const NEON_HINT = "set -a; . ./.env.neon.local; set +a; pnpm db:" + command + " --demo";
 
 /** Stop before anything is open. */
@@ -43,6 +48,10 @@ function fail(message: string): never {
 }
 
 if (!["status", "store", "load"].includes(command)) stop(USAGE);
+if (pick && demo) stop("--demo works on the demo's database alone: drop --local or --remote.");
+if (args.includes("--remote") && args.includes("--local")) stop(USAGE);
+// lib/storage.ts reads this as the storage for this one command.
+if (pick) process.env.INNERNET_STORAGE = pick;
 // Any of the three switches lib/mode.ts reads as the demo, so none can turn this
 // machine's command into one against Neon.
 const demoVars = ["INNERNET_DEMO", "INNERNET_DEMO_BUILD", "VERCEL"].filter((name) => process.env[name] === "1");
@@ -107,6 +116,7 @@ async function main() {
   const { activityCounts, loadActivity, writeHistoryLines } = await import("../lib/db/activity");
   const { storeLocal } = await import("../lib/db/ingest");
   const { folderBytes, lockHolder, resolveDbDir } = await import("../lib/db/pglite");
+  const { storageTarget } = await import("../lib/storage");
   const { demoIndexProblems } = await import("../lib/demo-check");
   const { HISTORY_DIR, historyLabel } = await import("../lib/activity");
   const { normalizeIndex } = await import("../lib/normalize");
@@ -125,6 +135,7 @@ async function main() {
     if (!db) {
       const st = dbState();
       if (demo) fail(`Could not reach the demo's database: ${st.note}`);
+      if (storageTarget() === "remote") fail(`Could not use the remote database: ${st.note}`);
       const dir = resolveDbDir();
       const holder = st.state === "locked" ? (st.holder ?? lockHolder(dir)) : null;
       if (command === "status" && (holder || st.state === "off")) {
@@ -150,18 +161,20 @@ async function main() {
       fail(st.note);
     }
 
-    // The database must be the one asked for: PGlite for this machine, Neon for --demo.
-    if (db.kind !== (demo ? "neon" : "pglite")) fail(`Stopped: expected ${demo ? "the demo's Neon database" : "this machine's database"}, and opened ${db.label}.`);
+    // The database must be the one asked for: the demo's for --demo, else the storage
+    // chosen: this machine's or your remote one, never the demo's.
+    const expected = demo ? "neon" : storageTarget() === "remote" ? "remote" : "pglite";
+    if (db.kind !== expected) fail(`Stopped: expected ${demo ? "the demo's Neon database" : expected === "remote" ? "your remote database" : "this machine's database"}, and opened ${db.label}.`);
 
     // ------------------------------------------------ status
     if (command === "status") {
       const [info, pages, counts] = await Promise.all([storedIndexInfo(db), storedPageCount(db), activityCounts(db)]);
       let size: string;
-      if (demo) {
+      if (db.kind !== "pglite") {
         const [r] = await db.query<{ n: number }>("SELECT pg_database_size(current_database())::float8 AS n");
         size = `${bytes(Number(r?.n ?? 0))} in the database`;
       } else size = `${bytes(folderBytes(resolveDbDir()))} on disk`;
-      console.log(demo ? "Innernet demo database (Neon Postgres, DATABASE_URL)" : "Innernet database (PGlite, this machine)");
+      console.log(demo ? "Innernet demo database (Neon Postgres, DATABASE_URL)" : db.kind === "remote" ? "Innernet database (remote)" : "Innernet database (PGlite, this machine)");
       console.log(`  where     ${db.label}, ${size}`);
       console.log(
         info

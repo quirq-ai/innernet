@@ -242,7 +242,7 @@ export function ingestHistory(db: Db, options: { dir?: string; only?: string[] }
 
 async function ingest(db: Db, dir: string, only?: string[]): Promise<IngestResult> {
   // Belt and braces: this machine's history is only ever stored in this machine's database.
-  if (db.kind !== "pglite") throw new Error("this machine's history is stored only in this machine's database");
+  if (db.kind !== "pglite" && db.kind !== "remote") throw new Error("this machine's history is stored only in its own databases, never the demo's");
   const disk = scan(dir, only);
   const full = !only;
   const result: IngestResult = { sessions: disk.sessions.size, files: disk.files.length, read: 0, added: 0, forgotten: 0, kept: 0, skipped: 0 };
@@ -546,7 +546,7 @@ export interface StoreSummary {
  */
 export async function storeLocal(db: Db, index: SiteIndex | null): Promise<StoreSummary> {
   // This machine's index and history go to this machine's database and nowhere else.
-  if (db.kind !== "pglite") throw new Error("this machine's index and history are stored only in this machine's database");
+  if (db.kind !== "pglite" && db.kind !== "remote") throw new Error("this machine's index and history are stored only in its own databases, never the demo's");
   let indexPart: StoreSummary["index"] = { state: "none", pages: 0, written: 0, deleted: 0, generatedAt: null, replacing: null, ms: 0 };
   if (index) {
     const stored = await storedIndexInfo(db);

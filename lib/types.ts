@@ -141,11 +141,13 @@ export interface IndexMeta {
   deeperCounted?: boolean; // true when folders past maxDepth are tallied into `deeper`
   counts: { pages: number; articles: number; repos: number; stubs: number; categories: number; agents?: number };
   durationMs: number;
-  /** Present on the demo index (data/demo/index.json): which public repositories it holds.
-   * In a demo index every page's `path` is its GitHub URL, never a local path. */
+  /** Present on a GitHub index (the demo's data/demo/index.json, or a Sources snapshot in
+   * data/github-*.json): which public repositories it holds. Every page's `path` is its
+   * GitHub URL, never a local path. `org` names the one account, or "github.com" when the
+   * repositories come from several; each repository names its own `owner`. */
   demo?: {
     org: string;
-    repos: { name: string; url: string; branch: string; fork: boolean; description: string | null }[];
+    repos: { name: string; url: string; branch: string; fork: boolean; description: string | null; owner?: string }[];
   };
 }
 

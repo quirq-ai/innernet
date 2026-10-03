@@ -1,52 +1,87 @@
+// Remote input: a collection of public GitHub repositories, from any account, each as
+// "owner/name". There is no whole-account mode: a sync fetches exactly what is listed.
+
 export interface RemoteConfig {
-  owner: string;
-  /** Empty means all public repositories owned by this account. */
+  /** Canonical "owner/name" entries, lowercase, deduplicated and sorted. */
   repositories: string[];
+  /** Set when the saved settings named a whole account, which is no longer a choice: the
+   * list stays empty until repositories are added, and Sources says why. */
+  legacyAccount?: string;
 }
 
-export const DEFAULT_REMOTE: RemoteConfig = { owner: "quirq-ai", repositories: [] };
+export const EMPTY_REMOTE: RemoteConfig = { repositories: [] };
 
-function githubParts(value: string): string[] | null {
-  if (!/^https?:\/\//i.test(value)) return null;
-  if (/[\\%]/.test(value) || value.split("/").some((part) => part === "." || part === "..")) {
-    throw new Error("Use a GitHub URL without escaped or relative path segments.");
-  }
-  let url: URL;
-  try { url = new URL(value); } catch { throw new Error("Enter a GitHub account or repository URL."); }
-  if (url.protocol !== "https:" || url.hostname !== "github.com" || url.port || url.username || url.password || url.search || url.hash) {
-    throw new Error("Use a public https://github.com URL without credentials, a query, or a fragment.");
-  }
-  return url.pathname.replace(/\/$/, "").slice(1).split("/");
+export const MAX_REPOSITORIES = 50;
+
+const OWNER = /^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/;
+const NAME = /^[a-z\d._-]{1,100}$/;
+
+function validOwner(owner: string): boolean {
+  return OWNER.test(owner) && !owner.includes("--");
 }
 
-/** Canonical values are also safe individual path segments for the GitHub crawler. */
+function validName(name: string): boolean {
+  return NAME.test(name) && name !== "." && name !== ".." && !name.includes("__dot__");
+}
+
+/** One entry, as a link (https://github.com/owner/name, .git or a trailing slash allowed)
+ * or as owner/name, to its canonical form. Throws a sentence the form can show. */
+export function parseRepository(entry: string): string {
+  const input = entry.trim();
+  let parts: string[];
+  if (/^https?:\/\//i.test(input)) {
+    if (/[\\%]/.test(input) || input.split("/").some((part) => part === "." || part === "..")) {
+      throw new Error(`${input} has escaped or relative path segments.`);
+    }
+    let url: URL;
+    try {
+      url = new URL(input);
+    } catch {
+      throw new Error(`${input} is not a link.`);
+    }
+    if (url.protocol !== "https:" || url.hostname.toLowerCase() !== "github.com" || url.port || url.username || url.password || url.search || url.hash) {
+      throw new Error(`${input} is not a public https://github.com link.`);
+    }
+    parts = url.pathname.replace(/\/+$/, "").slice(1).split("/");
+  } else {
+    parts = input.replace(/^github\.com\//i, "").split("/");
+  }
+  if (parts.length !== 2) throw new Error(`${input} is not a repository: use https://github.com/owner/name or owner/name.`);
+  const owner = parts[0].toLowerCase();
+  const name = parts[1].replace(/\.git$/i, "").toLowerCase();
+  if (!validOwner(owner)) throw new Error(`${parts[0]} is not a GitHub account name.`);
+  if (!validName(name)) throw new Error(`${parts[1]} is not a repository name.`);
+  return `${owner}/${name}`;
+}
+
+/** Saved or submitted settings to their canonical form. Accepts the old shape too
+ * ({ owner, repositories: names }): names become owner/name, and a whole account is
+ * remembered in `legacyAccount` with an empty list. Throws a sentence the form can show. */
 export function normalizeRemoteConfig(value: unknown): RemoteConfig {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Enter your GitHub account and repositories.");
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Enter your GitHub repositories, one link per line.");
   const remote = value as Record<string, unknown>;
-  if (typeof remote.owner !== "string") throw new Error("Enter a GitHub account.");
-  const ownerInput = remote.owner.trim();
-  const account = githubParts(ownerInput);
-  if (account && account.length !== 1) throw new Error("Enter the GitHub account URL; add individual repositories in the list below.");
-  const owner = (account?.[0] ?? ownerInput).toLowerCase();
-  if (!/^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/.test(owner) || owner.includes("--")) throw new Error("Enter a valid GitHub organization or username.");
-  if (!Array.isArray(remote.repositories) || remote.repositories.length > 50) throw new Error("Use a list of up to 50 repositories, or leave it empty for all public repositories.");
-  const repositories = remote.repositories.map((entry: unknown) => {
-    if (typeof entry !== "string") throw new Error("Repository names must be text.");
-    const input = entry.trim();
-    const parts = githubParts(input);
-    if (parts && (parts.length !== 2 || parts[0].toLowerCase() !== owner)) throw new Error("Every repository URL must belong to the GitHub account above.");
-    const name = (parts ? parts[1].replace(/\.git$/i, "") : input).toLowerCase();
-    if (!/^[a-z\d._-]{1,100}$/.test(name) || name === "." || name === ".." || name.includes("__dot__")) throw new Error("Enter repository names or GitHub repository URLs, one per line.");
-    return name;
-  });
-  return { owner, repositories: [...new Set(repositories)].sort() };
+  if (!Array.isArray(remote.repositories)) throw new Error("Enter your GitHub repositories, one link per line.");
+  if (remote.repositories.length > MAX_REPOSITORIES) throw new Error(`List at most ${MAX_REPOSITORIES} repositories.`);
+  if (remote.repositories.some((entry) => typeof entry !== "string")) throw new Error("Repository links must be text.");
+  const entries = (remote.repositories as string[]).map((entry) => entry.trim()).filter(Boolean);
+
+  // The old shape: an account, and names inside it (or none, for every repository).
+  if (typeof remote.owner === "string" && remote.owner.trim()) {
+    const ownerInput = remote.owner.trim().replace(/^https:\/\/github\.com\//i, "").replace(/\/+$/, "").toLowerCase();
+    if (!validOwner(ownerInput)) throw new Error("The saved GitHub account is not a valid account name.");
+    if (!entries.length) return { repositories: [], legacyAccount: ownerInput };
+    const repositories = entries.map((entry) => parseRepository(entry.includes("/") ? entry : `${ownerInput}/${entry}`));
+    return { repositories: [...new Set(repositories)].sort() };
+  }
+
+  const repositories = entries.map(parseRepository);
+  return { repositories: [...new Set(repositories)].sort() };
 }
 
-export function isDefaultRemote(remote: RemoteConfig): boolean {
-  return remote.owner === DEFAULT_REMOTE.owner && remote.repositories.length === 0;
-}
+/** The accounts a collection draws on, in order. */
+export const remoteOwners = (remote: RemoteConfig) => [...new Set(remote.repositories.map((r) => r.split("/")[0]))];
 
-/** Activity lines are capped at 4 KB; the complete list lives in source settings. */
+/** Activity lines are capped at 4 KB; the complete list lives in the source settings. */
 export function remoteActivityFields(remote: RemoteConfig) {
-  return { githubAccount: remote.owner, repositoryCount: remote.repositories.length, repositories: remote.repositories.slice(0, 5) };
+  return { repositoryCount: remote.repositories.length, repositories: remote.repositories.slice(0, 5) };
 }

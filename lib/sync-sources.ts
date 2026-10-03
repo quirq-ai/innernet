@@ -10,7 +10,7 @@ import { getIndex } from "./data";
 import { ingestSession } from "./db/ingest";
 import { PROJECT_ROOT } from "./project-root";
 import { localSourceConfig, readRemoteConfig, readSourceSelection, REMOTE_CACHE_DIR, remoteOutputFile, type SourceSelection } from "./sources";
-import { DEFAULT_REMOTE, remoteActivityFields, type RemoteConfig } from "./remote-config";
+import { EMPTY_REMOTE, remoteActivityFields, type RemoteConfig } from "./remote-config";
 
 export type SyncResult =
   | { ok: true; pages: number; generatedAt: string; durationMs: number }
@@ -25,22 +25,24 @@ export const sourceSyncRunning = (): boolean => state.running;
 /** Run the same crawler as `pnpm index`, with this server's configured roots and depth.
  * Calling Node directly also works on Windows, without a shell or a global pnpm.
  * Always replace the index this app serves, even if the shell has INNERNET_OUT set. */
-async function runCrawler(script: string, env: Record<string, string>): Promise<void> {
+async function runCrawler(script: string, env: Record<string, string>, unset: string[] = []): Promise<void> {
   const cwd = PROJECT_ROOT;
   const requireFromProject = createRequire(path.join(cwd, "package.json"));
   const loader = pathToFileURL(requireFromProject.resolve("tsx")).href;
+  const childEnv: NodeJS.ProcessEnv = { ...process.env, ...env };
+  for (const key of unset) delete childEnv[key];
   await new Promise<void>((resolve, reject) => {
     execFile(
       process.execPath,
       ["--import", loader, path.join(cwd, "scripts", script)],
-      {
-        cwd,
-        env: { ...process.env, ...env },
-        windowsHide: true,
-        timeout: 5 * 60_000,
-        maxBuffer: 1024 * 1024,
+      { cwd, env: childEnv, windowsHide: true, timeout: 5 * 60_000, maxBuffer: 1024 * 1024 },
+      (error, _stdout, stderr) => {
+        if (!error) return resolve();
+        // The crawler's own last word ("GitHub repository x/y was not found or is not
+        // public", the hourly limit) says more than any summary could.
+        const said = String(stderr ?? "").trim().split("\n").filter(Boolean).pop()?.slice(0, 300);
+        reject(Object.assign(error, { said }));
       },
-      (error) => (error ? reject(error) : resolve()),
     );
   });
 }
@@ -55,10 +57,15 @@ async function rebuild(selection: SourceSelection, remote: RemoteConfig): Promis
     await runCrawler("build-index.ts", { INNERNET_OUT: path.join(PROJECT_ROOT, "data", "index.json") });
   }
   if (selection.remote) {
-    await runCrawler("build-demo-index.ts", {
-      INNERNET_REMOTE_OUT: remoteOutputFile(remote), INNERNET_REMOTE_CACHE: REMOTE_CACHE_DIR,
-      INNERNET_GITHUB_OWNER: remote.owner, INNERNET_GITHUB_REPOSITORIES: JSON.stringify(remote.repositories),
-    });
+    const out = remoteOutputFile(remote);
+    if (!out) throw new Error("Remote has no repositories to sync.");
+    // The collection names every repository as owner/name; an account set in the shell
+    // must not narrow it.
+    await runCrawler(
+      "build-demo-index.ts",
+      { INNERNET_REMOTE_OUT: out, INNERNET_REMOTE_CACHE: REMOTE_CACHE_DIR, INNERNET_GITHUB_REPOSITORIES: JSON.stringify(remote.repositories) },
+      ["INNERNET_GITHUB_OWNER"],
+    );
   }
 }
 
@@ -67,10 +74,14 @@ export async function syncSources(session: string): Promise<SyncResult> {
   if (state.running) return { ok: false, status: 409, error: "Sources are already syncing. Try again once that sync finishes." };
   const started = Date.now();
   const selection = readSourceSelection();
-  let remote = DEFAULT_REMOTE;
+  let remote: RemoteConfig = EMPTY_REMOTE;
   if (selection.remote) {
-    try { remote = readRemoteConfig(); }
-    catch { return { ok: false, status: 400, error: "Saved GitHub configuration is invalid. Fix the account and repository fields in Sources, then save before syncing." }; }
+    try {
+      remote = readRemoteConfig();
+    } catch {
+      return { ok: false, status: 400, error: "The saved repositories could not be read. Fix them in Sources, then save before syncing." };
+    }
+    if (!remote.repositories.length) return { ok: false, status: 400, error: "Add at least one repository to Remote, then save before syncing." };
   }
   state.running = true;
   const command = [selection.local && "pnpm index", selection.remote && "pnpm index:demo"].filter(Boolean).join(" + ");
@@ -91,7 +102,7 @@ export async function syncSources(session: string): Promise<SyncResult> {
         ok: false,
         status: 500,
         error: timedOut ? "Sync timed out after five minutes. Try again or select fewer sources." : selection.remote
-          ? `Sources could not all be synced. Check the GitHub account and repository names, public access, and your network connection.${selection.local ? " A completed local sync is kept." : ""}`
+          ? `Sources could not all be synced${error instanceof Error && "said" in error && typeof error.said === "string" && error.said ? `: ${error.said}` : ". Check that the repositories are public and that you are online"}.${selection.local ? " A completed local sync is kept." : ""}`
           : "Sources could not be synced. Check that the configured local folders exist and try again.",
       };
     }

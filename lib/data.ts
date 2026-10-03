@@ -116,8 +116,12 @@ export function getIndex(): Loaded {
   const local = selection.local ? getLocalIndex() : null;
   let remote: Loaded | null = null;
   if (selection.remote) {
-    try { remote = fromFile(remoteIndexFile()); }
-    catch { /* Sources remains available to repair invalid settings or rebuild a broken snapshot. */ }
+    try {
+      const file = remoteIndexFile();
+      remote = file ? fromFile(file) : null;
+    } catch {
+      /* Sources remains available to repair invalid settings or rebuild a broken snapshot. */
+    }
   }
   if (selectedCache?.selection === key && selectedCache.local === local && selectedCache.remote === remote) return selectedCache.loaded;
   const localIndex = local && !local.missing ? local.index : null;
