@@ -1,0 +1,5 @@
+# Dependency build scripts pnpm may run. pnpm 11 refuses an install with an unlisted one.
+# esbuild (through tsx) works from its prebuilt platform package, so its install script stays off,
+# as pnpm 10 left it.
+allowBuilds:
+  esbuild: false
