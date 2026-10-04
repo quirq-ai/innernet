@@ -20,7 +20,7 @@ schema = "quirq-repo/1"
 [[targets]]
 name = "app"
 kind = "node-app"
-srcs = ["app/**", "components/**", "lib/**", "public/**", "scripts/**", "data/demo/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tsconfig.json", "next.config.ts", "proxy.ts", "instrumentation.ts", "postcss.config.mjs", "innernet.config.json"]
+srcs = ["app/**", "components/**", "lib/**", "public/**", "scripts/**", "data/demo/**", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tsconfig.json", "next.config.ts", "proxy.ts", "instrumentation.ts", "postcss.config.mjs", "innernet.config.json", "CONTRIBUTING.md", "DESIGN.md"]
 outs = [".next/"]
 
 [qq]
