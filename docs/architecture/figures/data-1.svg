@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 450" role="img" aria-label="Bytes per field across all 437 pages of the demo index. README text is the largest single field at 165,292 bytes, 28 percent of page data. The new logo field holds 23,471 bytes for 10 pages." width="760" height="450">
+<style>
+.bg { fill: #fffefb; }
+.bx { fill: #f7f5f0; stroke: rgba(28,27,24,0.2); stroke-width: 1.2; }
+.bx.acc { stroke: #2a52c4; stroke-width: 1.6; }
+.bx.dash { stroke-dasharray: 5 4; }
+.bx.nwb { stroke: #2f7d4f; stroke-width: 1.5; }
+.frame { fill: #efece5; stroke: rgba(28,27,24,0.2); stroke-width: 1.2; }
+.zone { fill: none; stroke: #2f7d4f; stroke-width: 1.2; stroke-dasharray: 6 5; }
+text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+.t { fill: #1c1b18; font-size: 14px; font-weight: 600; }
+.tm, .nm, .rt, .lblm, .sm, .n, .labm { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.tm { fill: #1c1b18; font-size: 13px; font-weight: 600; }
+.s { fill: #6a655b; font-size: 12px; }
+.sm { fill: #6a655b; font-size: 11.5px; }
+.hd { fill: #6a655b; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; }
+.lbl { fill: #46433c; font-size: 11.5px; }
+.lbls { fill: #46433c; font-size: 10px; }
+.lblm { fill: #46433c; font-size: 11px; }
+.rt { fill: #1c1b18; font-size: 10.5px; }
+.n { fill: #1c1b18; font-size: 12.5px; font-weight: 600; }
+.ln { fill: none; stroke: #6a655b; stroke-width: 1.3; }
+.ln.acc { stroke: #2a52c4; stroke-width: 1.7; }
+.ln.dash { stroke-dasharray: 4 4; }
+.ln.nwl { stroke: #2f7d4f; stroke-width: 1.6; }
+.ln.warnl { stroke: #b4501f; stroke-width: 1.8; }
+.ahd { fill: #6a655b; } .aha { fill: #2a52c4; } .ahn { fill: #2f7d4f; } .ahw { fill: #b4501f; }
+.acct, .hd.acct { fill: #2a52c4; }
+.nw, .nwt, .hd.nwt, .rt.nwt, tspan.nwt { fill: #2f7d4f; }
+.warnT { fill: #b4501f; font-weight: 600; }
+.tr { fill: none; stroke: rgba(28,27,24,0.2); stroke-width: 1.3; }
+.tr.hot { stroke: #2a52c4; stroke-width: 2; }
+.nd { fill: #fffefb; stroke: rgba(28,27,24,0.2); stroke-width: 1.5; }
+.nd.hot, .file { fill: #2a52c4; stroke: #2a52c4; }
+.nm { fill: #1c1b18; font-size: 13px; }
+.nm.dim { fill: #6a655b; }
+.tag { fill: #6a655b; font-size: 11px; }
+.tag.hotT { fill: #2a52c4; font-weight: 600; }
+.rule { stroke: rgba(28,27,24,0.09); stroke-width: 1; }
+.colh { fill: #6a655b; font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; }
+.chg { fill: #1c1b18; font-size: 12.5px; font-weight: 500; }
+.same { fill: #a9a499; font-size: 12.5px; }
+.grid { stroke: rgba(28,27,24,0.09); stroke-width: 1; }
+.base { stroke: rgba(28,27,24,0.2); stroke-width: 1; }
+.tick { fill: #6a655b; font-size: 11px; }
+.labm { fill: #1c1b18; font-size: 12px; }
+.lab { fill: #46433c; font-size: 12px; font-style: italic; }
+.val { fill: #46433c; font-size: 11.5px; }
+.bar { fill: #c9c4b9; } .bar.hi { fill: #2a52c4; } .bar.nwbar { fill: #2f7d4f; } .bar.other { fill: #c9c4b9; }
+.hit { fill: transparent; }
+.ln.s1 { stroke: #2a52c4; stroke-width: 2; } .ln.s2 { stroke: #eb6834; stroke-width: 2; }
+.dot.s1 { fill: #2a52c4; stroke: #fffefb; stroke-width: 2; } .dot.s2 { fill: #eb6834; stroke: #fffefb; stroke-width: 2; }
+.mark60 { stroke: rgba(28,27,24,0.2); stroke-width: 1; }
+.ann { fill: #46433c; font-size: 11.5px; }
+.endl { fill: #1c1b18; font-size: 12px; font-weight: 500; }
+@media (prefers-color-scheme: dark) {
+  .bg { fill: #1a1a18; }
+  .bx { fill: #0f0f0e; stroke: rgba(236,234,227,0.2); }
+  .bx.acc { stroke: #9db6ff; } .bx.nwb, .zone { stroke: #6fcf97; }
+  .frame { fill: #161614; stroke: rgba(236,234,227,0.2); }
+  .t, .tm, .rt, .n, .nm, .chg, .labm, .endl { fill: #eceae3; }
+  .s, .sm, .hd, .tick, .tag, .colh, .nm.dim { fill: #938e83; }
+  .lbl, .lbls, .lblm, .val, .lab, .ann { fill: #c8c5bb; }
+  .ln, .ahd { stroke: #938e83; } .ahd { fill: #938e83; }
+  .ln.acc, .tr.hot { stroke: #9db6ff; } .aha, .acct, .hd.acct, .nd.hot, .file, .tag.hotT { fill: #9db6ff; }
+  .nd.hot, .file { stroke: #9db6ff; }
+  .ln.nwl { stroke: #6fcf97; } .ahn, .nw, .nwt, .hd.nwt, .rt.nwt, tspan.nwt { fill: #6fcf97; }
+  .ln.warnl { stroke: #f0955f; } .ahw, .warnT { fill: #f0955f; }
+  .tr, .base, .mark60 { stroke: rgba(236,234,227,0.2); } .grid, .rule { stroke: rgba(236,234,227,0.09); }
+  .nd { fill: #1a1a18; stroke: rgba(236,234,227,0.2); }
+  .same { fill: #5e5a52; }
+  .bar, .bar.other { fill: #4a4740; } .bar.hi { fill: #6f8ff0; } .bar.nwbar { fill: #3f9e6a; }
+  .ln.s1 { stroke: #6f8ff0; } .ln.s2 { stroke: #d95926; }
+  .dot.s1 { fill: #6f8ff0; stroke: #1a1a18; } .dot.s2 { fill: #d95926; stroke: #1a1a18; }
+}
+</style>
+<rect class="bg" x="0" y="0" width="760" height="450" rx="10"/>
+<line class="grid" x1="150.0" y1="10" x2="150.0" y2="406"/><text class="tick" x="150.0" y="424" text-anchor="middle">0</text><line class="grid" x1="275.0" y1="10" x2="275.0" y2="406"/><text class="tick" x="275.0" y="424" text-anchor="middle">45k</text><line class="grid" x1="400.0" y1="10" x2="400.0" y2="406"/><text class="tick" x="400.0" y="424" text-anchor="middle">90k</text><line class="grid" x1="525.0" y1="10" x2="525.0" y2="406"/><text class="tick" x="525.0" y="424" text-anchor="middle">135k</text><line class="grid" x1="650.0" y1="10" x2="650.0" y2="406"/><text class="tick" x="650.0" y="424" text-anchor="middle">180k</text><text class="tick" x="400" y="444" text-anchor="middle">bytes in the JSON, key names included</text><g class="row"><rect class="hit" x="0" y="13" width="760" height="30"/><text class="labm" x="140" y="32" text-anchor="end">readme</text><path class="bar hi" d="M150,20 H605.1 A4,4 0 0 1 609.1,24 V32 A4,4 0 0 1 605.1,36 H150 Z"/><text class="val" x="615.1" y="32">165.3 KB</text></g><g class="row"><rect class="hit" x="0" y="43" width="760" height="30"/><text class="labm" x="140" y="62" text-anchor="end">files</text><path class="bar" d="M150,50 H257.7 A4,4 0 0 1 261.7,54 V62 A4,4 0 0 1 257.7,66 H150 Z"/><text class="val" x="267.7" y="62">40.2 KB</text></g><g class="row"><rect class="hit" x="0" y="73" width="760" height="30"/><text class="labm" x="140" y="92" text-anchor="end">path</text><path class="bar" d="M150,80 H238.4 A4,4 0 0 1 242.4,84 V92 A4,4 0 0 1 238.4,96 H150 Z"/><text class="val" x="248.4" y="92">33.3 KB</text></g><g class="row"><rect class="hit" x="0" y="103" width="760" height="30"/><text class="labm" x="140" y="122" text-anchor="end">git</text><path class="bar" d="M150,110 H227.9 A4,4 0 0 1 231.9,114 V122 A4,4 0 0 1 227.9,126 H150 Z"/><text class="val" x="237.9" y="122">29.5 KB</text></g><g class="row"><rect class="hit" x="0" y="133" width="760" height="30"/><text class="labm" x="140" y="152" text-anchor="end">logo</text><path class="bar nwbar" d="M150,140 H211.2 A4,4 0 0 1 215.2,144 V152 A4,4 0 0 1 211.2,156 H150 Z"/><text class="val" x="221.2" y="152">23.5 KB  · new, 10 pages</text></g><g class="row"><rect class="hit" x="0" y="163" width="760" height="30"/><text class="labm" x="140" y="182" text-anchor="end">languages</text><path class="bar" d="M150,170 H209.6 A4,4 0 0 1 213.6,174 V182 A4,4 0 0 1 209.6,186 H150 Z"/><text class="val" x="219.6" y="182">22.9 KB</text></g><g class="row"><rect class="hit" x="0" y="193" width="760" height="30"/><text class="labm" x="140" y="212" text-anchor="end">relPath</text><path class="bar" d="M150,200 H196.0 A4,4 0 0 1 200.0,204 V212 A4,4 0 0 1 196.0,216 H150 Z"/><text class="val" x="206.0" y="212">18.0 KB</text></g><g class="row"><rect class="hit" x="0" y="223" width="760" height="30"/><text class="labm" x="140" y="242" text-anchor="end">modified</text><path class="bar" d="M150,230 H190.9 A4,4 0 0 1 194.9,234 V242 A4,4 0 0 1 190.9,246 H150 Z"/><text class="val" x="200.9" y="242">16.2 KB</text></g><g class="row"><rect class="hit" x="0" y="253" width="760" height="30"/><text class="labm" x="140" y="272" text-anchor="end">created</text><path class="bar" d="M150,260 H189.7 A4,4 0 0 1 193.7,264 V272 A4,4 0 0 1 189.7,276 H150 Z"/><text class="val" x="199.7" y="272">15.7 KB</text></g><g class="row"><rect class="hit" x="0" y="283" width="760" height="30"/><text class="labm" x="140" y="302" text-anchor="end">related</text><path class="bar" d="M150,290 H184.7 A4,4 0 0 1 188.7,294 V302 A4,4 0 0 1 184.7,306 H150 Z"/><text class="val" x="194.7" y="302">13.9 KB</text></g><g class="row"><rect class="hit" x="0" y="313" width="760" height="30"/><text class="labm" x="140" y="332" text-anchor="end">children</text><path class="bar" d="M150,320 H184.2 A4,4 0 0 1 188.2,324 V332 A4,4 0 0 1 184.2,336 H150 Z"/><text class="val" x="194.2" y="332">13.7 KB</text></g><g class="row"><rect class="hit" x="0" y="343" width="760" height="30"/><text class="labm" x="140" y="362" text-anchor="end">root</text><path class="bar" d="M150,350 H180.0 A4,4 0 0 1 184.0,354 V362 A4,4 0 0 1 180.0,366 H150 Z"/><text class="val" x="190.0" y="362">12.2 KB</text></g><g class="row"><rect class="hit" x="0" y="373" width="760" height="30"/><text class="lab" x="140" y="392" text-anchor="end">24 other fields</text><path class="bar other" d="M150,380 H624.5 A4,4 0 0 1 628.5,384 V392 A4,4 0 0 1 624.5,396 H150 Z"/><text class="val" x="634.5" y="392">172.2 KB</text></g><line class="base" x1="150" y1="10" x2="150" y2="406"/></svg>
