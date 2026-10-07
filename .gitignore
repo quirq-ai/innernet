@@ -16,3 +16,6 @@ data/demo/*.tmp
 # Vercel link and pulled env files hold secrets (the Neon connection string). Never commit them.
 .vercel
 .env*.local
+
+# qq writes its build output to .qq/out. Never commit it.
+.qq/
