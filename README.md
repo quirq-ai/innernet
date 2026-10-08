@@ -45,7 +45,10 @@ pnpm dev:demo     # preview the demo locally
 `data/demo/index.json` is committed, and every path in it is a GitHub URL. Vercel builds
 always run the demo (`VERCEL=1`); locally `INNERNET_DEMO=1` switches it on (`lib/mode.ts`).
 In the demo the localhost guard is off, a banner says what you are looking at, folders
-link to GitHub instead of VS Code, and the guide plays the committed 720p film. With a
+link to GitHub instead of VS Code, and the guide plays the committed 720p film. The demo
+may be framed by itself and by the quirq site's launch window (`https://www.quirq.dev`)
+and by nothing else, so Vercel preview deployments of that site cannot show it in a
+window (allowing them would mean allowing every `*.vercel.app` site). With a
 database it keeps the pages and searches visitors open for 30 days, anonymously
 ([the demo's history](#the-demos-history)); without one, history stays in the browser.
 
@@ -454,7 +457,8 @@ Innernet is built to read and serve your project context on your machine.
   Git remotes, and credential-shaped text becomes `[redacted]` during indexing and
   when an older index is loaded.
 - **Local serving.** The server binds to loopback, rejects non-localhost Host headers
-  and sets a Content-Security-Policy that keeps the browser on the same origin.
+  and sets a Content-Security-Policy that keeps the browser on the same origin and
+  refuses to let any other page frame it (`X-Frame-Options: DENY` as well).
   Development also allows websockets for hot reload. Browser requests stay on the
   app's own routes: `/api/suggest` for suggestions, `/api/activity` to write the
   [history](#history), and the local **Sources** page's `/api/sources`,

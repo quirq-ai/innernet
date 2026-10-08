@@ -9,8 +9,9 @@ const dev = process.env.NODE_ENV !== "production";
 // Whether this build is the demo (lib/mode.ts). Written into the build, so the demo
 // does not depend on VERCEL reaching the deployed functions at run time.
 const demoBuild = process.env.INNERNET_DEMO === "1" || process.env.VERCEL === "1";
-// Only the public demo may be framed, and only by the quirq site's launch window
-// (www.quirq.dev; quirq.dev redirects there). Innernet on this machine never is.
+// Only the public demo may be framed, and only by itself and the quirq site's launch
+// window (www.quirq.dev; quirq.dev redirects there). Innernet on this machine never is.
+const frameAncestors = `frame-ancestors ${demoBuild ? "'self' https://www.quirq.dev" : "'none'"}`;
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
@@ -18,7 +19,7 @@ const csp = [
   "img-src 'self' data:",
   "font-src 'self'",
   `connect-src 'self'${dev ? " ws: wss:" : ""}`,
-  `frame-ancestors ${demoBuild ? "'self' https://www.quirq.dev" : "'none'"}`,
+  frameAncestors,
   "base-uri 'self'",
   "form-action 'self'",
 ].join("; ");
@@ -141,9 +142,10 @@ const nextConfig: NextConfig = {
       },
       {
         // Project logos (app/api/logo/[id]/route.ts): images only, so an SVG opened on
-        // its own can load and run nothing. Listed last, so it replaces the policy above.
+        // its own can load and run nothing. Listed last, so it replaces the policy above,
+        // and so repeats its frame-ancestors.
         source: "/api/logo/:id",
-        headers: [{ key: "Content-Security-Policy", value: "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox" }],
+        headers: [{ key: "Content-Security-Policy", value: `default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox; ${frameAncestors}` }],
       },
     ];
   },

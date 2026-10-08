@@ -7,6 +7,10 @@ import { C, ChapterHead, Command, Excerpt, Fine, Prose, SectionHead } from "./pa
 import { Plate } from "./plate";
 import { cite, exists, fileCount, fileHref, lineCount, lineOf, readText } from "./source";
 
+// On the demo, file links go to GitHub, which refuses to be framed: open them in a new tab
+// so they never replace the page when the demo is shown in another site's window.
+const fileLink = DEMO ? { target: "_blank", rel: "noopener noreferrer" } : {};
+
 // Chapter IV: a map of the code, four recipes quoted from the code itself, the loop,
 // the conventions, and the checklist from CONTRIBUTING.md.
 
@@ -150,7 +154,7 @@ function FileMap() {
                   <span aria-hidden className="absolute left-0 top-[18px] h-px w-2.5 bg-line-strong" />
                   <div className="flex items-baseline gap-3">
                     {present ? (
-                      <a href={fileHref(it.path, it.dir)} className="min-w-0 truncate font-mono text-[13px] text-link hover:underline">
+                      <a href={fileHref(it.path, it.dir)} {...fileLink} className="min-w-0 truncate font-mono text-[13px] text-link hover:underline">
                         {it.path}
                         {it.dir ? "/" : ""}
                       </a>
@@ -494,7 +498,7 @@ function Checklist() {
             </Markdown>
           </div>
           <p className="border-t border-line px-5 py-3 text-[13px] sm:px-8">
-            <a href={fileHref("CONTRIBUTING.md")} className="link">
+            <a href={fileHref("CONTRIBUTING.md")} {...fileLink} className="link">
               {DEMO ? "Read CONTRIBUTING.md on GitHub" : "Open CONTRIBUTING.md in VS Code"}
             </a>
           </p>
