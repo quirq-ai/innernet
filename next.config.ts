@@ -6,6 +6,11 @@ import type { NextConfig } from "next";
 // Content-Security-Policy holds the browser to that. Development also needs eval for
 // React's debugging and a websocket for hot reload.
 const dev = process.env.NODE_ENV !== "production";
+// Whether this build is the demo (lib/mode.ts). Written into the build, so the demo
+// does not depend on VERCEL reaching the deployed functions at run time.
+const demoBuild = process.env.INNERNET_DEMO === "1" || process.env.VERCEL === "1";
+// Only the public demo may be framed, and only by the quirq site's launch window
+// (www.quirq.dev; quirq.dev redirects there). Innernet on this machine never is.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
@@ -13,7 +18,7 @@ const csp = [
   "img-src 'self' data:",
   "font-src 'self'",
   `connect-src 'self'${dev ? " ws: wss:" : ""}`,
-  "frame-ancestors 'none'",
+  `frame-ancestors ${demoBuild ? "'self' https://www.quirq.dev" : "'none'"}`,
   "base-uri 'self'",
   "form-action 'self'",
 ].join("; ");
@@ -66,10 +71,6 @@ const GUIDE_SOURCES = [
   "DESIGN.md",
   "CONTRIBUTING.md",
 ];
-
-// Whether this build is the demo (lib/mode.ts). Written into the build, so the demo
-// does not depend on VERCEL reaching the deployed functions at run time.
-const demoBuild = process.env.INNERNET_DEMO === "1" || process.env.VERCEL === "1";
 
 // PGlite, the database on this machine (lib/db/pglite.ts): a WebAssembly Postgres that
 // reads its own .wasm and data files from node_modules, so it is required at run time
@@ -133,7 +134,9 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: csp },
           { key: "Referrer-Policy", value: "no-referrer" },
           { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
+          // For browsers that ignore frame-ancestors. The demo leaves it out: DENY would also
+          // refuse the quirq site that frame-ancestors allows.
+          ...(demoBuild ? [] : [{ key: "X-Frame-Options", value: "DENY" }]),
         ],
       },
       {

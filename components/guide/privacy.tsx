@@ -66,7 +66,7 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
     items: [
       <>Any request not addressed to localhost: a 403 before anything is read.</>,
       <>Scripts, styles, images and connections from any other origin.</>,
-      <>Being framed by another page. Every page also asks search engines to look away.</>,
+      <>Being framed by another page (the public demo makes one exception: the quirq site, www.quirq.dev, may show it in a window). Every page also asks search engines to look away.</>,
       <>
         Source and history actions from another site. This app accepts them only from its own pages on localhost, and opens only named app storage locations.
       </>,
