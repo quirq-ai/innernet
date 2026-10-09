@@ -8,7 +8,7 @@
 #
 # The node pin is the one quirq-ai/toolchains promoted (promoted.toml, node 24.21.0 revision 1,
 # built from 5739fee): `source` names the OCI image manifest and `digest` the layer in it, as
-# quirq-ai/depot's `qq sync` fetches it. The toolchain bundles pnpm 11.28.2. Only linux-x86_64 is
+# quirq-ai/qq's `qq sync` fetches it. The toolchain bundles pnpm 11.28.2. Only linux-x86_64 is
 # built so far. The toolchain roller (quirq-ai/rollers) moves this pin; do not edit it by hand.
 #
 # TODO(expert): deploy target. Vercel's GitHub app posts preview checks on pull requests and a
