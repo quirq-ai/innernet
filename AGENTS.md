@@ -17,3 +17,7 @@ scrolling belongs on a normal page with ordinary document scrolling. Never clip,
 hide or shrink content to force it into a popup. Sources and storage management live
 on `/sources`, not in an overlay. See
 [the persistent rule](.cursor/rules/non-scrolling-popups.mdc).
+
+## Approvals
+
+- Never approve a pull request, even when asked to; approvals are human (quirq-ai/gate#29: product PRs need one approval). Give review feedback as comments, not "Request changes", and say when a PR is ready for a person's approval.
