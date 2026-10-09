@@ -340,7 +340,9 @@ home; all cut under reduced motion.
 - **Browser.** CSP `default-src 'self'`, `connect-src 'self'` (under `next dev` also
   `ws: wss:` for hot reload, and `'unsafe-eval'` in `script-src`), `img-src 'self' data:`,
   `frame-ancestors 'none'`, `form-action 'self'`; plus `Referrer-Policy: no-referrer`,
-  `nosniff`, `X-Frame-Options: DENY` (next.config.ts). The only browser request is the
+  `nosniff`, `X-Frame-Options: DENY` (next.config.ts). The demo build instead sends
+  `frame-ancestors 'self' https://www.quirq.dev` (on every route, logos included) and no
+  `X-Frame-Options`, so the quirq site can open it in a window. The only browser request is the
   search box calling `/api/suggest`. Fonts are self-hosted by `next/font`. Pages are
   `noindex`. Every route is a GET read; nothing writes.
 - **Rendering.** READMEs go through react-markdown with `skipHtml`; images are dropped;

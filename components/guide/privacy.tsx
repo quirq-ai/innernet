@@ -66,7 +66,7 @@ const LEDGER: { title: string; mark: string; items: React.ReactNode[] }[] = [
     items: [
       <>Any request not addressed to localhost: a 403 before anything is read.</>,
       <>Scripts, styles, images and connections from any other origin.</>,
-      <>Being framed by another page. Every page also asks search engines to look away.</>,
+      <>Being framed by another page (the public demo makes one exception: its own pages and the quirq site, www.quirq.dev, may show it in a window). Every page also asks search engines to look away.</>,
       <>
         Source and history actions from another site. This app accepts them only from its own pages on localhost, and opens only named app storage locations.
       </>,
@@ -190,7 +190,7 @@ export function Privacy() {
           its own visitors&apos; history only when it keeps a database; the next section says what it keeps. Sources is unavailable on the demo.
         </p>
       </Prose>
-      <Excerpt file="next.config.ts" from="const csp = [" lines={11} mark={["default-src", "frame-ancestors"]} className="mt-6" />
+      <Excerpt file="next.config.ts" from="const frameAncestors" lines={12} mark={["default-src", "frame-ancestors"]} className="mt-6" />
       <Fine className="mt-6 max-w-[680px]">
         One caveat: <C>next dev</C> records request URLs, search queries included, in <C>.next/dev/trace</C>. It is gitignored and recreated; delete it whenever you
         like.

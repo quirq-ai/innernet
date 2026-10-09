@@ -422,7 +422,7 @@ flowchart LR
   HF -- "React text; links only to this app's paths or http(s)" --> AP["/activity"]
 ```
 
-*Fig. 6 No index text reaches the page as HTML, and no logo is ever inlined. A logo goes through four checks: the crawler's `tidySvg` (`scripts/build-index.ts:499-525`), `cleanLogo()` on load (`lib/normalize.ts:63-74`), `logoById()` before serving (`lib/logo.ts:48-58`), and a `default-src 'none'; sandbox` policy on its route (`next.config.ts:132-137`).*
+*Fig. 6 No index text reaches the page as HTML, and no logo is ever inlined. A logo goes through four checks: the crawler's `tidySvg` (`scripts/build-index.ts:499-525`), `cleanLogo()` on load (`lib/normalize.ts:63-74`), `logoById()` before serving (`lib/logo.ts:48-58`), and a `default-src 'none'; sandbox` policy on its route (`next.config.ts:143-149`).*
 
 ### Caches and what clears them
 
@@ -481,7 +481,7 @@ Dependencies still point down, with one exception: the history format lives in `
 
 - **No cycles.** A strongly connected components search over 126 files found none, the new `lib/db` included.
 - **Client and server stay apart.** The 14 client islands import portable modules and plain components only; `trail.ts` and `shared.ts` carry no server imports.
-- **The demo cannot open PGlite, and local mode cannot open Neon.** `openNeon()` throws outside the demo (`lib/db/neon.ts:16`); PGlite is left out of demo builds (`next.config.ts:118`) and `instrumentation.ts` returns early there.
+- **The demo cannot open PGlite, and local mode cannot open Neon.** `openNeon()` throws outside the demo (`lib/db/neon.ts:16`); PGlite is left out of demo builds (`next.config.ts:127`) and `instrumentation.ts` returns early there.
 - **Database failure is ordinary.** `getDb()` resolves to null when off, building, locked or failing, and every caller falls back to the files (`lib/db/index.ts:12-26`).
 - **No unbounded work at run time.** History lines are capped at 4 KB, files read from the end past 8 MB, sessions held to 5,000 events; the demo caps sessions at 400 events, the day at 10,000 and the table at 300 MB.
 - **Largest fan-out** is `app/activity/page.tsx` with 16 imports, a composition root.
@@ -514,9 +514,9 @@ The threat model has one new part: the server now accepts writes. Local writes s
 | Neon refused locally **New** | lib/db/neon.ts:16 · scripts/db.ts:52-58 | This machine's index or history reaching a server, even from a command run in the wrong shell |
 | Demo history privacy **New** | lib/db/demo-history.ts:10-59 | Visitors being identified: hashed session keys, server time, no IP, user agent, cookie or header; read and clear only by id |
 | Demo leak checks **Wider** | lib/demo-check.ts | A local index reaching Neon, or Neon serving one: now run on store, load and serve, with SVG logos decoded |
-| Logo sandbox **New** | next.config.ts:132-137 · lib/logo.ts:56 | An SVG logo running script, even when opened on its own |
-| No secret on disk **New** | next.config.ts:85-94 · .gitignore · .vercelignore | `DATABASE_URL` landing in Turbopack's cache, in git, or in a CLI upload |
-| Content-Security-Policy | next.config.ts:9-19 | Unchanged: every fetch, image, font and form held to the same origin |
+| Logo sandbox **New** | next.config.ts:143-149 · lib/logo.ts:56 | An SVG logo running script, even when opened on its own |
+| No secret on disk **New** | next.config.ts:87-96 · .gitignore · .vercelignore | `DATABASE_URL` landing in Turbopack's cache, in git, or in a CLI upload |
+| Content-Security-Policy | next.config.ts:14-25 · :140 · :148 | Every fetch, image, font and form held to the same origin. Framing: refused locally (`frame-ancestors 'none'`, `X-Frame-Options: DENY`); the demo, logos included, may be framed only by itself and `https://www.quirq.dev`, the quirq site's launch window, never by Vercel previews (that would mean every `*.vercel.app` site) |
 | No HTML from the index | components/wiki/article/readme.tsx:185 | Script injection through a README |
 
 **Review**

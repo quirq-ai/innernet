@@ -5,6 +5,8 @@ export function BrandCredit() {
       Powered by{" "}
       <a
         href="https://github.com/quirq-ai"
+        target="_blank"
+        rel="noopener noreferrer"
         aria-label="quirq on GitHub"
         className="rounded-sm font-display text-[15px] leading-none text-ink-2 decoration-line-strong underline-offset-4 transition-colors hover:text-ink hover:underline"
       >
