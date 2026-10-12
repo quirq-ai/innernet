@@ -117,7 +117,12 @@ not individual HTML files. On the demo the activity post is made only when the d
 page then reads and clears the visitor's own sessions on the same route (a `POST` of
 `{"read": [ids]}` and a `DELETE` of `{"sessions": [ids]}`: ids never go in an address);
 without one the demo keeps history in `localStorage` and sends nothing. The history
-page's Store now is a plain form posting to `/api/db/store`, local only. Keep it that way: no other browser fetches, no external browser requests, no new client
+page's Store now is a plain form posting to `/api/db/store`, local only. The local
+`/activity/visualize` page uses `/api/activity/files` to read one history folder or
+file page at a time. It is read only, requires the same origin, refuses the demo and
+never follows links outside or within the history folder. Its client components
+expand folders and JSON values, switch raw/formatted views, and page through data.
+Keep it that way: no other browser fetches, no external browser requests, no new client
 components without a reason only the browser can satisfy.
 
 **Shared code stays shared.** The indexer imports `lib/text.ts`, `lib/normalize.ts` and

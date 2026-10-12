@@ -246,6 +246,13 @@ always has. Delete a session's folder to forget it; the database forgets it on i
 read. The public
 demo keeps its visitors' history differently: see [the demo's history](#the-demos-history).
 
+**Visualize**, beside **Database** on History, opens `/activity/visualize`. Expand
+the history folders and choose any file to read its raw contents or formatted JSON
+and JSON Lines. JSON objects and arrays expand in place; malformed records remain
+visible. Large files have Previous and Next pages, and binary files show their
+bytes. Refresh reads the latest files. This local, read-only page follows
+`INNERNET_HISTORY_DIR`, lists links without opening them, and never changes history.
+
 Saving source choices adds a `kind: "sources"` event with the Local and Remote
 selections. **Sync now** also adds events to the requesting tab's session: `kind: "sync"`
 with `status: "started"`, then `"completed"` or `"failed"`. Completion includes the

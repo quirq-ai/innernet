@@ -34,7 +34,8 @@ decoration for its own sake.
    `lib/search.ts` directly. The browser fetches only from our own routes: the search
    box asks `/api/suggest`, the history recorder posts each page visited to
    `/api/activity`, and the local Sources page uses `/api/sources`,
-   `/api/sources/sync`, `/api/sources/open` and `/api/storage` (same origin on
+   `/api/sources/sync`, `/api/sources/open` and `/api/storage`. The activity file
+   viewer reads folders and files through `/api/activity/files` (same origin on
    localhost only).
    On the demo the recorder posts only when the demo
    keeps a database, and the history page then reads and clears the visitor's own

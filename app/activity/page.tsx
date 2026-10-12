@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BrowserHistory } from "@/components/activity/browser-history";
 import { DatabaseCard } from "@/components/activity/database-card";
 import { FormatNotes } from "@/components/activity/format-notes";
@@ -100,6 +101,13 @@ export default async function ActivityPage() {
                   </>
                 )}
               </p>
+
+              {!DEMO && (
+                <nav aria-label="Activity tools" className="mt-6 flex flex-wrap gap-2 text-[13px]">
+                  <a href="#database" className="rounded-full border border-line-strong px-4 py-2 text-ink-2 hover:border-ink hover:text-ink">Database</a>
+                  <Link href="/activity/visualize" className="rounded-full border border-line-strong px-4 py-2 text-ink-2 hover:border-ink hover:text-ink">Visualize</Link>
+                </nav>
+              )}
 
               {!DEMO && sessions.length > 0 && (
                 <div className="rise mt-9 flex flex-wrap items-end gap-x-10 gap-y-6" style={{ animationDelay: "120ms" }}>
